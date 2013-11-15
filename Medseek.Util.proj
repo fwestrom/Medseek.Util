@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build;Test" InitialTargets="Prepare" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Configurable properties -->
+  <PropertyGroup Label="Configurable Properties">
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <RootDir Condition="'$(RootDir)' == ''">$(MSBuildProjectDirectory)\</RootDir>
+    <SourceDir Condition="'$(SourceDir)' == ''">$(RootDir)</SourceDir>
+    <BuildDir Condition="'$(BuildDir)' == ''">$(RootDir)build\</BuildDir>
+    <ToolsDir Condition="'$(ToolsDir)' == ''">$(RootDir)tools\</ToolsDir>
+    <NuGetPath Condition="'$(NuGetPath)' == ''">$(SourceDir).nuget\NuGet.exe</NuGetPath>
+    <Skip Condition="'$(Skip)' == ''" />
+  </PropertyGroup>
+  <PropertyGroup>
+    <BuildBinDir>$(BuildDir)bin\</BuildBinDir>
+    <BuildObjDir>$(BuildDir)obj\</BuildObjDir>
+    <BuildPackagesDir>$(BuildDir)packages\</BuildPackagesDir>
+    <SolutionDir>$(RootDir)</SolutionDir>
+    <MSBuildCommunityTasksPath>$(ToolsDir)MSBuild.Community.Tasks</MSBuildCommunityTasksPath>
+    <DoClean Condition="'$(DoClean)' == ''">True</DoClean>
+    <DoBuild Condition="'$(DoBuild)' == ''">True</DoBuild>
+    <DoTest Condition="'$(DoTest)' == ''">True</DoTest>
+    <DoPack Condition="'$(DoPack)' == ''">True</DoPack>
+    <ProjectProperties>Configuration=$(Configuration)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);IntermediateOutputPath=$(BuildObjDir)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);OutputPath=$(BuildBinDir)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);SolutionDir=$(SolutionDir)</ProjectProperties>
+  </PropertyGroup>
+
+  <!-- Build items -->
+  <ItemGroup>
+    <ProjectReference Include="$(SourceDir)Medseek.Util*\*.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.csproj" />
+    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Ioc.Castle.csproj" />
+    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Testing.csproj" />
+  </ItemGroup>
+
+  <!-- Prepare -->
+  <Target Name="Prepare">
+    <ItemGroup>
+      <PrepareDir Include="$(BuildDir)" />
+      <PrepareDir Include="$(BuildBinDir)" />
+      <PrepareDir Include="$(BuildObjDir)" />
+      <PrepareDir Include="$(BuildPackagesDir)" />
+      <Skip Include="$(Skip)" />
+    </ItemGroup>
+    <Message Text="Skip: %(Skip.Identity)" />
+    <MakeDir Directories="@(PrepareDir)" />
+    <CreateProperty Value="False">
+      <Output PropertyName="Do%(Skip.Identity)" TaskParameter="Value" />
+    </CreateProperty>
+  </Target>
+
+  <!-- Clean -->
+  <Target Name="Clean" Condition="$(DoClean)">
+    <ItemGroup>
+      <Directory Include="@(PrepareDir)" />
+      <Directory Include="%(ProjectReference.RelativeDir)bin\" />
+      <Directory Include="%(ProjectReference.RelativeDir)obj\" />
+      <File Include="%(Directory.Identity)**" />
+    </ItemGroup>
+    <RemoveDir Directories="@(Directory)" ContinueOnError="true" />
+    <Delete Files="@(File)" TreatErrorsAsWarnings="true" />
+  </Target>
+
+  <!-- Build -->
+  <Target Name="Build" Condition="$(DoBuild)">
+    <MSBuild Projects="@(ProjectReference)" Properties="$(ProjectProperties)" RebaseOutputs="true">
+      <Output TaskParameter="TargetOutputs" ItemName="OutputAssemblies" />
+    </MSBuild>
+  </Target>
+
+  <!-- Test -->
+  <Target Name="Test" Condition="$(DoTest)" DependsOnTargets="Build">
+  </Target>
+
+  <!-- Pack -->
+  <Target Name="Pack" DependsOnTargets="Build" Inputs="@(NuSpec)" Outputs="$(BuildPackagesDir)%(Filename).nupkg" Condition="$(DoPack)">
+    <PropertyGroup>
+      <PackCommand>$(NuGetPath) pack "%(NuSpec.Identity)"</PackCommand>
+      <PackCommand>$(PackCommand) -BasePath $(BuildBinDir)</PackCommand>
+      <PackCommand>$(PackCommand) -OutputDirectory $(BuildPackagesDir)</PackCommand>
+      <PackCommand>$(PackCommand) -Prop Configuration=$(Configuration)</PackCommand>
+      <PackCommand>$(PackCommand) -Prop OutputPath=$(BuildBinDir)</PackCommand>
+      <PackCommand>$(PackCommand) -Verbosity detailed</PackCommand>
+    </PropertyGroup>
+    <Exec Command="$(PackCommand)" WorkingDirectory="$(BuildDir)" />
+  </Target>
+</Project>
