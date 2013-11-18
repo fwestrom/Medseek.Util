@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Web.Http.Dependencies;
     using global::Castle.Facilities.TypedFactory;
     using global::Castle.MicroKernel.Registration;
@@ -69,13 +70,34 @@
             var result = Component.For(registration.Services)
                 .OnlyNewServices();
 
+            // Name
+            if (registration.Name != null)
+                result = result.Named(registration.Name);
+
             // AsFactory
             if (registration.AsFactory)
-                result = result.AsFactory();
+            {
+                const bool fallbackToResolveByType = true;
+                result = result.AsFactory(new DefaultTypedFactoryComponentSelector(fallbackToResolveByTypeIfNameNotFound: fallbackToResolveByType));
+            }
 
             // Implementation
             if (registration.Implementation != null)
+            {
                 result = result.ImplementedBy(registration.Implementation);
+                result = registration.Implementation
+                    .GetConstructors()
+                    .SelectMany(c => c.GetParameters()
+                        .SelectMany(p => p.GetCustomAttributes(typeof(InjectAttribute), false)
+                            .Cast<InjectAttribute>()
+                            .Select(a => Dependency.OnComponent(p.Name, a.ComponentName ?? p.Name))))
+                    .Aggregate(result, (r, d) => r.DependsOn(d));
+                result = registration.Implementation
+                    .GetMethods()
+                    .Where(m => m.GetCustomAttributes(typeof(OnCreateAttribute), false)
+                        .Any())
+                    .Aggregate(result, (r, m) => r.OnCreate(x => m.Invoke(x, null)));
+            }
 
             // Lifestyle
             if (!LifestyleMap.ContainsKey(registration.Lifestyle))
@@ -84,9 +106,9 @@
             var applyLifestyle = LifestyleMap[registration.Lifestyle];
             result = applyLifestyle(result);
 
-            // Name
-            if (registration.Name != null)
-                result = result.Named(registration.Name);
+            // Interceptors
+            if (!string.IsNullOrEmpty(registration.Interceptors))
+                result = result.Interceptors(registration.Interceptors.Split(','));
 
             return result;
         }

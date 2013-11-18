@@ -41,7 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Ioc\InjectAttribute.cs" />
     <Compile Include="Ioc\Lifestyle.cs" />
+    <Compile Include="Ioc\OnCreateAttribute.cs" />
     <Compile Include="Ioc\RegisterAttribute.cs" />
     <Compile Include="Ioc\RegisterAttributeBase.cs" />
     <Compile Include="Ioc\RegisterFactoryAttribute.cs" />

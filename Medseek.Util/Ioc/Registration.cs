@@ -19,6 +19,17 @@
         }
 
         /// <summary>
+        /// Gets or sets a comma separated list of the interceptor component 
+        /// names for the component.
+        /// </summary>
+        public string Interceptors
+        {
+            get;
+            set;
+        }
+
+
+        /// <summary>
         /// Gets or sets the implementation type of the component.
         /// </summary>
         public Type Implementation
