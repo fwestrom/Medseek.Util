@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Web.Http.Dependencies;
     using global::Castle.Facilities.TypedFactory;
     using global::Castle.MicroKernel.Registration;
     using global::Castle.Windsor;
@@ -20,6 +21,25 @@
             { Lifestyle.Singleton, x => x.LifeStyle.Singleton },
             { Lifestyle.Transient, x => x.LifeStyle.Transient },
         };
+
+        /// <summary>
+        /// Initializes static members of the <see cref="WindsorBootstrapper" /> class.
+        /// </summary>
+        static WindsorBootstrapper()
+        {
+            InstallFromConfiguration = true;
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the application 
+        /// configuration should be used as a source for what to install into 
+        /// the container.
+        /// </summary>
+        public static bool InstallFromConfiguration
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets and initializes the container associated with the 
@@ -77,9 +97,13 @@
             container.Register(
                 Component
                     .For<IWindsorContainer>()
-                    .Instance(container));
-            container.Install(
-                Configuration.FromAppConfig());
+                    .Instance(container),
+                Component
+                    .For<WindsorDependencyResolver, IDependencyResolver>());
+            
+            if (InstallFromConfiguration)
+                container.Install(Configuration.FromAppConfig());
+
             return container;
         }
     }
