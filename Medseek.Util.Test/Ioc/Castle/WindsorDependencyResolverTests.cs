@@ -1,6 +1,7 @@
 ﻿namespace Medseek.Util.Ioc.Castle
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using global::Castle.MicroKernel;
     using global::Castle.Windsor;
@@ -51,11 +52,24 @@
         /// previously disposed.
         /// </summary>
         [Test]
-        public void BeginScopeThrowsIfAlreadyDisposed()
+        public void BeginScopeDoesNotThrowIfAlreadyDisposed()
         {
             Obj.Dispose();
             TestDelegate action = () => Obj.BeginScope();
-            Assert.That(action, Throws.TypeOf<ObjectDisposedException>());
+            Assert.That(action, Throws.Nothing);
+        }
+
+        /// <summary>
+        /// Verifies that an exception is thrown if the dependency resolver was
+        /// previously disposed.
+        /// </summary>
+        [Test]
+        public void BeginScopeThrowsIfScopeAlreadyDisposed()
+        {
+            var scope = (WindsorDependencyResolver)Obj.BeginScope();
+            scope.Dispose();
+            TestDelegate action = () => scope.BeginScope();
+            Assert.That(action, Throws.InstanceOf<ObjectDisposedException>());
         }
 
         /// <summary>
@@ -81,6 +95,71 @@
             container.Verify(x => 
                 x.Dispose(),
                 Times.Never());
+        }
+
+        /// <summary>
+        /// Verifies that the components that were previously obtained from the
+        /// dependency resolver are released when it is disposed.
+        /// </summary>
+        [Test]
+        public void DisposeReleasesComponentResolvedFromGetService()
+        {
+            var myComponents = new List<object>();
+            var scope = Obj.BeginScope();
+            container.Setup(x => 
+                x.Resolve(typeof(IMyService)))
+                .Callback(() => myComponents.Add(new Mock<IMyService>().Object))
+                .Returns((Type a) => myComponents.Last());
+            kernel.Setup(x =>
+                x.HasComponent(typeof(IMyService)))
+                .Returns(true);
+
+            var results = Enumerable.Range(1, Rand.Next(1, 10))
+                .Select(n => scope.GetService(typeof(IMyService)))
+                .ToArray();
+            Assume.That(myComponents, Is.EquivalentTo(results));
+
+            myComponents.ForEach(component => 
+                container.Setup(x => 
+                    x.Release(component))
+                    .Verifiable());
+
+            scope.Dispose();
+
+            container.Verify();
+        }
+
+        /// <summary>
+        /// Verifies that the components that were previously obtained from the
+        /// dependency resolver are released when it is disposed.
+        /// </summary>
+        [Test]
+        public void DisposeReleasesComponentResolvedFromGetServices()
+        {
+            var invokeGetServicesCounter = 0;
+            var myComponents = new List<object>();
+            var scope = Obj.BeginScope();
+            container.Setup(x =>
+                x.ResolveAll(typeof(IMyService)))
+                .Callback(() => myComponents.AddRange(Enumerable.Range(0, ++invokeGetServicesCounter).Select(n => new Mock<IMyService>().Object)))
+                .Returns((Type a) => myComponents.AsEnumerable().Reverse().Take(invokeGetServicesCounter).Reverse().ToArray());
+            kernel.Setup(x =>
+                x.HasComponent(typeof(IMyService)))
+                .Returns(true);
+
+            var results = Enumerable.Range(1, Rand.Next(1, 10))
+                .SelectMany(n => scope.GetServices(typeof(IMyService)))
+                .ToArray();
+            Assume.That(myComponents, Is.EquivalentTo(results));
+
+            myComponents.ForEach(component =>
+                container.Setup(x =>
+                    x.Release(component))
+                    .Verifiable());
+
+            scope.Dispose();
+
+            container.Verify();
         }
 
         /// <summary>
@@ -126,11 +205,24 @@
         /// previously disposed.
         /// </summary>
         [Test]
-        public void GetServiceThrowsIfAlreadyDisposed()
+        public void GetServiceDoesNotThrowIfAlreadyDisposed()
         {
             Obj.Dispose();
             TestDelegate action = () => Obj.GetService(typeof(IMyService));
-            Assert.That(action, Throws.TypeOf<ObjectDisposedException>());
+            Assert.That(action, Throws.Nothing);
+        }
+
+        /// <summary>
+        /// Verifies that an exception is thrown if the dependency resolver was
+        /// previously disposed.
+        /// </summary>
+        [Test]
+        public void GetServiceThrowsIfScopeAlreadyDisposed()
+        {
+            var scope = Obj.BeginScope();
+            scope.Dispose();
+            TestDelegate action = () => scope.GetService(typeof(IMyService));
+            Assert.That(action, Throws.InstanceOf<ObjectDisposedException>());
         }
 
         /// <summary>
@@ -176,11 +268,24 @@
         /// previously disposed.
         /// </summary>
         [Test]
-        public void GetServicesThrowsIfAlreadyDisposed()
+        public void GetServicesDoesNotThrowIfAlreadyDisposed()
         {
             Obj.Dispose();
             TestDelegate action = () => Obj.GetServices(typeof(IMyService));
-            Assert.That(action, Throws.TypeOf<ObjectDisposedException>());
+            Assert.That(action, Throws.Nothing);
+        }
+
+        /// <summary>
+        /// Verifies that an exception is thrown if the dependency resolver was
+        /// previously disposed.
+        /// </summary>
+        [Test]
+        public void GetServicesThrowsIfScopeAlreadyDisposed()
+        {
+            var scope = Obj.BeginScope();
+            scope.Dispose();
+            TestDelegate action = () => scope.GetServices(typeof(IMyService));
+            Assert.That(action, Throws.InstanceOf<ObjectDisposedException>());
         }
 
         /// <summary>

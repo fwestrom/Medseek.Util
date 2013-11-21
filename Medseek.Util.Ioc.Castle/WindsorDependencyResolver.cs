@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Web.Http.Dependencies;
-    using global::Castle.MicroKernel.Lifestyle;
     using global::Castle.Windsor;
     using IDependencyResolver = System.Web.Http.Dependencies.IDependencyResolver;
 
@@ -15,8 +14,10 @@
     public class WindsorDependencyResolver : IDependencyResolver
     {
         private readonly IWindsorContainer container;
-        private readonly IDisposable scope;
+        private readonly List<object> toRelease = new List<object>();
+        private readonly bool isScope;
         private bool disposed;
+
 
         /// <summary>
         /// Initializes a new instance of the <see 
@@ -27,13 +28,13 @@
         {
         }
 
-        private WindsorDependencyResolver(IWindsorContainer container, bool beginScope)
+        private WindsorDependencyResolver(IWindsorContainer container, bool isScope)
         {
             if (container == null)
                 throw new ArgumentNullException("container");
 
             this.container = container;
-            scope = beginScope ? container.BeginScope() : null;
+            this.isScope = isScope;
         }
 
         /// <summary>
@@ -56,11 +57,10 @@
         /// </summary>
         public void Dispose()
         {
-            if (!disposed)
+            if (isScope && !disposed)
             {
                 disposed = true;
-                if (scope != null)
-                    scope.Dispose();
+                toRelease.ForEach(container.Release);
             }
         }
 
@@ -78,10 +78,15 @@
             if (disposed)
                 throw new ObjectDisposedException(GetType().Name);
 
+            object result = null;
             var hasComponent = container.Kernel.HasComponent(serviceType);
-            var result = hasComponent 
-                ? container.Resolve(serviceType) 
-                : null;
+            if (hasComponent)
+            {
+                result = container.Resolve(serviceType);
+                if (isScope)
+                    toRelease.Add(result);
+            }
+
             return result;
         }
 
@@ -98,12 +103,17 @@
         {
             if (disposed)
                 throw new ObjectDisposedException(GetType().Name);
-            
+
+            var results = new object[0];
             var hasComponent = container.Kernel.HasComponent(serviceType);
-            var result = hasComponent 
-                ? container.ResolveAll(serviceType).Cast<object>() 
-                : Enumerable.Empty<object>();
-            return result;
+            if (hasComponent)
+            {
+                results = container.ResolveAll(serviceType).Cast<object>().ToArray();
+                if (isScope)
+                    toRelease.AddRange(results);
+            }
+
+            return results;
         }
     }
 }
