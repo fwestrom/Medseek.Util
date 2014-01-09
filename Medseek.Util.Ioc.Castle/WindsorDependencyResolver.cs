@@ -18,7 +18,6 @@
         private readonly bool isScope;
         private bool disposed;
 
-
         /// <summary>
         /// Initializes a new instance of the <see 
         /// cref="WindsorDependencyResolver" /> class.

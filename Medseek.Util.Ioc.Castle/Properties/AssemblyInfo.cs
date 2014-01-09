@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyConfiguration("")]
@@ -12,5 +13,7 @@ using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
 [assembly: Guid("d5dfd494-812f-480d-8825-a7f4f57c2a95")]
+
+[assembly: InternalsVisibleTo("Medseek.Util.Test")]
 
 [assembly: AssemblyVersion("1.0.*")]

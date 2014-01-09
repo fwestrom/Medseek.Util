@@ -12,7 +12,32 @@
     /// </summary>
     public class WindsorIntegrationHttpModule : IHttpModule
     {
-        private readonly Lazy<IWindsorContainer> container = new Lazy<IWindsorContainer>(WindsorBootstrapper.GetContainer);
+        private readonly Lazy<IWindsorContainer> container;
+
+        /// <summary>
+        /// Initializes a new instance of the <see 
+        /// cref="WindsorIntegrationHttpModule" /> class.
+        /// </summary>
+        public WindsorIntegrationHttpModule()
+            : this(WindsorBootstrapper.GetContainer)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see 
+        /// cref="WindsorIntegrationHttpModule" /> class.
+        /// </summary>
+        /// <param name="getContainer">
+        /// A callback delegate that will be used to obtain the container the 
+        /// first time the container is used.
+        /// </param>
+        internal WindsorIntegrationHttpModule(Func<IWindsorContainer> getContainer)
+        {
+            if (getContainer == null)
+                throw new ArgumentNullException("getContainer");
+
+            container = new Lazy<IWindsorContainer>(getContainer);
+        }
 
         /// <summary>
         /// Initializes a module and prepares it to handle requests.
@@ -33,7 +58,6 @@
         /// </summary>
         public void Dispose()
         {
-            container.Value.Dispose();
         }
     }
 }
