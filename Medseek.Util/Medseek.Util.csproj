@@ -41,6 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="UtilAssembly.cs" />
+    <Compile Include="Properties\AssemblyInfoShared.cs" />
     <Compile Include="Ioc\InjectAttribute.cs" />
     <Compile Include="Ioc\Lifestyle.cs" />
     <Compile Include="Ioc\OnCreateAttribute.cs" />
@@ -49,6 +51,32 @@
     <Compile Include="Ioc\RegisterFactoryAttribute.cs" />
     <Compile Include="Ioc\Registration.cs" />
     <Compile Include="Ioc\Registrations.cs" />
+    <Compile Include="Messaging\Logging\ILog.cs" />
+    <Compile Include="Messaging\Logging\ILogger.cs" />
+    <Compile Include="Messaging\Logging\ILogManager.cs" />
+    <Compile Include="Messaging\Logging\LogBase.cs" />
+    <Compile Include="Messaging\Logging\LogManager.cs" />
+    <Compile Include="Messaging\Logging\LogManagerBase.cs" />
+    <Compile Include="Messaging\Logging\NoOp\NoOpLog.cs" />
+    <Compile Include="Messaging\Logging\NoOp\NoOpLogManager.cs" />
+    <Compile Include="Messaging\IMqChannel.cs" />
+    <Compile Include="Messaging\IMqConnection.cs" />
+    <Compile Include="Messaging\IMqConsumer.cs" />
+    <Compile Include="Messaging\IMqDisposable.cs" />
+    <Compile Include="Messaging\IMqPublisher.cs" />
+    <Compile Include="Messaging\IMqRpcClient.cs" />
+    <Compile Include="Messaging\MessageProperties.cs" />
+    <Compile Include="Messaging\MqAddress.cs" />
+    <Compile Include="Messaging\MqChannelBase.cs" />
+    <Compile Include="Messaging\MqConnectionBase.cs" />
+    <Compile Include="Messaging\MqConsumerBase.cs" />
+    <Compile Include="Messaging\MqPublisherBase.cs" />
+    <Compile Include="Messaging\MqRpcClient.cs" />
+    <Compile Include="Messaging\MqSynchronizedDisposable.cs" />
+    <Compile Include="Messaging\ReceivedEventArgs.cs" />
+    <Compile Include="Objects\Disposable.cs" />
+    <Compile Include="Objects\INotifyDisposed.cs" />
+    <Compile Include="Objects\SynchronizedDisposable.cs" />
     <Compile Include="UtilComponents.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

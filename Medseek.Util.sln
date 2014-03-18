@@ -25,6 +25,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{656B01
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Testing", "Medseek.Util.Testing\Medseek.Util.Testing.csproj", "{48BFC366-A1B0-4019-BF33-1E0A10ECFC57}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Logging.Log4Net", "Medseek.Util.Logging.Log4Net\Medseek.Util.Logging.Log4Net.csproj", "{EA8D92C1-EA44-4428-BF89-DDCE27831258}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Messaging.RabbitMq", "Medseek.Util.Messaging.RabbitMq\Medseek.Util.Messaging.RabbitMq.csproj", "{CEE14AB7-0D49-4432-9184-7AA8FA008F14}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +51,14 @@ Global
 		{48BFC366-A1B0-4019-BF33-1E0A10ECFC57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{48BFC366-A1B0-4019-BF33-1E0A10ECFC57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{48BFC366-A1B0-4019-BF33-1E0A10ECFC57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA8D92C1-EA44-4428-BF89-DDCE27831258}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA8D92C1-EA44-4428-BF89-DDCE27831258}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA8D92C1-EA44-4428-BF89-DDCE27831258}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA8D92C1-EA44-4428-BF89-DDCE27831258}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CEE14AB7-0D49-4432-9184-7AA8FA008F14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEE14AB7-0D49-4432-9184-7AA8FA008F14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEE14AB7-0D49-4432-9184-7AA8FA008F14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEE14AB7-0D49-4432-9184-7AA8FA008F14}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

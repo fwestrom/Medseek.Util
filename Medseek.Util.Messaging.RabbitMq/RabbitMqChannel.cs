@@ -1,0 +1,111 @@
+﻿namespace Medseek.Util.Messaging.RabbitMq
+{
+    using System;
+    using Medseek.Util.Ioc;
+    using RabbitMQ.Client;
+
+    /// <summary>
+    /// Provides a messaging system channel for interacting with RabbitMQ.
+    /// </summary>
+    [Register(typeof(IMqChannel), Lifestyle = Lifestyle.Transient)]
+    public class RabbitMqChannel : MqChannelBase
+    {
+        private readonly IRabbitMqFactory factory;
+        private readonly IModel model;
+        private bool isPaused;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RabbitMqChannel" 
+        /// /> class.
+        /// </summary>
+        public RabbitMqChannel(IConnection connection, IRabbitMqFactory factory)
+        {
+            if (connection == null)
+                throw new ArgumentNullException("connection");
+            if (factory == null)
+                throw new ArgumentNullException("factory");
+
+            this.factory = factory;
+            model = connection.CreateModel();
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the channel can be paused.
+        /// </summary>
+        public override bool CanPause
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the channel is paused to 
+        /// enable flow control of messages.
+        /// </summary>
+        public override bool IsPaused
+        {
+            get
+            {
+                return isPaused;
+            }
+            set
+            {
+                if (value != isPaused)
+                {
+                    isPaused = value;
+                    model.ChannelFlow(!value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a consumer that can be used to receive messages from the 
+        /// messaging system channel.
+        /// </summary>
+        /// <param name="address">
+        /// A description of the services and messaging primitives to which the
+        /// consumer binds for incoming messages.
+        /// </param>
+        /// <param name="autoDelete">
+        /// A value indicating whether closing the consumer should cause any 
+        /// applicable services and messaging primitives to be removed.
+        /// </param>
+        /// <returns>
+        /// The message consumer component that was created.
+        /// </returns>
+        protected override IMqConsumer OnCreateConsumer(MqAddress address, bool autoDelete)
+        {
+            var consumer = factory.GetRabbitMqConsumer(model, address, autoDelete);
+            consumer.Disposed += (sender, e) => factory.Release(consumer);
+            return consumer;
+        }
+
+        /// <summary>
+        /// Creates a publisher that can be used to send messages over to the 
+        /// messaging system channel.
+        /// </summary>
+        /// <param name="address">
+        /// A description of the services and messaging primitives that should 
+        /// be used when publishing outgoing messages.
+        /// </param>
+        /// <returns>
+        /// The message publisher component that was created.
+        /// </returns>
+        protected override IMqPublisher OnCreatePublisher(MqAddress address)
+        {
+            var publisher = factory.GetRabbitMqPublisher(model, address);
+            publisher.Disposed += (sender, e) => factory.Release(publisher);
+            return publisher;
+        }
+
+        /// <summary>
+        /// Disposes the messaging system channel.
+        /// </summary>
+        protected override void OnDisposingChannel()
+        {
+            model.Dispose();
+        }
+    }
+}

@@ -45,6 +45,9 @@
     <Reference Include="Castle.Windsor">
       <HintPath>..\packages\Castle.Windsor.3.2.1\lib\net45\Castle.Windsor.dll</HintPath>
     </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="Moq">
       <HintPath>..\packages\Moq.Contrib.0.3\lib\Moq.dll</HintPath>
     </Reference>
@@ -56,6 +59,10 @@
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="RabbitMQ.Client, Version=3.2.4.0, Culture=neutral, PublicKeyToken=89e7d7c5feba84ce, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\RabbitMQ.Client.3.2.4\lib\net30\RabbitMQ.Client.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Net.Http" />
@@ -83,8 +90,16 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="..\Medseek.Util\Properties\AssemblyInfoShared.cs">
+      <Link>Properties\AssemblyInfoShared.cs</Link>
+    </Compile>
     <Compile Include="Ioc\Castle\WindsorDependencyResolverTests.cs" />
     <Compile Include="Ioc\Castle\WindsorIntegrationHttpModuleTests.cs" />
+    <Compile Include="Logging\Log4Net\Log4NetLogTests.cs" />
+    <Compile Include="Messaging\RabbitMq\RabbitMqChannelTests.cs" />
+    <Compile Include="Messaging\RabbitMq\RabbitMqConnectionTests.cs" />
+    <Compile Include="Messaging\RabbitMq\RabbitMqConsumerTests.cs" />
+    <Compile Include="Messaging\RabbitMq\RabbitMqPublisherTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Testing\TestFixtureTests.cs" />
   </ItemGroup>
@@ -92,11 +107,21 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Objects\" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Medseek.Util.Ioc.Castle\Medseek.Util.Ioc.Castle.csproj">
       <Project>{e8fb7235-95e7-4f72-a3ed-374d0b198b73}</Project>
       <Name>Medseek.Util.Ioc.Castle</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Medseek.Util.Logging.Log4Net\Medseek.Util.Logging.Log4Net.csproj">
+      <Project>{ea8d92c1-ea44-4428-bf89-ddce27831258}</Project>
+      <Name>Medseek.Util.Logging.Log4Net</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Medseek.Util.Messaging.RabbitMq\Medseek.Util.Messaging.RabbitMq.csproj">
+      <Project>{cee14ab7-0d49-4432-9184-7aa8fa008f14}</Project>
+      <Name>Medseek.Util.Messaging.RabbitMq</Name>
     </ProjectReference>
     <ProjectReference Include="..\Medseek.Util.Testing\Medseek.Util.Testing.csproj">
       <Project>{48bfc366-a1b0-4019-bf33-1e0a10ecfc57}</Project>
