@@ -3,7 +3,7 @@
     /// <summary>
     /// Contains constants describing and related to the Utility components.
     /// </summary>
-    public static class UtilComponents
+    public class UtilComponents : ComponentsInfo
     {
         /// <summary>
         /// The XML namespace used by the Utility components.

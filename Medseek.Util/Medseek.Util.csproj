@@ -43,6 +43,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ComponentsInfo.cs" />
     <Compile Include="Ioc\IStartable.cs" />
     <Compile Include="MicroServices\IMicroServiceInstanceFactory.cs" />
     <Compile Include="MicroServices\IMicroServiceLocator.cs" />
@@ -53,6 +54,8 @@
     <Compile Include="Threading\DispatchedThread.cs" />
     <Compile Include="Threading\IDispatchedThread.cs" />
     <Compile Include="Threading\IThread.cs" />
+    <Compile Include="Threading\IThreadingFactory.cs" />
+    <Compile Include="Threading\Thread.cs" />
     <Compile Include="UtilAssembly.cs" />
     <Compile Include="Properties\AssemblyInfoShared.cs" />
     <Compile Include="Ioc\InjectAttribute.cs" />

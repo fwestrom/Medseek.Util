@@ -23,7 +23,7 @@
         private readonly Dictionary<Type, DataContractSerializer> serializers = new Dictionary<Type, DataContractSerializer>();
         private readonly IMqChannel channel;
         private readonly IMicroServiceLocator microServiceLocator;
-        private readonly IDispatchedThread thread = new DispatchedThread();
+        private readonly IDispatchedThread thread;
         private long dispatcherDepth;
         private bool disposed;
         private bool started;

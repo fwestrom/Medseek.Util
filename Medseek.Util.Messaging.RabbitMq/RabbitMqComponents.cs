@@ -3,7 +3,7 @@
     /// <summary>
     /// Provides information about the RabbitMQ utility components.
     /// </summary>
-    public class RabbitMqComponents
+    public class RabbitMqComponents : ComponentsInfo
     {
         /// <summary>
         /// The name of a default RabbitMQ connection component.

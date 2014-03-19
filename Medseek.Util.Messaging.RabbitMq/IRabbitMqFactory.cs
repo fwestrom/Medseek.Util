@@ -7,7 +7,7 @@
     /// Interface for types that can provide instances of the RabbitMQ 
     /// messaging components.
     /// </summary>
-    [RegisterFactory]
+    [RegisterFactory(Lifestyle = Lifestyle.Transient)]
     public interface IRabbitMqFactory
     {
         /// <summary>

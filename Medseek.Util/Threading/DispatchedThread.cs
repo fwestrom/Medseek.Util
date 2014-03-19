@@ -17,7 +17,7 @@
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly object sync = new object();
-        private readonly Thread thread;
+        private readonly IThread thread;
         private Dispatcher dispatcher;
         private bool disposed;
 
@@ -31,9 +31,13 @@
         /// cref="Start" /> method.
         /// </remarks>
         /// <seealso cref="IsBackground" />
-        public DispatchedThread()
+        public DispatchedThread(IThreadingFactory threadingFactory)
         {
-            thread = new Thread(RunDispatchThread) { IsBackground = true };
+            if (threadingFactory == null)
+                throw new ArgumentNullException("threadingFactory");
+
+            thread = threadingFactory.CreateThread(RunDispatchThread);
+            thread.IsBackground = true;
         }
 
         /// <summary>
@@ -43,7 +47,7 @@
         {
             get
             {
-                return thread.ManagedThreadId;
+                return thread.Id;
             }
         }
 

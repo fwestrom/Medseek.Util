@@ -10,9 +10,8 @@
     [Register(typeof(IMqPublisher), Lifestyle = Lifestyle.Transient)]
     public class RabbitMqPublisher : MqPublisherBase
     {
-        private readonly IModel model;
-
         private readonly IRabbitMqHelper helper;
+        private readonly IModel model;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RabbitMqPublisher"/> class.
@@ -27,8 +26,8 @@
             if (model == null)
                 throw new ArgumentNullException("model");
 
-            this.model = model;
             this.helper = helper;
+            this.model = model;
         }
 
         /// <summary>

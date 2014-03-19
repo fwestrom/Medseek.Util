@@ -13,14 +13,17 @@
     {
         /// <summary>
         /// Gets the component registrations for the components in the 
-        /// executing assembly.
+        /// specified assembly.
         /// </summary>
+        /// <param name="assembly">
+        /// The assembly to examine for component registrations.
+        /// </param>
         /// <returns>
         /// The component registration descriptions.
         /// </returns>
-        public static IEnumerable<Registration> FromAssemblyContaining(Type type)
+        public static IEnumerable<Registration> FromAssembly(Assembly assembly)
         {
-            var results = Assembly.GetAssembly(type).DefinedTypes
+            var results = assembly.DefinedTypes
                 .SelectMany(t => t.GetCustomAttributes<RegisterAttributeBase>()
                     .Select(a => a.ToRegistration(t.AsType())));
 
@@ -29,6 +32,36 @@
                 Debug.WriteLine("Registration: Services = {0}, Implementation = {1}", string.Join(",", result.Services), result.Implementation);
                 yield return result;
             }
+        }
+
+        /// <summary>
+        /// Gets the component registrations for the components in the 
+        /// assembly in which the specified type is defined.
+        /// </summary>
+        /// <param name="type">
+        /// The type for which the defining assembly is to be examined for 
+        /// component registrations.
+        /// </param>
+        /// <returns>
+        /// The component registration descriptions.
+        /// </returns>
+        public static IEnumerable<Registration> FromAssemblyContaining(Type type)
+        {
+            var assembly = Assembly.GetAssembly(type);
+            return FromAssembly(assembly);
+        }
+
+        /// <summary>
+        /// Gets the component registrations for the components in the 
+        /// executing assembly.
+        /// </summary>
+        /// <returns>
+        /// The component registration descriptions.
+        /// </returns>
+        public static IEnumerable<Registration> FromExecutingAssembly()
+        {
+            var assembly = Assembly.GetCallingAssembly();
+            return FromAssembly(assembly);
         }
     }
 }
