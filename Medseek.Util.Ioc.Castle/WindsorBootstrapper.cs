@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Web.Http.Dependencies;
+    using global::Castle.Facilities.Startable;
     using global::Castle.Facilities.TypedFactory;
     using global::Castle.MicroKernel.Registration;
     using global::Castle.Windsor;
@@ -102,6 +103,10 @@
             // Lifestyle
             if (!LifestyleMap.ContainsKey(registration.Lifestyle))
                 throw new NotSupportedException("Unsupported lifestyle " + registration.Lifestyle + ".");
+
+            // StartMethod
+            if (registration.StartMethod != null)
+                result = result.StartUsingMethod(registration.StartMethod.Name);
 
             var applyLifestyle = LifestyleMap[registration.Lifestyle];
             result = applyLifestyle(result);

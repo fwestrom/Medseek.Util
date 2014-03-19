@@ -12,7 +12,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <tags></tags>
     <dependencies>
-      <dependency id="Medseek.Util" version="1.0" />
+      <dependency id="Medseek.Util" version="1.1" />
     </dependencies>
   </metadata>
 </package>

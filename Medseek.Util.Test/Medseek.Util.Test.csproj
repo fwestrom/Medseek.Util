@@ -108,7 +108,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="MicroServices\" />
     <Folder Include="Objects\" />
+    <Folder Include="Threading\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Medseek.Util.Ioc.Castle\Medseek.Util.Ioc.Castle.csproj">

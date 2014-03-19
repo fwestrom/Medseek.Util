@@ -68,6 +68,8 @@
       <Link>Properties\AssemblyInfoShared.cs</Link>
     </Compile>
     <Compile Include="CastleComponents.cs" />
+    <Compile Include="MicroServiceComponentSelector.cs" />
+    <Compile Include="MicroServiceLocator.cs" />
     <Compile Include="WindsorBootstrapper.cs" />
     <Compile Include="WindsorDependencyResolver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
 
     /// <summary>
     /// Describes a component registration.
@@ -62,6 +63,15 @@
         /// through the injection container.
         /// </summary>
         public IEnumerable<Type> Services
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the method to use for starting the component.
+        /// </summary>
+        public MethodInfo StartMethod
         {
             get;
             set;

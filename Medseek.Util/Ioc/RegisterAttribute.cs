@@ -1,6 +1,7 @@
 ﻿namespace Medseek.Util.Ioc
 {
     using System;
+    using System.Linq;
 
     /// <summary>
     /// Marks a type for registration as a component to be installed in the 
@@ -19,6 +20,23 @@
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether the component should be 
+        /// started by the container (after its installation phase has 
+        /// completed) via an invocation of <see cref="IStartable.Start" />.
+        /// </summary>
+        /// <remarks>
+        /// A component can only be started if it sets this property and 
+        /// implements the <see cref="IStartable" /> interface so the container
+        /// can start the component instance.
+        /// </remarks>
+        /// <seealso cref="IStartable" />
+        public bool Start
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Converts the attribute to a registration description.
         /// </summary>
         /// <param name="attributedType">
@@ -31,6 +49,14 @@
         {
             var result = base.ToRegistration(attributedType);
             result.Implementation = attributedType;
+            if (Start)
+            {
+                var startableType = typeof(IStartable);
+                if (!attributedType.GetInterfaces().Contains(startableType))
+                    throw new InvalidCastException(startableType.FullName + " does not implement the required IStartable interface.");
+                result.StartMethod = startableType.GetMethod("Start");
+            }
+
             return result;
         }
     }
