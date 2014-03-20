@@ -8,7 +8,7 @@
     /// Provides thread functionality by wrapping an instance of <see 
     /// cref="System.Threading.Thread" />.
     /// </summary>
-    [Register(Lifestyle = Lifestyle.Transient)]
+    [Register(typeof(IThread), Lifestyle = Lifestyle.Transient)]
     public class Thread : IThread
     {
         private readonly System.Threading.Thread thread;
