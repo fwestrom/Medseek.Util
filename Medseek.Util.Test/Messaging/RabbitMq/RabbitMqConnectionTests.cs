@@ -14,7 +14,7 @@
     {
         private Mock<IMqChannel> channel;
         private Mock<IConnection> connection;
-        private Mock<ConnectionFactory> connectionFactory;
+        private Mock<IConnectionFactoryWrapper> connectionFactory;
         private Mock<IRabbitMqFactory> factory;
 
         /// <summary>
@@ -25,7 +25,7 @@
         {
             channel = new Mock<IMqChannel>();
             connection = new Mock<IConnection>();
-            connectionFactory = new Mock<ConnectionFactory>();
+            connectionFactory = new Mock<IConnectionFactoryWrapper>();
             Use(connectionFactory.Object);
             factory = Mock<IRabbitMqFactory>();
 
