@@ -15,7 +15,7 @@
     /// <summary>
     /// Provides a message queue event dispatcher.
     /// </summary>
-    [Register]
+    [Register(Start = true)]
     public class MqDispatcher : IStartable, IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
