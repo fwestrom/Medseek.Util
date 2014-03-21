@@ -9,7 +9,7 @@
     /// <summary>
     /// DataContractSerializer implementation of ISerializer.
     /// </summary>
-    [Register(typeof(ISerializer))]
+    [Register(typeof(ISerializer), OnlyNewServices = false)]
     public class SystemRuntimeSerializationDataContractSerializer : ISerializer
     {
         /// <summary>

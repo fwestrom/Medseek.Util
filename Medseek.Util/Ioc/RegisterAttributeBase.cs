@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Linq;
 
     /// <summary>
@@ -10,6 +11,7 @@
     /// </summary>
     public abstract class RegisterAttributeBase : Attribute
     {
+
         private readonly Type[] services;
 
         /// <summary>
@@ -22,6 +24,7 @@
                 throw new ArgumentNullException("services");
 
             this.services = services.ToArray();
+            OnlyNewServices = true;
         }
 
         /// <summary>
@@ -56,6 +59,7 @@
         /// <summary>
         /// Gets or sets a value indicating whether previously registered services will be registered for this component.
         /// </summary>
+        [DefaultValue(true)]
         public bool OnlyNewServices
         {
             get; 
