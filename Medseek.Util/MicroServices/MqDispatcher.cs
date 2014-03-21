@@ -4,12 +4,14 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Management.Instrumentation;
     using System.Reflection;
     using System.Runtime.Serialization;
     using System.Threading;
     using Medseek.Util.Ioc;
     using Medseek.Util.Logging;
     using Medseek.Util.Messaging;
+    using Medseek.Util.Serialization;
     using Medseek.Util.Threading;
 
     /// <summary>
@@ -20,10 +22,13 @@
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Dictionary<IMqConsumer, MicroServiceDescriptor> descriptorMap = new Dictionary<IMqConsumer, MicroServiceDescriptor>();
-        private readonly Dictionary<Type, DataContractSerializer> serializers = new Dictionary<Type, DataContractSerializer>();
+        private readonly Dictionary<Type, ISerializer> serializers = new Dictionary<Type, ISerializer>();
         private readonly IMqChannel channel;
         private readonly IMicroServiceLocator microServiceLocator;
         private readonly IDispatchedThread thread;
+
+        private readonly ISerializerFactory serializerFactory;
+
         private long dispatcherDepth;
         private bool disposed;
         private bool started;
@@ -35,7 +40,8 @@
         public MqDispatcher(
             IMqConnection connection, 
             IMicroServiceLocator microServiceLocator,
-            IDispatchedThread thread)
+            IDispatchedThread thread,
+            ISerializerFactory serializerFactory)
         {
             if (connection == null)
                 throw new ArgumentNullException("connection");
@@ -47,6 +53,7 @@
             channel = connection.CreateChannnel();
             this.microServiceLocator = microServiceLocator;
             this.thread = thread;
+            this.serializerFactory = serializerFactory;
             thread.Name = "MicroServices.Dispatch";
         }
 
@@ -153,11 +160,9 @@
 
         private object Deserialize(Type type, Stream data)
         {
-            DataContractSerializer serializer;
-            if (!serializers.TryGetValue(type, out serializer))
-                serializers[type] = serializer = new DataContractSerializer(type);
-
-            var result = serializer.ReadObject(data);
+            var serializer = serializerFactory.GetAllSerializers().FirstOrDefault(s => s.CanDeserialize(type,data));
+            
+            var result = serializer.Deserialize(type, data);
             return result;
         }
 
@@ -166,15 +171,11 @@
             if (type == typeof(void))
                 return new byte[0];
 
-            DataContractSerializer serializer;
+            ISerializer serializer;
             if (!serializers.TryGetValue(type, out serializer))
-                serializers[type] = serializer = new DataContractSerializer(type);
+                throw new InstanceNotFoundException("No serializer could be found for the given type.");
 
-            using (var ms = new MemoryStream())
-            {
-                serializer.WriteObject(ms, obj);
-                return ms.ToArray();
-            }
+            return serializer.Serialize(type, obj);
         }
     }
 }

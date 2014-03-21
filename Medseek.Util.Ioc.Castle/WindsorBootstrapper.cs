@@ -68,9 +68,11 @@
         public static ComponentRegistration<object> ToRegistration(Registration registration)
         {
             // Services
-            var result = Component.For(registration.Services)
-                .OnlyNewServices();
-
+            var result = (ComponentRegistration<object>)Component.For(registration.Services);
+            
+            if (registration.OnlyNewServices)
+                result = result.OnlyNewServices();
+                
             // Name
             if (registration.Name != null)
                 result = result.Named(registration.Name);

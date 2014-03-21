@@ -54,8 +54,9 @@
     <Reference Include="Moq.Contrib">
       <HintPath>..\packages\Moq.Contrib.0.3\lib\Moq.Contrib.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
@@ -70,6 +71,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.0.0\lib\net45\System.Net.Http.Formatting.dll</HintPath>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Http, Version=5.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -101,6 +103,9 @@
     <Compile Include="Messaging\RabbitMq\RabbitMqConsumerTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqPublisherTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Serialization\IocSerializationInstallerTests.cs" />
+    <Compile Include="Serialization\SerializerTests.cs" />
+    <Compile Include="Serialization\TestObject.cs" />
     <Compile Include="Testing\TestFixtureTests.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -124,6 +129,10 @@
     <ProjectReference Include="..\Medseek.Util.Messaging.RabbitMq\Medseek.Util.Messaging.RabbitMq.csproj">
       <Project>{cee14ab7-0d49-4432-9184-7aa8fa008f14}</Project>
       <Name>Medseek.Util.Messaging.RabbitMq</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Medseek.Util.Serialization.Newtonsoft.Json\Medseek.Util.Serialization.Newtonsoft.Json.csproj">
+      <Project>{2907d6d6-393c-443c-a2af-3ec2278f0e45}</Project>
+      <Name>Medseek.Util.Serialization.Newtonsoft.Json</Name>
     </ProjectReference>
     <ProjectReference Include="..\Medseek.Util.Testing\Medseek.Util.Testing.csproj">
       <Project>{48bfc366-a1b0-4019-bf33-1e0a10ecfc57}</Project>

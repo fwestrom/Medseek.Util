@@ -54,6 +54,15 @@
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether previously registered services will be registered for this component.
+        /// </summary>
+        public bool OnlyNewServices
+        {
+            get; 
+            set;
+        }
+
+        /// <summary>
         /// Gets the service types that the component exposes to consumer types
         /// through the injection container.
         /// </summary>
@@ -87,6 +96,7 @@
                 Implementation = attributedType,
                 Lifestyle = Lifestyle,
                 AsFactory = false,
+                OnlyNewServices = OnlyNewServices
             };
 
             return registration;

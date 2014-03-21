@@ -76,5 +76,14 @@
             get;
             set;
         }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether previously registered services will be registered for this component.
+        /// </summary>
+        public bool OnlyNewServices
+        {
+            get;
+            set;
+        }
     }
 }

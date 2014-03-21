@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{2EF401A4-BA7F-4978-8B32-816C6C4DC555}"
 	ProjectSection(SolutionItems) = preProject
 		Medseek.Util.proj = Medseek.Util.proj
@@ -33,6 +31,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Messaging.ActiveMq", "Medseek.Util.Messaging.ActiveMq\Medseek.Util.Messaging.ActiveMq.csproj", "{731165BD-266B-4FB2-8316-8F03D4B01D16}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.MicroServices.Run", "Medseek.MicroServices.Run\Medseek.MicroServices.Run.csproj", "{D4D39AEC-CF92-44AC-9300-C920CE32EDD5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Serialization.Newtonsoft.Json", "Medseek.Util.Serialization.Newtonsoft.Json\Medseek.Util.Serialization.Newtonsoft.Json.csproj", "{2907D6D6-393C-443C-A2AF-3EC2278F0E45}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -72,6 +72,10 @@ Global
 		{D4D39AEC-CF92-44AC-9300-C920CE32EDD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4D39AEC-CF92-44AC-9300-C920CE32EDD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4D39AEC-CF92-44AC-9300-C920CE32EDD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2907D6D6-393C-443C-A2AF-3EC2278F0E45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2907D6D6-393C-443C-A2AF-3EC2278F0E45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2907D6D6-393C-443C-A2AF-3EC2278F0E45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2907D6D6-393C-443C-A2AF-3EC2278F0E45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
