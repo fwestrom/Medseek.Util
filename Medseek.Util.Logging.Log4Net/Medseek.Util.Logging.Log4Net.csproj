@@ -45,6 +45,7 @@
     <Compile Include="..\Medseek.Util\Properties\AssemblyInfoShared.cs">
       <Link>Properties\AssemblyInfoShared.cs</Link>
     </Compile>
+    <Compile Include="Log4NetComponents.cs" />
     <Compile Include="Log4NetCoreLogger.cs" />
     <Compile Include="Log4NetLog.cs" />
     <Compile Include="Log4NetLogManager.cs" />
@@ -58,6 +59,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="log4net.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Medseek.Util.Logging.Log4Net.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>

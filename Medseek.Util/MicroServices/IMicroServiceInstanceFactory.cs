@@ -1,5 +1,6 @@
 ﻿namespace Medseek.Util.MicroServices
 {
+    using Medseek.Util.Ioc;
     using Medseek.Util.Messaging;
 
     /// <summary>
@@ -8,6 +9,7 @@
     /// <typeparam name="T">
     /// The service type of the component.
     /// </typeparam>
+    [RegisterFactory(Lifestyle = Lifestyle.Transient, ComponentSelectorName = UtilComponents.MicroServiceComponentSelector)]
     public interface IMicroServiceInstanceFactory<T>
     {
         /// <summary>

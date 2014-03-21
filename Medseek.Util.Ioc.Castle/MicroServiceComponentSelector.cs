@@ -14,7 +14,7 @@
     /// A typed factory component selector that chooses micro-service 
     /// implementation components to resolve from a factory.
     /// </summary>
-    [Register(typeof(MicroServiceComponentSelector), Lifestyle = Lifestyle.Transient)]
+    [Register(typeof(MicroServiceComponentSelector), typeof(ITypedFactoryComponentSelector), Name = UtilComponents.MicroServiceComponentSelector, Lifestyle = Lifestyle.Transient)]
     public class MicroServiceComponentSelector : DefaultTypedFactoryComponentSelector
     {
         private readonly IWindsorContainer container;

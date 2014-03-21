@@ -54,13 +54,14 @@ namespace Medseek.Util.Objects
         public event EventHandler Disposing;
 
         /// <summary>
-        /// Gets a value indicating whether the object has been disposed.
+        /// Gets or sets a value indicating whether the object has been 
+        /// disposed.
         /// </summary>
         /// <seealso cref="Dispose" />
         public bool IsDisposed
         {
             get;
-            private set;
+            protected set;
         }
 
         /// <summary>
@@ -138,27 +139,32 @@ namespace Medseek.Util.Objects
             if (!IsDisposed)
             {
                 IsDisposed = true;
+                DoDispose(suppressFinalize);
+            }
+        }
+
+        protected void DoDispose(bool suppressFinalize)
+        {
+            try
+            {
                 try
                 {
-                    try
-                    {
-                        OnDisposing();
-                        var disposing = Disposing;
-                        if (disposing != null)
-                            disposing(this, EventArgs.Empty);
-                    }
-                    finally
-                    {
-                        if (suppressFinalize)
-                            GC.SuppressFinalize(this);
-                    }
+                    OnDisposing();
+                    var disposing = Disposing;
+                    if (disposing != null)
+                        disposing(this, EventArgs.Empty);
                 }
                 finally
                 {
-                    var disposed = Disposed;
-                    if (disposed != null)
-                        disposed(this, EventArgs.Empty);
+                    if (suppressFinalize)
+                        GC.SuppressFinalize(this);
                 }
+            }
+            finally
+            {
+                var disposed = Disposed;
+                if (disposed != null)
+                    disposed(this, EventArgs.Empty);
             }
         }
     }

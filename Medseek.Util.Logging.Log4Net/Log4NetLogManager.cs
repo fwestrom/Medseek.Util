@@ -1,8 +1,11 @@
 ﻿namespace Medseek.Util.Logging.Log4Net
 {
+    using Medseek.Util.Ioc;
+
     /// <summary>
     /// Provides a log manager for interacting with log4net loggers.
     /// </summary>
+    [Register(typeof(ILogManager), Lifestyle = Lifestyle.Transient)]
     public class Log4NetLogManager : LogManagerBase
     {
         /// <summary>

@@ -206,11 +206,31 @@
             dispatcher.InvokeAsync(action);
         }
 
+        private void OnDispatcherShutdownFinished(object sender, EventArgs e)
+        {
+            Log.DebugFormat("Dispatcher shutdown finished; Thread = {0}:{1}.", thread.Id, thread.Name);
+        }
+
+        private void OnDispatcherShutdownStarted(object sender, EventArgs e)
+        {
+            Log.DebugFormat("Dispatcher shutdown started; Thread = {0}:{1}.", thread.Id, thread.Name);
+        }
+
+        private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            var message = string.Format("Unhandled exception from dispatcher; Thread = {0}:{1}, Handled = {2}, Cause = {3}: {4}.", thread.Id, thread.Name, e.Handled, e.Exception.GetType().Name, e.Exception.Message.TrimEnd('.'));
+            Log.Warn(message, e.Exception);
+        }
+
         private void RunDispatchThread()
         {
+            Log.DebugFormat("Started dispatcher thread; Thread = {0}:{1}.", thread.Id, thread.Name);
             lock (sync)
             {
                 dispatcher = Dispatcher.CurrentDispatcher;
+                dispatcher.UnhandledException += OnDispatcherUnhandledException;
+                dispatcher.ShutdownFinished += OnDispatcherShutdownFinished;
+                dispatcher.ShutdownStarted += OnDispatcherShutdownStarted;
                 Monitor.Pulse(sync);
                 Debug.Assert(dispatcher != null, "CurrentDispatcher should never be null.");
             }
