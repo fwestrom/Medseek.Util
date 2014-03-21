@@ -1,10 +1,12 @@
 ﻿namespace Medseek.Util.Logging.Log4Net
 {
     using System;
+    using Medseek.Util.Ioc;
 
     /// <summary>
     /// A logger that writes to a log4net logger.
     /// </summary>
+    [Register(typeof(ILog), Lifestyle = Lifestyle.Transient)]
     public class Log4NetLog : LogBase
     {
         private readonly log4net.ILog log;

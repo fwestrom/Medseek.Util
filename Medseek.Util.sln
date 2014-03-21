@@ -32,6 +32,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Messaging.Acti
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.MicroServices.Run", "Medseek.MicroServices.Run\Medseek.MicroServices.Run.csproj", "{D4D39AEC-CF92-44AC-9300-C920CE32EDD5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.MicroServices.Host", "Medseek.Util.MicroServices.Host\Medseek.Util.MicroServices.Host.csproj", "{40E5B6C1-6598-4FB4-84D2-623DB6626239}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Logging.NLog", "Medseek.Util.Logging.NLog\Medseek.Util.Logging.NLog.csproj", "{EE3C7441-166A-4435-8B0F-C67F650F0BE5}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Serialization.Newtonsoft.Json", "Medseek.Util.Serialization.Newtonsoft.Json\Medseek.Util.Serialization.Newtonsoft.Json.csproj", "{2907D6D6-393C-443C-A2AF-3EC2278F0E45}"
 EndProject
 Global
@@ -72,6 +76,14 @@ Global
 		{D4D39AEC-CF92-44AC-9300-C920CE32EDD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4D39AEC-CF92-44AC-9300-C920CE32EDD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4D39AEC-CF92-44AC-9300-C920CE32EDD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40E5B6C1-6598-4FB4-84D2-623DB6626239}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40E5B6C1-6598-4FB4-84D2-623DB6626239}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40E5B6C1-6598-4FB4-84D2-623DB6626239}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40E5B6C1-6598-4FB4-84D2-623DB6626239}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE3C7441-166A-4435-8B0F-C67F650F0BE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE3C7441-166A-4435-8B0F-C67F650F0BE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE3C7441-166A-4435-8B0F-C67F650F0BE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE3C7441-166A-4435-8B0F-C67F650F0BE5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2907D6D6-393C-443C-A2AF-3EC2278F0E45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2907D6D6-393C-443C-A2AF-3EC2278F0E45}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2907D6D6-393C-443C-A2AF-3EC2278F0E45}.Release|Any CPU.ActiveCfg = Release|Any CPU

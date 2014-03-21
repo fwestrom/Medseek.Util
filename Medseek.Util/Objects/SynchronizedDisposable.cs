@@ -46,15 +46,17 @@ namespace Medseek.Util.Objects
 
         protected override void Dispose(bool suppressFinalize)
         {
+            bool doDispose;
             sync.EnterUpgradeableReadLock();
             try
             {
-                if (!IsDisposed)
+                doDispose = !IsDisposed;
+                if (doDispose)
                 {
                     sync.EnterWriteLock();
                     try
                     {
-                        base.Dispose(suppressFinalize);
+                        IsDisposed = true;
                     }
                     finally
                     {
@@ -66,6 +68,9 @@ namespace Medseek.Util.Objects
             {
                 sync.ExitUpgradeableReadLock();
             }
+
+            if (doDispose)
+                DoDispose(suppressFinalize);
         }
     }
 }

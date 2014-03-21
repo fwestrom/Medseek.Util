@@ -17,7 +17,7 @@
     /// <summary>
     /// Provides a message queue event dispatcher.
     /// </summary>
-    [Register(Start = true)]
+    [Register(Lifestyle = Lifestyle.Singleton, Start = true)]
     public class MqDispatcher : IStartable, IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -32,6 +32,7 @@
         private long dispatcherDepth;
         private bool disposed;
         private bool started;
+        private bool threadStarted;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MqDispatcher" /> 
@@ -62,7 +63,6 @@
         /// </summary>
         public void Start()
         {
-            thread.Start();
             if (disposed)
                 throw new ObjectDisposedException(GetType().Name);
             if (started)
@@ -70,15 +70,20 @@
 
             Log.DebugFormat("{0}", MethodBase.GetCurrentMethod().Name);
             started = true;
-            
-            microServiceLocator.Initialize();
-            if (!thread.IsAlive)
+            if (!threadStarted)
+            {
+                threadStarted = true;
                 thread.Start();
+            }
+
+            microServiceLocator.Initialize();
 
             thread.Invoke(() =>
             {
                 foreach (var descriptor in microServiceLocator.Descriptors)
                 {
+                    Log.InfoFormat("Starting message consumer for {0}.", descriptor.Implementation);
+
                     var from = new MqAddress { Value = descriptor.RequestQueue };
                     var consumer = channel.CreateConsumer(from, false);
                     consumer.Received += OnReceived;
@@ -130,6 +135,7 @@
             Interlocked.Increment(ref dispatcherDepth);
             thread.InvokeAsync(() =>
             {
+                Log.DebugFormat("Identifying micro-service invocation details; CorrelationId = {0}.", e.Properties.CorrelationId);
                 if (channel.CanPause)
                     channel.IsPaused = Interlocked.Read(ref dispatcherDepth) > 10;
                 try
@@ -139,9 +145,12 @@
                     var method = descriptor.DefaultMethod;
                     var parameterType = method.GetParameters().Single().ParameterType;
                     var parameterValue = Deserialize(parameterType, e.Body);
+
+                    Log.DebugFormat("Invoking micro-service; Instance = {0}, Method = {1}, Parameter = {2}.", instance.Instance, method, parameterValue);
                     var invokeResult = instance.InvokeDefault(parameterValue);
                     if (e.Properties.ReplyTo != null)
                     {
+                        Log.DebugFormat("Sending reply message; CorrelationId = {0}, ReplyTo = {1}, Response = {2}.", e.Properties.CorrelationId, e.Properties.ReplyTo, invokeResult);
                         var body = Serialize(method.ReturnType, invokeResult);
                         using (var publisher = channel.CreatePublisher(e.Properties.ReplyTo))
                             publisher.Publish(body, e.Properties.CorrelationId);

@@ -1,14 +1,9 @@
 ﻿namespace Medseek.Util.Ioc.Castle
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Web.Http.Dependencies;
-    using global::Castle.Facilities.Startable;
-    using global::Castle.Facilities.TypedFactory;
     using global::Castle.MicroKernel.Registration;
     using global::Castle.Windsor;
-    using global::Castle.Windsor.Installer;
 
     /// <summary>
     /// Provides a bootstrapper for setting up an instance of the Castle 
@@ -16,20 +11,17 @@
     /// </summary>
     public static class WindsorBootstrapper
     {
-        private static readonly Lazy<IWindsorContainer> Container = new Lazy<IWindsorContainer>(Init, true);
-        private static readonly Dictionary<Lifestyle, Func<ComponentRegistration<object>, ComponentRegistration<object>>> LifestyleMap = new Dictionary<Lifestyle, Func<ComponentRegistration<object>, ComponentRegistration<object>>>
-        {
-            { Lifestyle.WebRequest, x => x.LifeStyle.PerWebRequest },
-            { Lifestyle.Singleton, x => x.LifeStyle.Singleton },
-            { Lifestyle.Transient, x => x.LifeStyle.Transient },
-        };
+        private static readonly Lazy<WindsorIocContainer> Container = new Lazy<WindsorIocContainer>(Init, true);
+        private static readonly CastlePlugin Plugin = CastleComponents.Plugin;
 
         /// <summary>
         /// Initializes static members of the <see cref="WindsorBootstrapper" /> class.
         /// </summary>
         static WindsorBootstrapper()
         {
-            InstallFromConfiguration = true;
+            Plugin.AddStartableFacility = false;
+            Plugin.AddTypedFactoryFacility = false;
+            Plugin.AddWcfFacility = false;
         }
 
         /// <summary>
@@ -39,8 +31,14 @@
         /// </summary>
         public static bool InstallFromConfiguration
         {
-            get;
-            set;
+            get
+            {
+                return Plugin.InstallFromConfiguration;
+            }
+            set
+            {
+                Plugin.InstallFromConfiguration = value;
+            }
         }
 
         /// <summary>
@@ -67,72 +65,15 @@
         /// </returns>
         public static ComponentRegistration<object> ToRegistration(Registration registration)
         {
-            // Services
-            var result = (ComponentRegistration<object>)Component.For(registration.Services);
-            
-            if (registration.OnlyNewServices)
-                result = result.OnlyNewServices();
-                
-            // Name
-            if (registration.Name != null)
-                result = result.Named(registration.Name);
-
-            // AsFactory
-            if (registration.AsFactory)
-            {
-                const bool fallbackToResolveByType = true;
-                result = result.AsFactory(new DefaultTypedFactoryComponentSelector(fallbackToResolveByTypeIfNameNotFound: fallbackToResolveByType));
-            }
-
-            // Implementation
-            if (registration.Implementation != null)
-            {
-                result = result.ImplementedBy(registration.Implementation);
-                result = registration.Implementation
-                    .GetConstructors()
-                    .SelectMany(c => c.GetParameters()
-                        .SelectMany(p => p.GetCustomAttributes(typeof(InjectAttribute), false)
-                            .Cast<InjectAttribute>()
-                            .Select(a => Dependency.OnComponent(p.Name, a.ComponentName ?? p.Name))))
-                    .Aggregate(result, (r, d) => r.DependsOn(d));
-                result = registration.Implementation
-                    .GetMethods()
-                    .Where(m => m.GetCustomAttributes(typeof(OnCreateAttribute), false)
-                        .Any())
-                    .Aggregate(result, (r, m) => r.OnCreate(x => m.Invoke(x, null)));
-            }
-
-            // Lifestyle
-            if (!LifestyleMap.ContainsKey(registration.Lifestyle))
-                throw new NotSupportedException("Unsupported lifestyle " + registration.Lifestyle + ".");
-
-            // StartMethod
-            if (registration.StartMethod != null)
-                result = result.StartUsingMethod(registration.StartMethod.Name);
-
-            var applyLifestyle = LifestyleMap[registration.Lifestyle];
-            result = applyLifestyle(result);
-
-            // Interceptors
-            if (!string.IsNullOrEmpty(registration.Interceptors))
-                result = result.Interceptors(registration.Interceptors.Split(','));
-
-            return result;
+            return Plugin.ToRegistration(registration);
         }
 
-        private static IWindsorContainer Init()
+        private static WindsorIocContainer Init()
         {
-            var container = new WindsorContainer();
+            var container = new WindsorIocContainer(Plugin);
             container.Register(
                 Component
-                    .For<IWindsorContainer>()
-                    .Instance(container),
-                Component
                     .For<WindsorDependencyResolver, IDependencyResolver>());
-            
-            if (InstallFromConfiguration)
-                container.Install(Configuration.FromAppConfig());
-
             return container;
         }
     }

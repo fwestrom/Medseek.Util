@@ -43,8 +43,16 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ComponentsInfo.cs" />
+    <Compile Include="Ioc\ComponentsInstallable.cs" />
+    <Compile Include="Ioc\IInstallable.cs" />
+    <Compile Include="Ioc\IIocContainer.cs" />
+    <Compile Include="Ioc\IIocPlugin.cs" />
+    <Compile Include="Ioc\IocExtensions.cs" />
     <Compile Include="Ioc\IStartable.cs" />
+    <Compile Include="Interactive\EnumerableExt.cs" />
+    <Compile Include="Ioc\RegisterComponentEventArgs.cs" />
+    <Compile Include="Logging\ILoggingPlugin.cs" />
+    <Compile Include="Messaging\IMqPlugin.cs" />
     <Compile Include="MicroServices\IMicroServiceInstanceFactory.cs" />
     <Compile Include="MicroServices\IMicroServiceLocator.cs" />
     <Compile Include="MicroServices\MicroServiceDescriptor.cs" />
@@ -69,14 +77,14 @@
     <Compile Include="Ioc\RegisterFactoryAttribute.cs" />
     <Compile Include="Ioc\Registration.cs" />
     <Compile Include="Ioc\Registrations.cs" />
-    <Compile Include="Messaging\Logging\ILog.cs" />
-    <Compile Include="Messaging\Logging\ILogger.cs" />
-    <Compile Include="Messaging\Logging\ILogManager.cs" />
-    <Compile Include="Messaging\Logging\LogBase.cs" />
-    <Compile Include="Messaging\Logging\LogManager.cs" />
-    <Compile Include="Messaging\Logging\LogManagerBase.cs" />
-    <Compile Include="Messaging\Logging\NoOp\NoOpLog.cs" />
-    <Compile Include="Messaging\Logging\NoOp\NoOpLogManager.cs" />
+    <Compile Include="Logging\ILog.cs" />
+    <Compile Include="Logging\ILogger.cs" />
+    <Compile Include="Logging\ILogManager.cs" />
+    <Compile Include="Logging\LogBase.cs" />
+    <Compile Include="Logging\LogManager.cs" />
+    <Compile Include="Logging\LogManagerBase.cs" />
+    <Compile Include="Logging\NoOp\NoOpLog.cs" />
+    <Compile Include="Logging\NoOp\NoOpLogManager.cs" />
     <Compile Include="Messaging\IMqChannel.cs" />
     <Compile Include="Messaging\IMqConnection.cs" />
     <Compile Include="Messaging\IMqConsumer.cs" />
@@ -101,6 +109,7 @@
   <ItemGroup>
     <None Include="Medseek.Util.nuspec" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
