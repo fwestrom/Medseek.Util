@@ -8,7 +8,7 @@
 
     using global::Newtonsoft.Json;
 
-    [Register(typeof(ISerializer))]
+    [Register(typeof(ISerializer), OnlyNewServices = false)]
     public class NewtonsoftJsonSerializer : ISerializer
     {
         /// <summary>
