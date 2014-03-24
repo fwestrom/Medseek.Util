@@ -57,8 +57,7 @@
         /// Is the serializers should serialize data.
         /// </summary>
         /// <param name="serializer">The serializer.</param>
-        [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here."),
-        TestCase(typeof(SystemRuntimeSerializationDataContractSerializer))]
+        [TestCaseSource("Serializers")]
         public void SerializersShouldSerializeData(ISerializer serializer)
         {
             var data = serializer.Serialize(typeof(Exception), new Exception("blow"));
