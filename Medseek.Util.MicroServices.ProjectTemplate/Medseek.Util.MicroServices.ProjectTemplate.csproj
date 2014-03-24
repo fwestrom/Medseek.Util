@@ -67,9 +67,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Medseek.Util">
-      <HintPath>..\packages\Medseek.Util.1.1.5193.39824\lib\net45\Medseek.Util.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.CoreUtility">
       <Private>False</Private>
     </Reference>
@@ -86,12 +83,15 @@
     <Compile Include="..\Medseek.Util\Properties\AssemblyInfoShared.cs">
       <Link>Properties\AssemblyInfoShared.cs</Link>
     </Compile>
+    <Compile Include="..\Medseek.Util\UtilAssembly.cs">
+      <Link>Properties\UtilAssembly.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="AssemblyInfo.cs" />
-    <None Include="packages.config" />
+    <None Include="packages.config.template" />
     <None Include="ProjectTemplate.csproj" />
     <None Include="Medseek.Util.MicroServices.ProjectTemplate.ico" />
   </ItemGroup>

@@ -15,13 +15,13 @@
   <TemplateContent>
     <Project File="ProjectTemplate.csproj" ReplaceParameters="true">
       <ProjectItem ReplaceParameters="true" TargetFileName="Properties\AssemblyInfo.cs">AssemblyInfo.cs</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="true">Components.cs</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="true">HelloRequest.cs</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="true">HelloResponse.cs</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="true">HelloWorldService.cs</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="true">IHelloWorldService.cs</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="true">App.config</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="true">packages.config</ProjectItem>
+      <ProjectItem ReplaceParameters="true">Components.cs</ProjectItem>
+      <ProjectItem ReplaceParameters="true">HelloRequest.cs</ProjectItem>
+      <ProjectItem ReplaceParameters="true">HelloResponse.cs</ProjectItem>
+      <ProjectItem ReplaceParameters="true">HelloWorldService.cs</ProjectItem>
+      <ProjectItem ReplaceParameters="true">IHelloWorldService.cs</ProjectItem>
+      <ProjectItem ReplaceParameters="true">App.config</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="packages.config">packages.config.template</ProjectItem>
     </Project>
   </TemplateContent>
 </VSTemplate>
