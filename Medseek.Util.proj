@@ -24,7 +24,7 @@
     <NuGetConfigPath Condition="'$(NuGetConfigPath)' == ''">$(NuGetDir)NuGet.config</NuGetConfigPath>
     <NuGetExePath Condition="'$(NuGetExePath)' == ''">$(NuGetDir)NuGet.exe</NuGetExePath>
     <NuGetTargetsPath Condition="'$(NuGetTargetsPath)' == ''">$(NuGetDir)NuGet.targets</NuGetTargetsPath>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">C:\Program Files (x86\MSBuild</VSToolsPath>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">C:\Program Files (x86\MSBuild\VisualStudio\v11.0\</VSToolsPath>
     <ProjectProperties>Configuration=$(Configuration)</ProjectProperties>
     <ProjectProperties>$(ProjectProperties);IntermediateOutputPath=$(BuildObjDir)</ProjectProperties>
     <ProjectProperties>$(ProjectProperties);OutputPath=$(BuildBinDir)</ProjectProperties>
