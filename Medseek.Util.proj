@@ -37,6 +37,8 @@
   <ItemGroup>
     <ExcludeProjectReferences Include="$(SourceDir)Medseek.Util*\ProjectTemplate.csproj" />
     <ExcludeProjectReferences Include="$(SourceDir)Medseek.Util*\*.HelloWorld.csproj" />
+    <ExcludeProjectReferences Include="$(SourceDir)Medseek.Util*\*.ProjectTemplate.csproj" />
+    <ExcludeProjectReferences Include="$(SourceDir)Medseek.Util*\*.Extension.csproj" />
     <ProjectReference Include="$(SourceDir)Medseek.Util*\*.csproj" Exclude="@(ExcludeProjectReferences)" />
   </ItemGroup>
   <ItemGroup>
