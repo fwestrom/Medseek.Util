@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{2EF401A4-BA7F-4978-8B32-816C6C4DC555}"
 	ProjectSection(SolutionItems) = preProject
 		Medseek.Util.proj = Medseek.Util.proj
@@ -37,6 +39,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Logging.NLog", "Medseek.Util.Logging.NLog\Medseek.Util.Logging.NLog.csproj", "{EE3C7441-166A-4435-8B0F-C67F650F0BE5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Serialization.Newtonsoft.Json", "Medseek.Util.Serialization.Newtonsoft.Json\Medseek.Util.Serialization.Newtonsoft.Json.csproj", "{2907D6D6-393C-443C-A2AF-3EC2278F0E45}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.MicroServices.Extension", "Medseek.Util.MicroServices.Extension\Medseek.Util.MicroServices.Extension.csproj", "{1C48D347-0BE7-40F4-9393-384E7C469AAD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.MicroServices.ProjectTemplate", "Medseek.Util.MicroServices.ProjectTemplate\Medseek.Util.MicroServices.ProjectTemplate.csproj", "{56DEFF3B-AC08-4A3E-8C3D-E3C93A8C1F5A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -88,6 +94,14 @@ Global
 		{2907D6D6-393C-443C-A2AF-3EC2278F0E45}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2907D6D6-393C-443C-A2AF-3EC2278F0E45}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2907D6D6-393C-443C-A2AF-3EC2278F0E45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C48D347-0BE7-40F4-9393-384E7C469AAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C48D347-0BE7-40F4-9393-384E7C469AAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C48D347-0BE7-40F4-9393-384E7C469AAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C48D347-0BE7-40F4-9393-384E7C469AAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56DEFF3B-AC08-4A3E-8C3D-E3C93A8C1F5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56DEFF3B-AC08-4A3E-8C3D-E3C93A8C1F5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56DEFF3B-AC08-4A3E-8C3D-E3C93A8C1F5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56DEFF3B-AC08-4A3E-8C3D-E3C93A8C1F5A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

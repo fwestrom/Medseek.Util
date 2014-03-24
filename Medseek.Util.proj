@@ -33,7 +33,9 @@
 
   <!-- Build items -->
   <ItemGroup>
-    <ProjectReference Include="$(SourceDir)Medseek.Util*\*.csproj" />
+    <ExcludeProjectReferences Include="$(SourceDir)Medseek.Util*\ProjectTemplate.csproj" />
+    <ExcludeProjectReferences Include="$(SourceDir)Medseek.Util*\*.HelloWorld.csproj" />
+    <ProjectReference Include="$(SourceDir)Medseek.Util*\*.csproj" Exclude="@(ExcludeProjectReferences)" />
   </ItemGroup>
   <ItemGroup>
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.csproj" />
@@ -126,5 +128,9 @@
       <PackCommand>$(PackCommand) -Verbosity detailed</PackCommand>
     </PropertyGroup>
     <Exec Command="$(PackCommand)" WorkingDirectory="$(BuildDir)" />
+    <ItemGroup>
+      <ToCopy Include="$(BuildBinDir)*.vsix" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ToCopy)" DestinationFolder="$(BuildPackagesDir)" />
   </Target>
 </Project>
