@@ -24,10 +24,12 @@
     <NuGetConfigPath Condition="'$(NuGetConfigPath)' == ''">$(NuGetDir)NuGet.config</NuGetConfigPath>
     <NuGetExePath Condition="'$(NuGetExePath)' == ''">$(NuGetDir)NuGet.exe</NuGetExePath>
     <NuGetTargetsPath Condition="'$(NuGetTargetsPath)' == ''">$(NuGetDir)NuGet.targets</NuGetTargetsPath>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">C:\Program Files (x86\MSBuild</VSToolsPath>
     <ProjectProperties>Configuration=$(Configuration)</ProjectProperties>
     <ProjectProperties>$(ProjectProperties);IntermediateOutputPath=$(BuildObjDir)</ProjectProperties>
     <ProjectProperties>$(ProjectProperties);OutputPath=$(BuildBinDir)</ProjectProperties>
     <ProjectProperties>$(ProjectProperties);SolutionDir=$(SolutionDir)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);VSToolsPath=$(VSToolsPath)</ProjectProperties>
     <SolutionDir>$(SourceDir)</SolutionDir>
   </PropertyGroup>
 
