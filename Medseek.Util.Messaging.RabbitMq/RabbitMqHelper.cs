@@ -1,5 +1,6 @@
 ﻿namespace Medseek.Util.Messaging.RabbitMq
 {
+    using System.Linq;
     using Medseek.Util.Ioc;
     using RabbitMQ.Client;
 
@@ -28,7 +29,8 @@
         /// </summary>
         public string Queue(MqAddress address)
         {
-            return string.Empty;
+            var parts = address.Value.Split('/');
+            return parts.Length > 4 ? parts[4] : string.Empty;
         }
 
         /// <summary>
@@ -49,7 +51,9 @@
         /// </summary>
         public PublicationAddress ToPublicationAddress(MqAddress address)
         {
-            var result = PublicationAddress.Parse(address.Value);
+            var parts = address.Value.Split('/');
+            var text = string.Join("/", parts.Take(4));
+            var result = PublicationAddress.Parse(text);
             return result;
         }
     }
