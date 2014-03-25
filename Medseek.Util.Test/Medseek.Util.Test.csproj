@@ -102,6 +102,7 @@
     <Compile Include="Messaging\RabbitMq\RabbitMqChannelTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqConnectionTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqConsumerTests.cs" />
+    <Compile Include="Messaging\RabbitMq\RabbitMqHelperTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqPublisherTests.cs" />
     <Compile Include="MicroServices\Host\ExampleMicroService.cs" />
     <Compile Include="MicroServices\Host\MicroServiceHostTests.cs" />

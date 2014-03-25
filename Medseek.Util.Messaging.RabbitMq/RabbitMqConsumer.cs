@@ -41,7 +41,7 @@
                 model.QueueBind(queue, pa.ExchangeName, pa.RoutingKey);
             }
 
-            model.BasicConsume(address.Value, true, consumer);
+            model.BasicConsume(queue, true, consumer);
         }
 
         /// <summary>
