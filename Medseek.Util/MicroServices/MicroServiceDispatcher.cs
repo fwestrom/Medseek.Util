@@ -19,6 +19,7 @@
     public class MicroServiceDispatcher : IStartable, IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly Dictionary<IMqConsumer, MicroServiceBinding> bindingMap = new Dictionary<IMqConsumer, MicroServiceBinding>();
         private readonly Dictionary<IMqConsumer, MicroServiceDescriptor> descriptorMap = new Dictionary<IMqConsumer, MicroServiceDescriptor>();
         private readonly IMqChannel channel;
         private readonly IMessageContextAccess messageContextAccess;
@@ -82,15 +83,23 @@
 
             thread.Invoke(() =>
             {
-                foreach (var descriptor in microServiceLocator.Descriptors)
+                foreach (var binding in microServiceLocator.Bindings)
                 {
-                    Log.InfoFormat("Starting message consumer for {0}.", descriptor.Implementation);
+                    Log.InfoFormat("Starting message consumer for binding; Address = {0}, Service = {1}, Method = {2}.", binding.Address, binding.Service, binding.Method);
 
-                    var from = new MqAddress { Value = descriptor.RequestQueue };
-                    var consumer = channel.CreateConsumer(from, false);
+                    var consumer = channel.CreateConsumer(binding.Address, true);
                     consumer.Received += OnReceived;
-                    descriptorMap[consumer] = descriptor;
+                    bindingMap[consumer] = binding;
                 }
+                //foreach (var descriptor in microServiceLocator.Descriptors)
+                //{
+                //    Log.InfoFormat("Starting message consumer for {0}.", descriptor.Implementation);
+                //
+                //    var from = new MqAddress { Value = descriptor.RequestQueue };
+                //    var consumer = channel.CreateConsumer(from, false);
+                //    consumer.Received += OnReceived;
+                //    descriptorMap[consumer] = descriptor;
+                //}
             });
         }
 
@@ -109,6 +118,11 @@
 
             thread.Invoke(() =>
             {
+                foreach (var consumer in bindingMap.Keys.ToArray())
+                {
+                    consumer.Dispose();
+                    bindingMap.Remove(consumer);
+                }
                 foreach (var consumer in descriptorMap.Keys.ToArray())
                 {
                     consumer.Dispose();
@@ -142,16 +156,27 @@
                     channel.IsPaused = Interlocked.Read(ref dispatcherDepth) > 10;
                 try
                 {
-                    var descriptor = descriptorMap[(IMqConsumer)sender];
-                    var instance = microServiceLocator.Get(descriptor.Contract);
-                    var method = descriptor.DefaultMethod;
+                    MicroServiceInstance instance;
+                    MethodInfo method;
+                    if (bindingMap.ContainsKey((IMqConsumer)sender))
+                    {
+                        var binding = bindingMap[(IMqConsumer)sender];
+                        instance = microServiceLocator.Get(binding.Service);
+                        method = binding.Method;
+                    }
+                    else
+                    {
+                        var descriptor = descriptorMap[(IMqConsumer)sender];
+                        instance = microServiceLocator.Get(descriptor.Contract);
+                        method = descriptor.DefaultMethod;
+                    }
                     var parameterType = method.GetParameters().Single().ParameterType;
                     var parameterValue = Deserialize(parameterType, e.Body);
                     messageContextAccess.Push(new MessageContext(e.Properties));
                     try
                     {
                         Log.DebugFormat("Invoking micro-service; Instance = {0}, Method = {1}, Parameter = {2}.", instance.Instance, method, parameterValue);
-                        var invokeResult = instance.InvokeDefault(parameterValue);
+                        var invokeResult = instance.Invoke(method, parameterValue);
                         if (e.Properties.ReplyTo != null)
                         {
                             Log.DebugFormat("Sending reply message; CorrelationId = {0}, ReplyTo = {1}, Response = {2}.", e.Properties.CorrelationId, e.Properties.ReplyTo, invokeResult);

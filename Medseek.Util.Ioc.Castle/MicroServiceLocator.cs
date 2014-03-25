@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Reflection;
     using global::Castle.Windsor;
+    using Medseek.Util.Interactive;
     using Medseek.Util.Ioc;
     using Medseek.Util.Logging;
     using Medseek.Util.Messaging;
@@ -18,6 +19,7 @@
     public class MicroServiceLocator : IMicroServiceLocator
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly List<MicroServiceBinding> bindings = new List<MicroServiceBinding>();
         private readonly List<MicroServiceDescriptor> descriptors = new List<MicroServiceDescriptor>();
         private readonly Dictionary<object, MicroServiceDescriptor> instanceMap = new Dictionary<object, MicroServiceDescriptor>();
         private readonly IMqConnection connection;
@@ -36,6 +38,17 @@
 
             this.connection = connection;
             this.container = container;
+        }
+
+        /// <summary>
+        /// Gets the collection of micro-service bindings.
+        /// </summary>
+        public IEnumerable<MicroServiceBinding> Bindings
+        {
+            get
+            {
+                return bindings;
+            }
         }
 
         /// <summary>
@@ -58,7 +71,7 @@
 
             descriptors.Clear();
             
-            var toAdd = container.Kernel.GetAssignableHandlers(typeof(object))
+            var items = container.Kernel.GetAssignableHandlers(typeof(object))
                 .SelectMany(handler => handler.ComponentModel.Implementation.CustomAttributes
                     .Select(ad => new { handler, type = handler.ComponentModel.Implementation, ad.AttributeType }))
                 .Where(x => x.AttributeType == typeof(RegisterMicroServiceAttribute))
@@ -66,13 +79,23 @@
                     .Select(attribute => new { x.type, attribute, x.handler }))
                 .SelectMany(x => x.attribute.MicroServiceContracts
                     .Select(contract => new { contract, x.handler, x.type, factory = container.Resolve(typeof(IMicroServiceInstanceFactory<>).MakeGenericType(contract)) }))
-                .Select(x => new MicroServiceDescriptor(x.contract, x.type, x.factory));
+                .ToArray();
 
-            foreach (var descriptor in toAdd)
-            {
-                Log.DebugFormat("MicroServiceDescriptor: Contract = {0}, Implementation = {1}, RequestQueue = {2}", descriptor.Contract, descriptor.Implementation, descriptor.RequestQueue);
+            var bindingsToAdd = items
+                .SelectMany(x => x.type.GetMethods()
+                    .SelectMany(method => method.GetCustomAttributes<MicroServiceBindingAttribute>()
+                        .Select(attribute => attribute.ToBinding(method, x.contract))))
+                .Do(x => Log.DebugFormat("MicroServiceBinding: Address = {0}, Service = {1}, Method = {2}", x.Address, x.Service, x.Method))
+                .ToArray();
+            foreach (var binding in bindingsToAdd)
+                bindings.Add(binding);
+
+            var descriptorsToAdd = items
+                .Select(x => new MicroServiceDescriptor(x.contract, x.type, x.factory))
+                .Do(x => Log.DebugFormat("MicroServiceDescriptor: Contract = {0}, Implementation = {1}, RequestQueue = {2}", x.Contract, x.Implementation, x.RequestQueue))
+                .ToArray();
+            foreach (var descriptor in descriptorsToAdd)
                 descriptors.Add(descriptor);
-            }
         }
 
         /// <summary>
@@ -121,6 +144,33 @@
             }
 
             descriptor.Release(instance);
+        }
+
+        private class FactoryHelper : IMicroServiceInstanceFactory<MicroServiceInstance>
+        {
+            private readonly MicroServiceBinding binding;
+            private readonly IMicroServiceLocator locator;
+
+            internal FactoryHelper(MicroServiceBinding binding, IMicroServiceLocator locator)
+            {
+                if (binding == null)
+                    throw new ArgumentNullException("binding");
+                if (locator == null)
+                    throw new ArgumentNullException("locator");
+
+                this.binding = binding;
+                this.locator = locator;
+            }
+
+            MicroServiceInstance IMicroServiceInstanceFactory<MicroServiceInstance>.Resolve(IMqConnection connection)
+            {
+                return locator.Get(binding.Service, connection);
+            }
+
+            void IMicroServiceInstanceFactory<MicroServiceInstance>.Release(MicroServiceInstance component)
+            {
+                locator.Release(component);
+            }
         }
     }
 }

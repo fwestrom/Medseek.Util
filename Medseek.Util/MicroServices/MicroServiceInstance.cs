@@ -37,9 +37,11 @@ namespace Medseek.Util.MicroServices
             private set;
         }
 
-        public object InvokeDefault(object parameter)
+        public object Invoke(MethodInfo method, object parameter)
         {
-            var result = invokeHelper.Invoke(parameter);
+            var result = method != Descriptor.DefaultMethod
+                ? method.Invoke(Instance, new[] { parameter }) 
+                : invokeHelper.Invoke(parameter);
             return result;
         }
 

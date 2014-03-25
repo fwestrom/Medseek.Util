@@ -1,6 +1,8 @@
 ﻿namespace Medseek.Util.MicroServices
 {
     using System;
+    using System.Reflection;
+    using Medseek.Util.Messaging;
 
     /// <summary>
     /// Describes a micro-service method binding to a topic exchange.
@@ -54,6 +56,20 @@
         {
             get; 
             set;
+        }
+
+        /// <summary>
+        /// Returns a micro-service binding description for the specified 
+        /// method marked by the attribute.
+        /// </summary>
+        public MicroServiceBinding ToBinding(MethodInfo method, Type service)
+        {
+            return new MicroServiceBinding
+            {
+                Address = new MqAddress(string.Format("{0}://{1}/{2}/{3}", "topic", Exchange, BindingKey, Queue)),
+                Method = method, 
+                Service = service,
+            };
         }
     }
 }

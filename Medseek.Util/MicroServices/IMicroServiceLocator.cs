@@ -10,6 +10,14 @@
     public interface IMicroServiceLocator
     {
         /// <summary>
+        /// Gets the collection of micro-service bindings.
+        /// </summary>
+        IEnumerable<MicroServiceBinding> Bindings
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets the collection of micro-service descriptors.
         /// </summary>
         IEnumerable<MicroServiceDescriptor> Descriptors
