@@ -62,11 +62,12 @@
         /// <summary>
         /// Verifies that the publication address is set correctly.
         /// </summary>
-        [Test]
-        public void ToPublicationAddressSetsRoutingKey()
+        [TestCase("direct:///Test.Direct", "Test.Direct")]
+        [TestCase("topic://medseek-api/Test.Topic", "Test.Topic")]
+        public void ToPublicationAddressSetsRoutingKey(string text, string expectedValue)
         {
-            var result = Obj.ToPublicationAddress(address);
-            Assert.That(result.RoutingKey, Is.EqualTo(routingKey));
+            var result = Obj.ToPublicationAddress(new MqAddress(text));
+            Assert.That(result.RoutingKey, Is.EqualTo(expectedValue));
         }
     }
 }

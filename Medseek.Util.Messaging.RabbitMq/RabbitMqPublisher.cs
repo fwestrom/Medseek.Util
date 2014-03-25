@@ -50,7 +50,7 @@
         {
             var basicProperties = helper.CreateBasicProperties(model, properties);
             var pa = helper.ToPublicationAddress(Address);
-            model.BasicPublish(pa.ExchangeName, pa.RoutingKey, basicProperties, body);
+            model.BasicPublish(pa, basicProperties, body);
         }
     }
 }

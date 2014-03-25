@@ -48,6 +48,7 @@
             var exchange = "Exchange-" + Guid.NewGuid();
             var replyTo = new MqAddress();
             var routingKey = "RoutingKey-" + Guid.NewGuid();
+            var pa = new PublicationAddress("topic", exchange, routingKey);
             helper.Setup(x =>
                 x.CreateBasicProperties(
                     model.Object, 
@@ -57,11 +58,11 @@
                 .Returns(basicProperties.Object);
             helper.Setup(x => 
                 x.ToPublicationAddress(address))
-                .Returns(new PublicationAddress("topic", exchange, routingKey));
+                .Returns(pa);
 
             var body = new byte[0];
             model.Setup(x => 
-                x.BasicPublish(exchange, routingKey, basicProperties.Object, body))
+                x.BasicPublish(pa, basicProperties.Object, body))
                 .Verifiable();
 
             Obj.Publish(body, correlationId, replyTo);

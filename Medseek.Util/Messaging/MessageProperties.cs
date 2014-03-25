@@ -38,7 +38,7 @@ namespace Medseek.Util.Messaging
             set
             {
                 replyTo = value;
-                properties["reply_to"] = value.ToString();
+                properties["reply_to"] = value != null ? value.ToString() : null;
             }
         }
 
