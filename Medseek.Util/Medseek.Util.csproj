@@ -64,6 +64,7 @@
     <Compile Include="MicroServices\MicroServiceDispatcher.cs" />
     <Compile Include="MicroServices\RegisterMicroServiceAttribute.cs" />
     <Compile Include="MicroServices\ThreadLocalMessageContext.cs" />
+    <Compile Include="MicroServices\MicroServiceBindingAttribute.cs" />
     <Compile Include="Serialization\ISerializer.cs" />
     <Compile Include="Serialization\ISerializerFactory.cs" />
     <Compile Include="Serialization\SystemRuntimeSerializationDataContractSerializer.cs" />

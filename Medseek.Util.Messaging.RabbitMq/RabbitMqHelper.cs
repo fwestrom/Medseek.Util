@@ -19,26 +19,16 @@
             if (properties.CorrelationId != null)
                 basicProperties.CorrelationId = properties.CorrelationId;
             if (properties.ReplyTo != null)
-                basicProperties.ReplyTo = ToReplyToString(properties.ReplyTo);
+                basicProperties.ReplyTo = ToPublicationAddress(properties.ReplyTo).ToString();
             return basicProperties;
         }
 
         /// <summary>
-        /// Gets the exchange associated with the messaging system address.
+        /// Gets the name of the queue associated with the address.
         /// </summary>
-        public string Exchange(MqAddress address)
+        public string Queue(MqAddress address)
         {
-            // TODO: Extract routing key from a uri-like value.
             return string.Empty;
-        }
-
-        /// <summary>
-        /// Gets the routing key associated with the messaging system address.
-        /// </summary>
-        public string RoutingKey(MqAddress address)
-        {
-            // TODO: Make sure routing key is getting pulled out of a uri-like value.
-            return address != null ? address.Value : null;
         }
 
         /// <summary>
@@ -50,20 +40,17 @@
             return new MessageProperties
             {
                 CorrelationId = basicProperties.CorrelationId,
-                ReplyTo = ToReplyToAddress(basicProperties.ReplyTo),
+                ReplyTo = new MqAddress(basicProperties.ReplyTo),
             };
         }
 
-        private static MqAddress ToReplyToAddress(string value)
+        /// <summary>
+        /// Gets a publication address from the messaging system address.
+        /// </summary>
+        public PublicationAddress ToPublicationAddress(MqAddress address)
         {
-            // TODO: Create address from a uri-like value.
-            return value != null ? new MqAddress(value) : null;
-        }
-
-        private string ToReplyToString(MqAddress address)
-        {
-            // TODO: Return a uri-like value for reply-to.
-            return RoutingKey(address);
+            var result = PublicationAddress.Parse(address.Value);
+            return result;
         }
     }
 }

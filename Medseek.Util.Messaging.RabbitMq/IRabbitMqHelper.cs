@@ -15,19 +15,19 @@
         IBasicProperties CreateBasicProperties(IModel model, MessageProperties properties);
 
         /// <summary>
-        /// Gets the exchange associated with the messaging system address.
+        /// Gets the name of the queue associated with the address.
         /// </summary>
-        string Exchange(MqAddress address);
-
-        /// <summary>
-        /// Gets the routing key associated with the messaging system address.
-        /// </summary>
-        string RoutingKey(MqAddress address);
+        string Queue(MqAddress address);
 
         /// <summary>
         /// Gets a message properties object set with the values from a
         /// RabbitMQ basic properties object.
         /// </summary>
         MessageProperties ToProperties(IBasicProperties basicProperties);
+
+        /// <summary>
+        /// Gets a publication address from the messaging system address.
+        /// </summary>
+        PublicationAddress ToPublicationAddress(MqAddress address);
     }
 }

@@ -56,11 +56,8 @@
                         a.ReplyTo == replyTo)))
                 .Returns(basicProperties.Object);
             helper.Setup(x => 
-                x.Exchange(address))
-                .Returns(exchange);
-            helper.Setup(x => 
-                x.RoutingKey(address))
-                .Returns(routingKey);
+                x.ToPublicationAddress(address))
+                .Returns(new PublicationAddress("topic", exchange, routingKey));
 
             var body = new byte[0];
             model.Setup(x => 

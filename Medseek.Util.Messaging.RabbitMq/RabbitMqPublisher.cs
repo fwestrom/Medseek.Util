@@ -49,9 +49,8 @@
         protected override void OnPublish(byte[] body, MessageProperties properties)
         {
             var basicProperties = helper.CreateBasicProperties(model, properties);
-            var exchange = helper.Exchange(Address);
-            var routingKey = helper.RoutingKey(Address);
-            model.BasicPublish(exchange, routingKey, basicProperties, body);
+            var pa = helper.ToPublicationAddress(Address);
+            model.BasicPublish(pa.ExchangeName, pa.RoutingKey, basicProperties, body);
         }
     }
 }

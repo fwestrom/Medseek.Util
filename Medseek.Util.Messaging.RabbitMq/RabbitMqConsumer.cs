@@ -30,7 +30,17 @@
             this.helper = helper;
             this.model = model;
             consumer.Received += OnConsumerReceived;
-            model.QueueDeclare(address.Value, false, false, autoDelete, null);
+
+            var queue = helper.Queue(address);
+            model.QueueDeclare(queue, false, false, autoDelete, null);
+
+            var pa = helper.ToPublicationAddress(address);
+            if (!(string.IsNullOrEmpty(pa.ExchangeName) || string.IsNullOrEmpty(pa.ExchangeType)))
+            {
+                model.ExchangeDeclare(pa.ExchangeName, pa.ExchangeType);
+                model.QueueBind(queue, pa.ExchangeName, pa.RoutingKey);
+            }
+
             model.BasicConsume(address.Value, true, consumer);
         }
 
@@ -39,6 +49,13 @@
         /// </summary>
         protected override void OnDisposingConsumer()
         {
+            var pa = helper.ToPublicationAddress(Address);
+            if (!(string.IsNullOrEmpty(pa.ExchangeName) || string.IsNullOrEmpty(pa.ExchangeType)))
+            {
+                var queue = helper.Queue(Address);
+                model.QueueUnbind(queue, pa.ExchangeName, pa.RoutingKey, null);
+            }
+
             model.BasicCancel(consumer.ConsumerTag);
         }
 
