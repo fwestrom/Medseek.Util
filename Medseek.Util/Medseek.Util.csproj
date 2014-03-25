@@ -57,7 +57,7 @@
     <Compile Include="MicroServices\IMicroServiceLocator.cs" />
     <Compile Include="MicroServices\MicroServiceDescriptor.cs" />
     <Compile Include="MicroServices\MicroServiceInstance.cs" />
-    <Compile Include="MicroServices\MqDispatcher.cs" />
+    <Compile Include="MicroServices\MicroServiceDispatcher.cs" />
     <Compile Include="MicroServices\RegisterMicroServiceAttribute.cs" />
     <Compile Include="Serialization\ISerializer.cs" />
     <Compile Include="Serialization\ISerializerFactory.cs" />

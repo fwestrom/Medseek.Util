@@ -4,7 +4,7 @@
     using System.Runtime.Serialization;
 
     [DataContract]
-    internal class TestObject
+    public class TestObject
     {
         [DataMember]
         public bool Bool { get; set; }

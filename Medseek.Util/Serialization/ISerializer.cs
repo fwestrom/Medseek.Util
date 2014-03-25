@@ -9,43 +9,67 @@
     public interface ISerializer
     {
         /// <summary>
-        /// Gets the content types.
+        /// Gets the content types supported by the serializer.
         /// </summary>
-        /// <value>
-        /// The content types.
-        /// </value>
-        string[] ContentTypes { get; }
+        string[] ContentTypes
+        {
+            get;
+        }
 
         /// <summary>
         /// Determines whether this instance can deserialize the specified type.
         /// </summary>
-        /// <param name="type">The type.</param>
-        /// <param name="targert">The target.</param>
-        /// <returns><c>true</c> if the serializer can deserialize the target.</returns>
-        bool CanDeserialize(Type type, Stream targert);
+        /// <param name="type">
+        /// The type of object to deserialize.
+        /// </param>
+        /// <param name="source">
+        /// The source stream from which the object data can be read.
+        /// </param>
+        /// <returns>
+        /// A value indicating whether objects of the specified type can be 
+        /// deserialized.
+        /// </returns>
+        bool CanDeserialize(Type type, Stream source);
 
         /// <summary>
-        /// Serializes the specified type.
+        /// Determines whether this instance can serialize objects of the 
+        /// specified type.
         /// </summary>
-        /// <param name="type">The type.</param>
-        /// <param name="target">The target.</param>
-        /// <returns><see cref="byte"/><see cref="Array"/></returns>
-        byte[] Serialize(Type type, object target);
+        /// <param name="type">
+        /// The type of object to serialize.
+        /// </param>
+        /// <returns>
+        /// A value indicating whether objects of the specified type can be 
+        /// serialized.
+        /// </returns>
+        bool CanSerialize(Type type);
 
         /// <summary>
-        /// Deserializes the specified data.
+        /// Deserializes an object of the specified type from a stream.
         /// </summary>
-        /// <typeparam name="T"><see cref="Type"/> to deserialize.</typeparam>
-        /// <param name="data">The data.</param>
-        /// <returns><see cref="T"/></returns>
-        T Deserialize<T>(byte[] data);
+        /// <param name="type">
+        /// The type of object to deserialize.
+        /// </param>
+        /// <param name="source">
+        /// The source stream from which the object data can be read.
+        /// </param>
+        /// <returns>
+        /// The deserialized object.
+        /// </returns>
+        object Deserialize(Type type, Stream source);
 
         /// <summary>
-        /// Deserializes the specified type.
+        /// Serializes an object to a stream.
         /// </summary>
-        /// <param name="type">The type.</param>
-        /// <param name="data">The data.</param>
-        /// <returns><see cref="type"/></returns>
-        object Deserialize(Type type, Stream data);
+        /// <param name="type">
+        /// The type of object to serialize.
+        /// </param>
+        /// <param name="obj">
+        /// The object to serialize.
+        /// </param>
+        /// <param name="destination">
+        /// The stream onto which the serialized object should be written.
+        /// </param>
+        void Serialize(Type type, object obj, Stream destination);
     }
 }

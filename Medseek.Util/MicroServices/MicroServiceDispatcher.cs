@@ -4,9 +4,7 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Management.Instrumentation;
     using System.Reflection;
-    using System.Runtime.Serialization;
     using System.Threading;
     using Medseek.Util.Ioc;
     using Medseek.Util.Logging;
@@ -15,46 +13,45 @@
     using Medseek.Util.Threading;
 
     /// <summary>
-    /// Provides a message queue event dispatcher.
+    /// Provides a micro-service dispatcher using a messaging system connection.
     /// </summary>
     [Register(Lifestyle = Lifestyle.Singleton, Start = true)]
-    public class MqDispatcher : IStartable, IDisposable
+    public class MicroServiceDispatcher : IStartable, IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Dictionary<IMqConsumer, MicroServiceDescriptor> descriptorMap = new Dictionary<IMqConsumer, MicroServiceDescriptor>();
-        private readonly Dictionary<Type, ISerializer> serializers = new Dictionary<Type, ISerializer>();
         private readonly IMqChannel channel;
         private readonly IMicroServiceLocator microServiceLocator;
+        private readonly ISerializer[] serializers;
         private readonly IDispatchedThread thread;
-
-        private readonly ISerializerFactory serializerFactory;
-
         private long dispatcherDepth;
         private bool disposed;
         private bool started;
         private bool threadStarted;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MqDispatcher" /> 
+        /// Initializes a new instance of the <see cref="MicroServiceDispatcher" /> 
         /// class.
         /// </summary>
-        public MqDispatcher(
+        public MicroServiceDispatcher(
             IMqConnection connection, 
             IMicroServiceLocator microServiceLocator,
-            IDispatchedThread thread,
-            ISerializerFactory serializerFactory)
+            ISerializerFactory serializerFactory,
+            IDispatchedThread thread)
         {
             if (connection == null)
                 throw new ArgumentNullException("connection");
             if (microServiceLocator == null)
                 throw new ArgumentNullException("microServiceLocator");
+            if (serializerFactory == null)
+                throw new ArgumentNullException("serializerFactory");
             if (thread == null)
                 throw new ArgumentNullException("thread");
 
             channel = connection.CreateChannnel();
             this.microServiceLocator = microServiceLocator;
+            serializers = serializerFactory.GetAllSerializers();
             this.thread = thread;
-            this.serializerFactory = serializerFactory;
             thread.Name = "MicroServices.Dispatch";
         }
 
@@ -146,17 +143,30 @@
                     var parameterType = method.GetParameters().Single().ParameterType;
                     var parameterValue = Deserialize(parameterType, e.Body);
 
-                    Log.DebugFormat("Invoking micro-service; Instance = {0}, Method = {1}, Parameter = {2}.", instance.Instance, method, parameterValue);
+                    Log.DebugFormat(
+                        "Invoking micro-service; Instance = {0}, Method = {1}, Parameter = {2}.",
+                        instance.Instance,
+                        method,
+                        parameterValue);
                     var invokeResult = instance.InvokeDefault(parameterValue);
                     if (e.Properties.ReplyTo != null)
                     {
-                        Log.DebugFormat("Sending reply message; CorrelationId = {0}, ReplyTo = {1}, Response = {2}.", e.Properties.CorrelationId, e.Properties.ReplyTo, invokeResult);
+                        Log.DebugFormat(
+                            "Sending reply message; CorrelationId = {0}, ReplyTo = {1}, Response = {2}.",
+                            e.Properties.CorrelationId,
+                            e.Properties.ReplyTo,
+                            invokeResult);
                         var body = Serialize(method.ReturnType, invokeResult);
                         using (var publisher = channel.CreatePublisher(e.Properties.ReplyTo))
                             publisher.Publish(body, e.Properties.CorrelationId);
                     }
 
                     //channel.BasicAck(e.DeliveryTag, false);
+                }
+                catch (Exception ex)
+                {
+                    var message = string.Format("Unexpected failure while dispatching message; Cause = {0}: {1}.", ex.GetType().Name, ex.Message.TrimEnd('.'));
+                    Log.Warn(message, ex);
                 }
                 finally
                 {
@@ -169,8 +179,7 @@
 
         private object Deserialize(Type type, Stream data)
         {
-            var serializer = serializerFactory.GetAllSerializers().FirstOrDefault(s => s.CanDeserialize(type,data));
-            
+            var serializer = serializers.First(s => s.CanDeserialize(type, data));
             var result = serializer.Deserialize(type, data);
             return result;
         }
@@ -180,11 +189,12 @@
             if (type == typeof(void))
                 return new byte[0];
 
-            ISerializer serializer;
-            if (!serializers.TryGetValue(type, out serializer))
-                throw new InstanceNotFoundException("No serializer could be found for the given type.");
-
-            return serializer.Serialize(type, obj);
+            var serializer = serializers.First(x => x.CanSerialize(type));
+            using (var ms = new MemoryStream())
+            {
+                serializer.Serialize(type, obj, ms);
+                return ms.ToArray();
+            }
         }
     }
 }

@@ -33,56 +33,61 @@
         /// <returns><c>true</c> if the serializer can deserialize the target.</returns>
         public bool CanDeserialize(Type type, Stream target)
         {
-            try
-            {
-                Deserialize(type, target);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            return true;
         }
 
         /// <summary>
-        /// Serializes the specified type.
+        /// Determines whether this instance can serialize objects of the 
+        /// specified type.
         /// </summary>
-        /// <param name="type">The type.</param>
-        /// <param name="target">The target.</param>
+        /// <param name="type">
+        /// The type of object to serialize.
+        /// </param>
         /// <returns>
-        ///   <see cref="byte" /><see cref="Array" />
+        /// A value indicating whether objects of the specified type can be 
+        /// serialized.
         /// </returns>
-        public byte[] Serialize(Type type, object target)
+        public bool CanSerialize(Type type)
         {
-            var json = JsonConvert.SerializeObject(target);
-            return Encoding.UTF8.GetBytes(json);
+            return true;
         }
 
         /// <summary>
-        /// Deserializes the specified data.
+        /// Deserializes an object of the specified type from a stream.
         /// </summary>
-        /// <typeparam name="T">Input type.</typeparam>
-        /// <param name="data">The data.</param>
-        /// <returns>The type parameter type.</returns>
-        public T Deserialize<T>(byte[] data)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Deserializes the specified type.
-        /// </summary>
-        /// <param name="type">The type.</param>
-        /// <param name="data">The data.</param>
+        /// <param name="type">
+        /// The type of object to deserialize.
+        /// </param>
+        /// <param name="source">
+        /// The source stream from which the object data can be read.
+        /// </param>
         /// <returns>
-        ///   <see cref="type" />
+        /// The deserialized object.
         /// </returns>
-        public object Deserialize(Type type, Stream data)
+        public object Deserialize(Type type, Stream source)
         {
-            data.Position = 0;
-            var sr = new StreamReader(data);
-            var dataStr = sr.ReadToEnd();
-            return JsonConvert.DeserializeObject(dataStr, type);
+            var sr = new StreamReader(source);
+            var json = sr.ReadToEnd();
+            return JsonConvert.DeserializeObject(json, type);
+        }
+
+        /// <summary>
+        /// Serializes an object to a stream.
+        /// </summary>
+        /// <param name="type">
+        /// The type of object to serialize.
+        /// </param>
+        /// <param name="obj">
+        /// The object to serialize.
+        /// </param>
+        /// <param name="destination">
+        /// The stream onto which the serialized object should be written.
+        /// </param>
+        public void Serialize(Type type, object obj, Stream destination)
+        {
+            var json = JsonConvert.SerializeObject(obj);
+            var data = Encoding.UTF8.GetBytes(json);
+            destination.Write(data, 0, data.Length);
         }
     }
 }

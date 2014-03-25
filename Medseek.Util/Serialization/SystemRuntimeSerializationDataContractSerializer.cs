@@ -2,8 +2,9 @@
 {
     using System;
     using System.IO;
+    using System.Reflection;
     using System.Runtime.Serialization;
-
+    using System.Xml;
     using Medseek.Util.Ioc;
 
     /// <summary>
@@ -26,71 +27,82 @@
         /// <summary>
         /// Determines whether this instance can deserialize the specified type.
         /// </summary>
-        /// <param name="type">The type.</param>
-        /// <param name="target">The target.</param>
-        /// <returns><c>true</c> if it can serialize the stream to the type of the <see cref="type"/></returns>
-        public bool CanDeserialize(Type type, Stream target)
+        /// <param name="type">
+        /// The type of object to deserialize.
+        /// </param>
+        /// <param name="source">
+        /// The source stream from which the object data can be read.
+        /// </param>
+        /// <returns>
+        /// A value indicating whether objects of the specified type can be 
+        /// deserialized.
+        /// </returns>
+        public bool CanDeserialize(Type type, Stream source)
         {
-            try
-            {
-                Deserialize(type, target);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            return type.GetCustomAttribute<DataContractAttribute>() != null
+                || type.GetInterface("ICollection") != null
+                || (type.IsArray && CanDeserialize(type.GetElementType(), source))
+                || type.IsEnum
+                || type.IsPrimitive
+                || type == typeof(DateTime)
+                || type == typeof(DateTimeOffset)
+                || type == typeof(TimeSpan)
+                || type == typeof(Guid)
+                || type == typeof(Uri)
+                || type == typeof(XmlQualifiedName);
         }
 
         /// <summary>
-        /// Serializes the specified type.
+        /// Determines whether this instance can serialize objects of the 
+        /// specified type.
         /// </summary>
-        /// <param name="type">The type.</param>
-        /// <param name="target">The target.</param>
+        /// <param name="type">
+        /// The type of object to serialize.
+        /// </param>
         /// <returns>
-        ///   <see cref="byte" /><see cref="Array" />
+        /// A value indicating whether objects of the specified type can be 
+        /// serialized.
         /// </returns>
-        public byte[] Serialize(Type type, object target)
+        public bool CanSerialize(Type type)
         {
-            if (type == typeof(void))
-                return new byte[0];
-
-            var serializer = new DataContractSerializer(type);
-
-            using (var ms = new MemoryStream())
-            {
-                serializer.WriteObject(ms, target);
-                return ms.ToArray();
-            }
+            return type.GetCustomAttribute<DataContractAttribute>() != null;
         }
 
         /// <summary>
-        /// Deserializes the specified data.
+        /// Deserializes an object of the specified type from a stream.
         /// </summary>
-        /// <typeparam name="T"><see cref="Type" /> to deserialize.</typeparam>
-        /// <param name="data">The data.</param>
+        /// <param name="type">
+        /// The type of object to deserialize.
+        /// </param>
+        /// <param name="source">
+        /// The source stream from which the object data can be read.
+        /// </param>
         /// <returns>
-        ///   <see cref="T" />
+        /// The deserialized object.
         /// </returns>
-        /// <exception cref="System.NotImplementedException">This method is not implemented.</exception>
-        public T Deserialize<T>(byte[] data)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Deserializes the specified type.
-        /// </summary>
-        /// <param name="type">The type.</param>
-        /// <param name="data">The data.</param>
-        /// <returns>
-        ///   <see cref="type" />
-        /// </returns>
-        public object Deserialize(Type type, Stream data)
+        public object Deserialize(Type type, Stream source)
         {
             var serializer = new DataContractSerializer(type);
-            var result = serializer.ReadObject(data);
-            return result;
+            var obj = serializer.ReadObject(source);
+            return obj;
+        }
+
+        /// <summary>
+        /// Serializes an object to a stream.
+        /// </summary>
+        /// <param name="type">
+        /// The type of object to serialize.
+        /// </param>
+        /// <param name="obj">
+        /// The object to serialize.
+        /// </param>
+        /// <param name="destination">
+        /// The stream onto which the serialized object should be written.
+        /// </param>
+        public void Serialize(Type type, object obj, Stream destination)
+        {
+            var serializer = new DataContractSerializer(type);
+            serializer.WriteObject(destination, obj);
         }
     }
 }

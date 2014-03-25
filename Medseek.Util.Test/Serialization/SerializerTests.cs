@@ -60,23 +60,29 @@
         [TestCaseSource("Serializers")]
         public void SerializersShouldSerializeData(ISerializer serializer)
         {
-            var data = serializer.Serialize(typeof(Exception), new Exception("blow"));
+            var ms = new MemoryStream();
+            serializer.Serialize(typeof(Exception), new Exception("blow"), ms);
+            var data = ms.ToArray();
             Assert.That(data.GetType(), Is.EqualTo(typeof(byte[])));
         }
 
         [TestCaseSource("Serializers")]
         public void SerializerShouldDeserializeData(ISerializer serializer)
         {
-            var itemsData = serializer.Serialize(typeof(List<TestObject>), items);
-            var deserialize = (List<TestObject>)serializer.Deserialize(typeof(List<TestObject>), new MemoryStream(itemsData));
+            var ms = new MemoryStream();
+            serializer.Serialize(typeof(List<TestObject>), items, ms);
+            ms.Position = 0;
+            var deserialize = (List<TestObject>)serializer.Deserialize(typeof(List<TestObject>), ms);
             Assert.That(deserialize.Count, Is.EqualTo(items.Count));
         }
 
         [TestCaseSource("Serializers")]
         public void SerializerShouldBeAbleToDeserializeTypesItSerialized(ISerializer serializer)
         {
-            var itemsData = serializer.Serialize(typeof(List<TestObject>), items);
-            Assert.That(serializer.CanDeserialize(typeof(List<TestObject>), new MemoryStream(itemsData)));
+            var ms = new MemoryStream();
+            serializer.Serialize(typeof(List<TestObject>), items, ms);
+            ms.Position = 0;
+            Assert.That(serializer.CanDeserialize(typeof(List<TestObject>), ms));
         }
     }
 }
