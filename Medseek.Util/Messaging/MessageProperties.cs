@@ -8,6 +8,7 @@ namespace Medseek.Util.Messaging
     public class MessageProperties : IMessageProperties
     {
         private readonly Dictionary<string, string> properties = new Dictionary<string, string>();
+        private MqAddress replyTo;
 
         /// <summary>
         /// Gets or sets the correlation identifier associated with the message.
@@ -32,10 +33,11 @@ namespace Medseek.Util.Messaging
         {
             get
             {
-                return new MqAddress(properties["reply_to"]);
+                return replyTo;
             }
             set
             {
+                replyTo = value;
                 properties["reply_to"] = value.ToString();
             }
         }
