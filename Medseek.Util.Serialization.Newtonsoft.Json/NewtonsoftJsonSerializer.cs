@@ -2,6 +2,7 @@
 {
     using System;
     using System.IO;
+    using System.Linq;
     using System.Text;
 
     using Medseek.Util.Ioc;
@@ -30,10 +31,13 @@
         /// </summary>
         /// <param name="type">The type.</param>
         /// <param name="target">The target.</param>
-        /// <returns><c>true</c> if the serializer can deserialize the target.</returns>
-        public bool CanDeserialize(Type type, Stream target)
+        /// <param name="contentType">Type of the content.</param>
+        /// <returns>
+        ///   <c>true</c> if the serializer can deserialize the target.
+        /// </returns>
+        public bool CanDeserialize(Type type, Stream target, string contentType)
         {
-            return true;
+            return ContentTypes.Contains(contentType);
         }
 
         /// <summary>

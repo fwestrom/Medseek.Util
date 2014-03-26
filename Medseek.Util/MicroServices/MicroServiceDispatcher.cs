@@ -171,7 +171,7 @@
                         method = descriptor.DefaultMethod;
                     }
                     var parameterType = method.GetParameters().Single().ParameterType;
-                    var parameterValue = Deserialize(parameterType, e.Body);
+                    var parameterValue = Deserialize(parameterType, e.Body, e.Properties.ContentType);
                     messageContextAccess.Push(new MessageContext(e.Properties));
                     try
                     {
@@ -206,9 +206,9 @@
             });
         }
 
-        private object Deserialize(Type type, Stream data)
+        private object Deserialize(Type type, Stream data, string contentType)
         {
-            var serializer = serializers.First(s => s.CanDeserialize(type, data));
+            var serializer = serializers.First(s => s.CanDeserialize(type, data, contentType));
             var result = serializer.Deserialize(type, data);
             return result;
         }

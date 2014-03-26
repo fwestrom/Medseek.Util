@@ -39,8 +39,13 @@
             installables.Add(ioc);
             installables.Add(logging);
             installables.Add(mqPlugin);
+            var plugins =
+                AppDomain.CurrentDomain.GetAssemblies()
+                         .SelectMany(a => a.GetTypes())
+                         .Where(t => t.IsSubclassOf(typeof(ReferencePluginAttribute)))
+                         .Select(a => a.Assembly);
             installables.AddRange(
-                assembliesToInstall
+                assembliesToInstall.AsEnumerable().Concat(plugins)
                     .SelectMany(Registrations.FromAssembly));
         }
 

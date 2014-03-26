@@ -43,6 +43,11 @@ namespace Medseek.Util.Messaging
         }
 
         /// <summary>
+        /// Gets or sets the type of the content.
+        /// </summary>
+        public string ContentType { get; set; }
+
+        /// <summary>
         /// Gets the value of a property by its identifier, name, or key.
         /// </summary>
         /// <param name="id">

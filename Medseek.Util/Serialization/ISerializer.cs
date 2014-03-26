@@ -19,17 +19,14 @@
         /// <summary>
         /// Determines whether this instance can deserialize the specified type.
         /// </summary>
-        /// <param name="type">
-        /// The type of object to deserialize.
-        /// </param>
-        /// <param name="source">
-        /// The source stream from which the object data can be read.
-        /// </param>
+        /// <param name="type">The type of object to deserialize.</param>
+        /// <param name="source">The source stream from which the object data can be read.</param>
+        /// <param name="contentType">Type of the content.</param>
         /// <returns>
-        /// A value indicating whether objects of the specified type can be 
+        /// A value indicating whether objects of the specified type can be
         /// deserialized.
         /// </returns>
-        bool CanDeserialize(Type type, Stream source);
+        bool CanDeserialize(Type type, Stream source, string contentType);
 
         /// <summary>
         /// Determines whether this instance can serialize objects of the 

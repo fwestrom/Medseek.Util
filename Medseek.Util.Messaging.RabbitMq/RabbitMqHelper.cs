@@ -1,6 +1,8 @@
 ﻿namespace Medseek.Util.Messaging.RabbitMq
 {
     using System.Linq;
+    using System.Text;
+
     using Medseek.Util.Ioc;
     using RabbitMQ.Client;
 
@@ -39,10 +41,12 @@
         /// </summary>
         public MessageProperties ToProperties(IBasicProperties basicProperties)
         {
+            object contentType;
             return new MessageProperties
             {
                 CorrelationId = basicProperties.CorrelationId,
                 ReplyTo = new MqAddress(basicProperties.ReplyTo),
+                ContentType = basicProperties.Headers.TryGetValue("Content-Type", out contentType) ? Encoding.Default.GetString((byte[])contentType) : null
             };
         }
 

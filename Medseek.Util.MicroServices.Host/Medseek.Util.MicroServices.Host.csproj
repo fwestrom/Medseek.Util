@@ -80,6 +80,10 @@
       <Project>{cee14ab7-0d49-4432-9184-7aa8fa008f14}</Project>
       <Name>Medseek.Util.Messaging.RabbitMq</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Medseek.Util.Serialization.Newtonsoft.Json\Medseek.Util.Serialization.Newtonsoft.Json.csproj">
+      <Project>{2907d6d6-393c-443c-a2af-3ec2278f0e45}</Project>
+      <Name>Medseek.Util.Serialization.Newtonsoft.Json</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Medseek.Util\Medseek.Util.csproj">
       <Project>{cea7c2ff-8d53-4a8b-8b94-bb2f55538b99}</Project>
       <Name>Medseek.Util</Name>

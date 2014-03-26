@@ -82,7 +82,9 @@
             var ms = new MemoryStream();
             serializer.Serialize(typeof(List<TestObject>), items, ms);
             ms.Position = 0;
-            Assert.That(serializer.CanDeserialize(typeof(List<TestObject>), ms));
+            var canDeserialize = serializer.CanDeserialize(typeof(List<TestObject>), ms, "application/json")
+                                 || serializer.CanDeserialize(typeof(List<TestObject>), ms, "application/xml");
+            Assert.That(canDeserialize);
         }
     }
 }

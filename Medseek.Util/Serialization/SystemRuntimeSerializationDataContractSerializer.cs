@@ -2,6 +2,7 @@
 {
     using System;
     using System.IO;
+    using System.Linq;
     using System.Reflection;
     using System.Runtime.Serialization;
     using System.Xml;
@@ -27,29 +28,27 @@
         /// <summary>
         /// Determines whether this instance can deserialize the specified type.
         /// </summary>
-        /// <param name="type">
-        /// The type of object to deserialize.
-        /// </param>
-        /// <param name="source">
-        /// The source stream from which the object data can be read.
-        /// </param>
+        /// <param name="type">The type of object to deserialize.</param>
+        /// <param name="source">The source stream from which the object data can be read.</param>
+        /// <param name="contentType">Type of the content.</param>
         /// <returns>
-        /// A value indicating whether objects of the specified type can be 
+        /// A value indicating whether objects of the specified type can be
         /// deserialized.
         /// </returns>
-        public bool CanDeserialize(Type type, Stream source)
+        public bool CanDeserialize(Type type, Stream source, string contentType)
         {
-            return type.GetCustomAttribute<DataContractAttribute>() != null
-                || type.GetInterface("ICollection") != null
-                || (type.IsArray && CanDeserialize(type.GetElementType(), source))
-                || type.IsEnum
-                || type.IsPrimitive
-                || type == typeof(DateTime)
-                || type == typeof(DateTimeOffset)
-                || type == typeof(TimeSpan)
-                || type == typeof(Guid)
-                || type == typeof(Uri)
-                || type == typeof(XmlQualifiedName);
+            return ContentTypes.AsEnumerable().Contains(contentType.ToLowerInvariant()) 
+                && (type.GetCustomAttribute<DataContractAttribute>() != null
+                        || type.GetInterface("ICollection") != null
+                        || (type.IsArray && CanDeserialize(type.GetElementType(), source, contentType))
+                        || type.IsEnum
+                        || type.IsPrimitive
+                        || type == typeof(DateTime)
+                        || type == typeof(DateTimeOffset)
+                        || type == typeof(TimeSpan)
+                        || type == typeof(Guid)
+                        || type == typeof(Uri)
+                        || type == typeof(XmlQualifiedName));
         }
 
         /// <summary>

@@ -18,7 +18,7 @@
             return new MessageProperties
             {
                 CorrelationId = message.NMSCorrelationID,
-                ReplyTo = message.NMSReplyTo.ToAddress(),
+                ReplyTo = message.NMSReplyTo.ToAddress()
             };
         }
 

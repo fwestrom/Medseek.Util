@@ -49,6 +49,8 @@
         protected override void OnPublish(byte[] body, MessageProperties properties)
         {
             var basicProperties = helper.CreateBasicProperties(model, properties);
+            if (Address.Value == null)
+                return;
             var pa = helper.ToPublicationAddress(Address);
             model.BasicPublish(pa, basicProperties, body);
         }
