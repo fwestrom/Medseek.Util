@@ -22,7 +22,7 @@
         [SetUp]
         public void Setup()
         {
-            Use(address = new MqAddress());
+            Use(address = new MqAddress { Value = "address" });
             helper = Mock<IRabbitMqHelper>();
             model = Mock<IModel>();
         }
