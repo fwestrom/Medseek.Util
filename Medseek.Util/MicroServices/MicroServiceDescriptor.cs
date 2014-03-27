@@ -37,7 +37,7 @@
                 throw new ArgumentNullException("implementation");
             if (factory == null)
                 throw new ArgumentNullException("factory");
-            if (!implementation.GetInterfaces().Contains(contract))
+            if (!contract.IsAssignableFrom(implementation))
                 throw new ArgumentException("The implementation type must provide a realization of the micro-service contract.", "implementation");
 
             this.contract = contract;

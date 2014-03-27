@@ -107,12 +107,7 @@
             if (InstallFromConfiguration)
                 container.Install(Configuration.FromAppConfig());
             if (RegisterIWindsorContainer)
-                container.Register(Component.For<IWindsorContainer>().Instance(container));
-            
-            container.Register(
-                Component
-                    .For<IIocContainer>()
-                    .Instance(container));
+                container.Register(Component.For<IWindsorContainer, IIocContainer>().Instance(container));
 
             return container;
         }
