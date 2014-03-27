@@ -163,6 +163,14 @@
         }
 
         /// <summary>
+        /// Starts the thread.
+        /// </summary>
+        void IThread.Start(object ignored)
+        {
+            Start();
+        }
+
+        /// <summary>
         /// Disposes and stops the thread and its dispatcher.
         /// </summary>
         public void Dispose()

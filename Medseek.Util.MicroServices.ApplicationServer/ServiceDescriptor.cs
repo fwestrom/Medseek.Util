@@ -1,4 +1,4 @@
-﻿namespace Medseek.MicroServices.Run
+﻿namespace Medseek.Util.MicroServices.ApplicationServer
 {
     using System;
     using System.Text;

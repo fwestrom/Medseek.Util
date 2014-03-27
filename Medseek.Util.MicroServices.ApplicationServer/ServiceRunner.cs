@@ -1,4 +1,4 @@
-﻿namespace Medseek.MicroServices.Run
+﻿namespace Medseek.Util.MicroServices.ApplicationServer
 {
     using System;
     using System.Diagnostics;
@@ -17,6 +17,7 @@
         private readonly Process process = new Process();
         private readonly SynchronizationContext synchronizationContext = SynchronizationContext.Current ?? new SynchronizationContext();
         private readonly ServiceDescriptor descriptor;
+        private string processId;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceRunner"/> class.
@@ -35,9 +36,6 @@
             {
                 Arguments = descriptor.Args,
                 FileName = Path.Combine(Path.GetDirectoryName(descriptor.ManifestPath), descriptor.Run),
-                //RedirectStandardError = true,
-                //RedirectStandardInput = true,
-                //RedirectStandardOutput = true,
                 WorkingDirectory = Path.GetDirectoryName(descriptor.ManifestPath),
                 UseShellExecute = false,
             };
@@ -60,10 +58,9 @@
         public void Start()
         {
             process.Start();
-            Log.InfoFormat("Started service process; Service = {0}, Pid = {1}.", descriptor, process.Id);
+            processId = process.Id.ToString("D");
+            Log.InfoFormat("Started service process; Service = {0}, Pid = {1}.", descriptor, processId);
             process.EnableRaisingEvents = true;
-            //process.BeginErrorReadLine();
-            //process.BeginOutputReadLine();
         }
 
         /// <summary>
@@ -73,7 +70,7 @@
         {
             if (!process.HasExited)
             {
-                Log.WarnFormat("Killing service process; Service = {0}, Pid = {1}.", descriptor, process.Id);
+                Log.WarnFormat("Killing service process; Service = {0}, Pid = {1}.", descriptor, processId);
                 process.Kill();
                 process.WaitForExit();
             }
@@ -88,22 +85,23 @@
 
         private void OnProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
         {
-            Log.DebugFormat("Read STDOUT from process; Pid = {0}.", process.Id);
+            Log.DebugFormat("Read STDOUT from process; Pid = {0}.", processId);
             Console.Out.WriteLine(e.Data);
         }
 
         private void OnProcessExited(object sender, EventArgs e)
         {
-            var senderProcess = (Process)sender;
-            var message = string.Format("Service process exited; Service = {0}, Pid = {1}.", descriptor, senderProcess.Id);
+            var message = string.Format("Service process exited; Service = {0}, Pid = {1}.", descriptor, processId);
             if (IsDisposed)
                 Log.Info(message);
             else
                 Log.Warn(message);
 
+            processId = null;
             synchronizationContext.Post(ignored =>
             {
                 process.EnableRaisingEvents = false;
+                process.Refresh();
                 if (!IsDisposed)
                     Start();
             }, null);

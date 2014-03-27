@@ -44,6 +44,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.MicroServices.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.MicroServices.ProjectTemplate", "Medseek.Util.MicroServices.ProjectTemplate\Medseek.Util.MicroServices.ProjectTemplate.csproj", "{56DEFF3B-AC08-4A3E-8C3D-E3C93A8C1F5A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.MicroServices.ApplicationServer", "Medseek.Util.MicroServices.ApplicationServer\Medseek.Util.MicroServices.ApplicationServer.csproj", "{C62A6826-43D7-444D-832B-0BFED9296857}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -102,6 +104,10 @@ Global
 		{56DEFF3B-AC08-4A3E-8C3D-E3C93A8C1F5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{56DEFF3B-AC08-4A3E-8C3D-E3C93A8C1F5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{56DEFF3B-AC08-4A3E-8C3D-E3C93A8C1F5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C62A6826-43D7-444D-832B-0BFED9296857}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C62A6826-43D7-444D-832B-0BFED9296857}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C62A6826-43D7-444D-832B-0BFED9296857}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C62A6826-43D7-444D-832B-0BFED9296857}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

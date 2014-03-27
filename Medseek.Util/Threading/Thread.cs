@@ -180,5 +180,14 @@
         {
             thread.Start();
         }
+
+        /// <summary>
+        /// Starts the thread.
+        /// </summary>
+        /// <seealso cref="System.Threading.Thread.Start()" />
+        public void Start(object parameter)
+        {
+            thread.Start(parameter);
+        }
     }
 }

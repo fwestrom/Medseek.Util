@@ -1,4 +1,4 @@
-﻿namespace Medseek.MicroServices.Run
+﻿namespace Medseek.Util.MicroServices.ApplicationServer
 {
     using System;
     using System.Collections.Generic;
@@ -14,7 +14,7 @@
     /// <summary>
     /// A micro-service runtime hosting application.
     /// </summary>
-    public class MicroServiceRun : Disposable
+    public class MicroServiceApplicationServer : Disposable
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
@@ -24,10 +24,10 @@
         private readonly DispatcherTimer refreshTimer;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MicroServiceRun" /> 
+        /// Initializes a new instance of the <see cref="MicroServiceApplicationServer" /> 
         /// class.
         /// </summary>
-        public MicroServiceRun(string[] args)
+        public MicroServiceApplicationServer(string[] args)
         {
             if (args == null)
                 throw new ArgumentNullException("args");
@@ -48,6 +48,7 @@
             Log.InfoFormat("Broker = {0}", broker);
             Log.InfoFormat("Directory = {0}", directory);
 
+            dispatcher.UnhandledException += OnDispatcherUnhandledException;
             refreshTimer.Start();
             try
             {
@@ -57,6 +58,7 @@
             {
                 Log.Info("Dispatcher exited.");
                 refreshTimer.Stop();
+                dispatcher.UnhandledException -= OnDispatcherUnhandledException;
 
                 foreach (var runner in runners)
                     runner.Dispose();
@@ -73,6 +75,12 @@
             dispatcher.InvokeShutdown();
         }
 
+        private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            var message = string.Format("Unhandled exception from Dispatcher; Handled = {0}.", e.Handled);
+            Log.Error(message, e.Exception);
+        }
+
         private void OnTick(object sender, EventArgs e)
         {
             var sw = Stopwatch.StartNew();
@@ -82,9 +90,9 @@
                 if (directory.Exists)
                 {
                     var descriptors = directory.GetFiles("services.xml", SearchOption.AllDirectories)
-                        .SelectMany(file => XDocument.Load((string)file.FullName)
+                        .SelectMany(file => XDocument.Load(file.FullName)
                             .Descendants(XName.Get("service", string.Empty))
-                            .Select(xe => new ServiceDescriptor(XmlExtensions.Attrib(xe, "id"), XmlExtensions.Attrib(xe, "run"), XmlExtensions.Attrib(xe, "args"), file.FullName)))
+                            .Select(xe => new ServiceDescriptor(xe.Attrib("id"), xe.Attrib("run"), xe.Attrib("args"), file.FullName)))
                         .ToArray();
 
                     var removed = runners.Where(r => !descriptors.Contains(r.Descriptor)).ToArray();

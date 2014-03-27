@@ -92,5 +92,11 @@
         /// </summary>
         /// <seealso cref="Thread.Start()" />
         void Start();
+
+        /// <summary>
+        /// Starts the thread.
+        /// </summary>
+        /// <seealso cref="System.Threading.Thread.Start(object)" />
+        void Start(object parameter);
     }
 }
