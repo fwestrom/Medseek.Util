@@ -145,32 +145,5 @@
 
             descriptor.Release(instance);
         }
-
-        private class FactoryHelper : IMicroServiceInstanceFactory<MicroServiceInstance>
-        {
-            private readonly MicroServiceBinding binding;
-            private readonly IMicroServiceLocator locator;
-
-            internal FactoryHelper(MicroServiceBinding binding, IMicroServiceLocator locator)
-            {
-                if (binding == null)
-                    throw new ArgumentNullException("binding");
-                if (locator == null)
-                    throw new ArgumentNullException("locator");
-
-                this.binding = binding;
-                this.locator = locator;
-            }
-
-            MicroServiceInstance IMicroServiceInstanceFactory<MicroServiceInstance>.Resolve(IMqConnection connection)
-            {
-                return locator.Get(binding.Service, connection);
-            }
-
-            void IMicroServiceInstanceFactory<MicroServiceInstance>.Release(MicroServiceInstance component)
-            {
-                locator.Release(component);
-            }
-        }
     }
 }

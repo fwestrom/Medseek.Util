@@ -158,7 +158,7 @@
                 Log.DebugFormat("{0}", MethodBase.GetCurrentMethod().Name);
                 thread.Start();
                 Monitor.Wait(sync);
-                Debug.Assert(dispatcher != null, "The dispather must be set by the thread.");
+                Debug.Assert(dispatcher != null, "The dispatcher must be set by the thread.");
             }
         }
 
