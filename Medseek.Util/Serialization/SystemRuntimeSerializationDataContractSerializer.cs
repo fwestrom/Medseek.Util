@@ -56,15 +56,16 @@
         /// specified type.
         /// </summary>
         /// <param name="type">
-        /// The type of object to serialize.
+        ///     The type of object to serialize.
         /// </param>
+        /// <param name="contentType"></param>
         /// <returns>
         /// A value indicating whether objects of the specified type can be 
         /// serialized.
         /// </returns>
-        public bool CanSerialize(Type type)
+        public bool CanSerialize(Type type, string contentType)
         {
-            return type.GetCustomAttribute<DataContractAttribute>() != null;
+            return ContentTypes.Contains(contentType) && type.GetCustomAttribute<DataContractAttribute>() != null;
         }
 
         /// <summary>
