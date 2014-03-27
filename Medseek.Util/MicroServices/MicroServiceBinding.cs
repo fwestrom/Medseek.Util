@@ -38,5 +38,14 @@
             get;
             set;
         }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether [is one way].
+        /// </summary>
+        public bool IsOneWay 
+        { 
+            get;
+            set;
+        }
     }
 }
