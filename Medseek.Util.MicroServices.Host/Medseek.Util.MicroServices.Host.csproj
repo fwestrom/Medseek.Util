@@ -38,9 +38,9 @@
     <Reference Include="Castle.Windsor">
       <HintPath>..\packages\Castle.Windsor.3.2.1\lib\net45\Castle.Windsor.dll</HintPath>
     </Reference>
-    <Reference Include="log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+    <Reference Include="NLog, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+      <HintPath>..\packages\NLog.2.1.0\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -58,13 +58,18 @@
     <Compile Include="ReferenceMicroServiceHostAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Medseek.Util.MicroServices.Host.nuspec" />
+    <None Include="Medseek.Util.MicroServices.Host.nuspec">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="App.config" />
     <None Include="App.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>$(AssemblyName).exe.config</Link>
       <Visible>false</Visible>
     </None>
+    <Content Include="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -72,9 +77,9 @@
       <Project>{e8fb7235-95e7-4f72-a3ed-374d0b198b73}</Project>
       <Name>Medseek.Util.Ioc.Castle</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Medseek.Util.Logging.Log4Net\Medseek.Util.Logging.Log4Net.csproj">
-      <Project>{ea8d92c1-ea44-4428-bf89-ddce27831258}</Project>
-      <Name>Medseek.Util.Logging.Log4Net</Name>
+    <ProjectReference Include="..\Medseek.Util.Logging.NLog\Medseek.Util.Logging.NLog.csproj">
+      <Project>{ee3c7441-166a-4435-8b0f-c67f650f0be5}</Project>
+      <Name>Medseek.Util.Logging.NLog</Name>
     </ProjectReference>
     <ProjectReference Include="..\Medseek.Util.Messaging.RabbitMq\Medseek.Util.Messaging.RabbitMq.csproj">
       <Project>{cee14ab7-0d49-4432-9184-7aa8fa008f14}</Project>

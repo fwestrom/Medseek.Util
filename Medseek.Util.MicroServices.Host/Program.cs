@@ -8,7 +8,7 @@
     using Medseek.Util.Interactive;
     using Medseek.Util.Ioc.Castle;
     using Medseek.Util.Logging;
-    using Medseek.Util.Logging.Log4Net;
+    using Medseek.Util.Logging.NLog;
     using Medseek.Util.Messaging.RabbitMq;
 
     /// <summary>
@@ -19,7 +19,7 @@
     /// </summary>
     public class Program
     {
-        private static readonly ILoggingPlugin Logging = Log4NetComponents.Plugin;
+        private static readonly ILoggingPlugin Logging = NLogComponents.Plugin;
         private static readonly ILog Log = Logging.GetLogManager().GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
