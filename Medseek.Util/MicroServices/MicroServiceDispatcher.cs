@@ -180,7 +180,7 @@
                         if (e.Properties.ReplyTo != null)
                         {
                             Log.DebugFormat("Sending reply message; CorrelationId = {0}, ReplyTo = {1}, Response = {2}.", e.Properties.CorrelationId, e.Properties.ReplyTo, invokeResult);
-                            var body = Serialize(method.ReturnType, invokeResult);
+                            var body = Serialize(method.ReturnType, invokeResult, e.Properties.ContentType);
                             using (var publisher = channel.CreatePublisher(e.Properties.ReplyTo))
                                 publisher.Publish(body, e.Properties.CorrelationId);
                         }
@@ -213,12 +213,12 @@
             return result;
         }
 
-        private byte[] Serialize(Type type, object obj)
+        private byte[] Serialize(Type type, object obj, string contentType)
         {
             if (type == typeof(void))
                 return new byte[0];
 
-            var serializer = serializers.First(x => x.CanSerialize(type));
+            var serializer = serializers.First(x => x.CanSerialize(type, contentType));
             using (var ms = new MemoryStream())
             {
                 serializer.Serialize(type, obj, ms);
