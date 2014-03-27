@@ -61,7 +61,6 @@
     <Compile Include="MicroServices\IMicroServiceLocator.cs" />
     <Compile Include="MicroServices\MessageContext.cs" />
     <Compile Include="MicroServices\MicroServiceBinding.cs" />
-    <Compile Include="MicroServices\MicroServiceDescriptor.cs" />
     <Compile Include="MicroServices\MicroServiceInstance.cs" />
     <Compile Include="MicroServices\MicroServiceDispatcher.cs" />
     <Compile Include="MicroServices\MicroServiceLocator.cs" />

@@ -6,26 +6,22 @@ namespace Medseek.Util.MicroServices
 
     public class MicroServiceInstance
     {
-        private readonly InvokeHelper invokeHelper;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="MicroServiceInstance" 
         /// /> class.
         /// </summary>
-        public MicroServiceInstance(MicroServiceDescriptor descriptor, object instance)
+        public MicroServiceInstance(MicroServiceBinding binding, object instance)
         {
-            if (descriptor == null)
-                throw new ArgumentNullException("descriptor");
+            if (binding == null)
+                throw new ArgumentNullException("binding");
             if (instance == null)
                 throw new ArgumentNullException("instance");
 
-            Descriptor = descriptor;
+            Binding = binding;
             Instance = instance;
-
-            invokeHelper = InvokeHelper.Create(instance, descriptor.DefaultMethod);
         }
 
-        public MicroServiceDescriptor Descriptor
+        public MicroServiceBinding Binding
         {
             get; 
             private set;
@@ -39,9 +35,7 @@ namespace Medseek.Util.MicroServices
 
         public object Invoke(MethodInfo method, object parameter)
         {
-            var result = method != Descriptor.DefaultMethod
-                ? method.Invoke(Instance, new[] { parameter }) 
-                : invokeHelper.Invoke(parameter);
+            var result = method.Invoke(Instance, new[] { parameter });
             return result;
         }
 

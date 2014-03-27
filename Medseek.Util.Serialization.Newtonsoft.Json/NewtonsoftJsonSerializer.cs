@@ -54,7 +54,7 @@
         /// </returns>
         public bool CanSerialize(Type type, string contentType)
         {
-            return ContentTypes.Contains(contentType);
+            return contentType == null || ContentTypes.Contains(contentType);
         }
 
         /// <summary>
