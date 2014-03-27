@@ -21,6 +21,6 @@
   </metadata>
   <files>
     <file src="$id$.exe.config" target="content" />
-    <file src="log4net.config" target="content" />
+    <file src="nlog.config" target="content" />
   </files>
 </package>
