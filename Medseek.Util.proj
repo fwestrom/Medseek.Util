@@ -45,6 +45,7 @@
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Ioc.Castle.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Logging.Log4Net.csproj" />
+    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Logging.NLog.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Messaging.RabbitMq.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.MicroServices.Host.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Serialization.Newtonsoft.Json.csproj" />
