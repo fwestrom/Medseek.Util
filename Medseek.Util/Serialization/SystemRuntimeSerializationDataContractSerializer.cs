@@ -37,7 +37,7 @@
         /// </returns>
         public bool CanDeserialize(Type type, Stream source, string contentType)
         {
-            return ContentTypes.AsEnumerable().Contains(contentType.ToLowerInvariant()) 
+            return (contentType == null || ContentTypes.AsEnumerable().Contains(contentType))
                 && (type.GetCustomAttribute<DataContractAttribute>() != null
                         || type.GetInterface("ICollection") != null
                         || (type.IsArray && CanDeserialize(type.GetElementType(), source, contentType))

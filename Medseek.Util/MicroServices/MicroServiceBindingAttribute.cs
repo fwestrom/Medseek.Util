@@ -62,9 +62,13 @@
         /// Returns a micro-service binding description for the specified 
         /// method marked by the attribute.
         /// </summary>
-        public MicroServiceBinding ToBinding(MethodInfo method, Type service)
+        /// <typeparam name="T">
+        /// The type of micro-service binding object to return.
+        /// </typeparam>
+        public T ToBinding<T>(MethodInfo method, Type service)
+            where T : MicroServiceBinding, new()
         {
-            return new MicroServiceBinding
+            return new T
             {
                 Address = new MqAddress(string.Format("{0}://{1}/{2}/{3}", "topic", Exchange, BindingKey, Queue)),
                 Method = method, 

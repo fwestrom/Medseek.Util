@@ -17,9 +17,8 @@
     public class MicroServiceLocator : IMicroServiceLocator
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly List<MicroServiceBinding> bindings = new List<MicroServiceBinding>();
-        private readonly List<MicroServiceDescriptor> descriptors = new List<MicroServiceDescriptor>();
-        private readonly Dictionary<object, MicroServiceDescriptor> instanceMap = new Dictionary<object, MicroServiceDescriptor>();
+        private readonly List<MyBinding> bindings = new List<MyBinding>();
+        private readonly Dictionary<object, MyBinding> instanceMap = new Dictionary<object, MyBinding>();
         private readonly IMqConnection connection;
         private readonly IIocContainer container;
 
@@ -50,24 +49,13 @@
         }
 
         /// <summary>
-        /// Gets the collection of micro-service descriptors.
-        /// </summary>
-        public IEnumerable<MicroServiceDescriptor> Descriptors
-        {
-            get
-            {
-                return descriptors;
-            }
-        }
-
-        /// <summary>
         /// Initializes the micro-service locator so that it can fulfill requests.
         /// </summary>
         public void Initialize()
         {
             Log.Debug(MethodBase.GetCurrentMethod().Name);
 
-            descriptors.Clear();
+            bindings.Clear();
             
             var items = container.Components
                 .SelectMany(componentInfo => componentInfo.Implementation.CustomAttributes
@@ -82,18 +70,12 @@
             var bindingsToAdd = items
                 .SelectMany(x => x.contract.GetMethods()
                     .SelectMany(method => method.GetCustomAttributes<MicroServiceBindingAttribute>()
-                        .Select(attribute => attribute.ToBinding(method, x.contract))))
+                        .Select(attribute => attribute.ToBinding<MyBinding>(method, x.contract))
+                        .Do(binding => binding.Factory = FactoryHelper.Create(x.contract, x.factory))))
                 .Do(x => Log.DebugFormat("MicroServiceBinding: Address = {0}, Service = {1}, Method = {2}", x.Address, x.Service, x.Method))
                 .ToArray();
             foreach (var binding in bindingsToAdd)
                 bindings.Add(binding);
-
-            var descriptorsToAdd = items
-                .Select(x => new MicroServiceDescriptor(x.contract, x.type, x.factory))
-                .Do(x => Log.DebugFormat("MicroServiceDescriptor: Contract = {0}, Implementation = {1}, RequestQueue = {2}", x.Contract, x.Implementation, x.RequestQueue))
-                .ToArray();
-            foreach (var descriptor in descriptorsToAdd)
-                descriptors.Add(descriptor);
         }
 
         /// <summary>
@@ -117,10 +99,10 @@
         /// <seealso cref="Release" />
         public MicroServiceInstance Get(Type contract, params object[] dependencies)
         {
-            var descriptor = Descriptors.Single(x => x.Contract == contract);
-            var instance = descriptor.Get(connection);
+            var binding = bindings.First(x => x.Service == contract);
+            var instance = new MicroServiceInstance(binding, binding.Factory.Get(connection));
             lock (instanceMap)
-                instanceMap.Add(instance, descriptor);
+                instanceMap.Add(instance, binding);
             return instance;
         }
 
@@ -134,14 +116,83 @@
         /// <seealso cref="Get" />
         public void Release(MicroServiceInstance instance)
         {
-            MicroServiceDescriptor descriptor;
+            MyBinding binding;
             lock (instanceMap)
             {
-                descriptor = instanceMap[instance];
+                binding = instanceMap[instance];
                 instanceMap.Remove(instance);
             }
 
-            descriptor.Release(instance);
+            binding.Factory.Release(instance);
+        }
+
+        private class MyBinding : MicroServiceBinding
+        {
+            internal FactoryHelper Factory
+            {
+                get;
+                set;
+            }
+        }
+
+        private abstract class FactoryHelper
+        {
+            internal static FactoryHelper Create(Type service, object factory)
+            {
+                if (service == null)
+                    throw new ArgumentNullException("service");
+                var helperType = typeof(FactoryHelper<>).MakeGenericType(service);
+                var constructor = helperType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic).Single();
+                var helper = (FactoryHelper)constructor.Invoke(new[] { factory });
+                return helper;
+            }
+
+            internal abstract object Get(params object[] dependencies);
+
+            internal abstract void Release(object component);
+        }
+
+        private class FactoryHelper<T> : FactoryHelper
+        {
+            private delegate T GetDelegate(IMqConnection connection);
+            private delegate void ReleaseDelegate(T instance);
+            private readonly GetDelegate get;
+            private readonly ReleaseDelegate release;
+
+            internal FactoryHelper(object factory)
+            {
+                if (factory == null)
+                    throw new ArgumentNullException("factory");
+
+                var getParameterTypes = typeof(GetDelegate).GetMethod("Invoke").GetParameters().Select(x => x.ParameterType).ToArray();
+                var getMethod = factory.GetType().GetMethod("Resolve", getParameterTypes);
+                if (getMethod == null)
+                    throw new ArgumentException("Unable to find Resolve method on factory.", "factory");
+                get = (GetDelegate)getMethod.CreateDelegate(typeof(GetDelegate), factory);
+                if (get == null)
+                    throw new ArgumentException("Unable to create delegate for invoking Resolve on factory.", "factory");
+
+                var releaseParameterTypes = typeof(ReleaseDelegate).GetMethod("Invoke").GetParameters().Select(x => x.ParameterType).ToArray();
+                var releaseMethod = factory.GetType().GetMethod("Release", releaseParameterTypes);
+                if (releaseMethod == null)
+                    throw new ArgumentException("Unable to find Release method on factory.", "factory");
+                release = (ReleaseDelegate)releaseMethod.CreateDelegate(typeof(ReleaseDelegate), factory);
+                if (release == null)
+                    throw new ArgumentException("Unable to create delegate for invoking Release on factory.", "factory");
+            }
+
+            internal override object Get(params object[] dependencies)
+            {
+                var connection = (IMqConnection)dependencies.First(x => x is IMqConnection);
+                var result = get(connection);
+                return result;
+            }
+
+            internal override void Release(object component)
+            {
+                var componentT = (T)component;
+                release(componentT);
+            }
         }
     }
 }

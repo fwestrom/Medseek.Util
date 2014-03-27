@@ -59,6 +59,7 @@
                 .SelectMany(handler => handler.ComponentModel.Implementation
                     .GetAttributes<RegisterMicroServiceAttribute>()
                     .SelectMany(attribute => attribute.MicroServiceContracts
+                        .Concat(new[] { handler.ComponentModel.Implementation })
                         .Select(contract => new { attribute, contract, handler })))
                 .OrderBy(x => x.handler.Supports(x.contract) ? 0 : 1)
                 .Select(x => x.handler);

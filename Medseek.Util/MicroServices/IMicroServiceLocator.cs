@@ -18,14 +18,6 @@
         }
 
         /// <summary>
-        /// Gets the collection of micro-service descriptors.
-        /// </summary>
-        IEnumerable<MicroServiceDescriptor> Descriptors
-        {
-            get;
-        }
-
-        /// <summary>
         /// Retrieves a micro-service component instance for the specified 
         /// contract.
         /// </summary>

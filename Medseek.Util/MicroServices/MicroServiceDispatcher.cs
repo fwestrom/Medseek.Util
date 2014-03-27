@@ -20,7 +20,6 @@
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Dictionary<IMqConsumer, MicroServiceBinding> bindingMap = new Dictionary<IMqConsumer, MicroServiceBinding>();
-        private readonly Dictionary<IMqConsumer, MicroServiceDescriptor> descriptorMap = new Dictionary<IMqConsumer, MicroServiceDescriptor>();
         private readonly IMqChannel channel;
         private readonly IMessageContextAccess messageContextAccess;
         private readonly IMicroServiceLocator microServiceLocator;
@@ -91,15 +90,6 @@
                     consumer.Received += OnReceived;
                     bindingMap[consumer] = binding;
                 }
-                //foreach (var descriptor in microServiceLocator.Descriptors)
-                //{
-                //    Log.InfoFormat("Starting message consumer for {0}.", descriptor.Implementation);
-                //
-                //    var from = new MqAddress { Value = descriptor.RequestQueue };
-                //    var consumer = channel.CreateConsumer(from, false);
-                //    consumer.Received += OnReceived;
-                //    descriptorMap[consumer] = descriptor;
-                //}
             });
         }
 
@@ -122,11 +112,6 @@
                 {
                     consumer.Dispose();
                     bindingMap.Remove(consumer);
-                }
-                foreach (var consumer in descriptorMap.Keys.ToArray())
-                {
-                    consumer.Dispose();
-                    descriptorMap.Remove(consumer);
                 }
             });
         }
@@ -156,22 +141,14 @@
                     channel.IsPaused = Interlocked.Read(ref dispatcherDepth) > 10;
                 try
                 {
-                    MicroServiceInstance instance;
-                    MethodInfo method;
-                    if (bindingMap.ContainsKey((IMqConsumer)sender))
-                    {
-                        var binding = bindingMap[(IMqConsumer)sender];
-                        instance = microServiceLocator.Get(binding.Service);
-                        method = binding.Method;
-                    }
-                    else
-                    {
-                        var descriptor = descriptorMap[(IMqConsumer)sender];
-                        instance = microServiceLocator.Get(descriptor.Contract);
-                        method = descriptor.DefaultMethod;
-                    }
+                    var binding = bindingMap[(IMqConsumer)sender];
+                    var instance = microServiceLocator.Get(binding.Service);
+                    var method = binding.Method;
                     var parameterType = method.GetParameters().Single().ParameterType;
-                    var parameterValue = Deserialize(parameterType, e.Body, e.Properties.ContentType);
+                    
+                    ISerializer serializer;
+                    var contentType = e.Properties.ContentType ?? "application/xml";
+                    var parameterValue = Deserialize(parameterType, e.Body, contentType, out serializer);
                     messageContextAccess.Push(new MessageContext(e.Properties));
                     try
                     {
@@ -180,7 +157,7 @@
                         if (e.Properties.ReplyTo != null)
                         {
                             Log.DebugFormat("Sending reply message; CorrelationId = {0}, ReplyTo = {1}, Response = {2}.", e.Properties.CorrelationId, e.Properties.ReplyTo, invokeResult);
-                            var body = Serialize(method.ReturnType, invokeResult, e.Properties.ContentType);
+                            var body = Serialize(method.ReturnType, invokeResult, contentType, serializer);
                             using (var publisher = channel.CreatePublisher(e.Properties.ReplyTo))
                                 publisher.Publish(body, e.Properties.CorrelationId);
                         }
@@ -206,19 +183,21 @@
             });
         }
 
-        private object Deserialize(Type type, Stream data, string contentType)
+        private object Deserialize(Type type, Stream data, string contentType, out ISerializer serializer)
         {
-            var serializer = serializers.First(s => s.CanDeserialize(type, data, contentType));
+            serializer = serializers.First(s => s.CanDeserialize(type, data, contentType));
             var result = serializer.Deserialize(type, data);
             return result;
         }
 
-        private byte[] Serialize(Type type, object obj, string contentType)
+        private byte[] Serialize(Type type, object obj, string contentType, ISerializer serializer)
         {
             if (type == typeof(void))
                 return new byte[0];
 
-            var serializer = serializers.First(x => x.CanSerialize(type, contentType));
+            if (serializer == null || !serializer.CanSerialize(type, contentType))
+                serializer = serializers.First(x => x.CanSerialize(type, contentType));
+            
             using (var ms = new MemoryStream())
             {
                 serializer.Serialize(type, obj, ms);
