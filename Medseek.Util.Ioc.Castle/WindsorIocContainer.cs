@@ -1,6 +1,7 @@
 ﻿namespace Medseek.Util.Ioc.Castle
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using global::Castle.MicroKernel;
     using global::Castle.MicroKernel.Registration;
@@ -31,6 +32,18 @@
         /// container.
         /// </summary>
         public event EventHandler<RegisterComponentEventArgs> RegisteredComponent;
+
+        /// <summary>
+        /// Gets the set of components that are registered with the container.
+        /// </summary>
+        public IEnumerable<ComponentInfo> Components
+        {
+            get
+            {
+                return Kernel.GetAssignableHandlers(typeof(object))
+                    .Select(x => new ComponentInfo(x.ComponentModel.Implementation, x.ComponentModel.Services.ToArray()));
+            }
+        }
 
         /// <summary>
         /// Gets the plugin that was used to obtain the container.

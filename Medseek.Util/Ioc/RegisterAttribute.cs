@@ -48,7 +48,6 @@
         public override Registration ToRegistration(Type attributedType)
         {
             var result = base.ToRegistration(attributedType);
-            result.Implementation = attributedType;
             if (Start)
             {
                 var startableType = typeof(IStartable);

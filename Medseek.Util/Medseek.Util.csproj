@@ -43,6 +43,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Ioc\ComponentInfo.cs" />
     <Compile Include="Ioc\ComponentsInstallable.cs" />
     <Compile Include="Ioc\IInstallable.cs" />
     <Compile Include="Ioc\IIocContainer.cs" />
@@ -63,6 +64,7 @@
     <Compile Include="MicroServices\MicroServiceDescriptor.cs" />
     <Compile Include="MicroServices\MicroServiceInstance.cs" />
     <Compile Include="MicroServices\MicroServiceDispatcher.cs" />
+    <Compile Include="MicroServices\MicroServiceLocator.cs" />
     <Compile Include="MicroServices\RegisterMicroServiceAttribute.cs" />
     <Compile Include="MicroServices\ThreadLocalMessageContext.cs" />
     <Compile Include="MicroServices\MicroServiceBindingAttribute.cs" />

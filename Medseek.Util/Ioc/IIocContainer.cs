@@ -1,6 +1,7 @@
 ﻿namespace Medseek.Util.Ioc
 {
     using System;
+    using System.Collections.Generic;
 
     /// <summary>
     /// Interface for types that provide the functionality of an inversion of 
@@ -13,6 +14,14 @@
         /// container.
         /// </summary>
         event EventHandler<RegisterComponentEventArgs> RegisteredComponent;
+
+        /// <summary>
+        /// Gets the set of components that are registered with the container.
+        /// </summary>
+        IEnumerable<ComponentInfo> Components
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the plugin that was used to obtain the container.
