@@ -146,15 +146,18 @@
                     var method = binding.Method;
                     var parameterType = method.GetParameters().Single().ParameterType;
                     
-                    ISerializer serializer;
+                    ISerializer serializer = null;
+                    
                     var contentType = e.Properties.ContentType ?? "application/xml";
-                    var parameterValue = Deserialize(parameterType, e.Body, contentType, out serializer);
+                    var parameterValue = parameterType == typeof(Stream) 
+                        ? e.Body 
+                        : Deserialize(parameterType, e.Body, contentType, out serializer);
                     messageContextAccess.Push(new MessageContext(e.Properties));
                     try
                     {
                         Log.DebugFormat("Invoking micro-service; Instance = {0}, Method = {1}, Parameter = {2}.", instance.Instance, method, parameterValue);
                         var invokeResult = instance.Invoke(method, parameterValue);
-                        if (e.Properties.ReplyTo != null)
+                        if (e.Properties.ReplyTo.Value != null && !binding.IsOneWay)
                         {
                             Log.DebugFormat("Sending reply message; CorrelationId = {0}, ReplyTo = {1}, Response = {2}.", e.Properties.CorrelationId, e.Properties.ReplyTo, invokeResult);
                             var body = Serialize(method.ReturnType, invokeResult, contentType, serializer);

@@ -50,6 +50,15 @@
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether [is one way].
+        /// </summary>
+        public bool IsOneWay
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets the name of the queue.
         /// </summary>
         public string Queue
@@ -73,6 +82,7 @@
                 Address = new MqAddress(string.Format("{0}://{1}/{2}/{3}", "topic", Exchange, BindingKey, Queue)),
                 Method = method, 
                 Service = service,
+                IsOneWay = IsOneWay,
             };
         }
     }
