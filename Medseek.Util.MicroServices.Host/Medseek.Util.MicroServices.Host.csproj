@@ -67,9 +67,6 @@
       <Link>$(AssemblyName).exe.config</Link>
       <Visible>false</Visible>
     </None>
-    <Content Include="NLog.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
