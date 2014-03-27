@@ -1,15 +1,13 @@
-﻿namespace Medseek.Util.Ioc.Castle
+﻿namespace Medseek.Util.MicroServices
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using global::Castle.Windsor;
     using Medseek.Util.Interactive;
     using Medseek.Util.Ioc;
     using Medseek.Util.Logging;
     using Medseek.Util.Messaging;
-    using Medseek.Util.MicroServices;
 
     /// <summary>
     /// Provides a locator for finding and exposing micro-service 
@@ -23,13 +21,13 @@
         private readonly List<MicroServiceDescriptor> descriptors = new List<MicroServiceDescriptor>();
         private readonly Dictionary<object, MicroServiceDescriptor> instanceMap = new Dictionary<object, MicroServiceDescriptor>();
         private readonly IMqConnection connection;
-        private readonly IWindsorContainer container;
+        private readonly IIocContainer container;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MicroServiceLocator" 
         /// /> class.
         /// </summary>
-        public MicroServiceLocator(IMqConnection connection, IWindsorContainer container)
+        public MicroServiceLocator(IMqConnection connection, IIocContainer container)
         {
             if (connection == null)
                 throw new ArgumentNullException("connection");
@@ -71,18 +69,18 @@
 
             descriptors.Clear();
             
-            var items = container.Kernel.GetAssignableHandlers(typeof(object))
-                .SelectMany(handler => handler.ComponentModel.Implementation.CustomAttributes
-                    .Select(ad => new { handler, type = handler.ComponentModel.Implementation, ad.AttributeType }))
+            var items = container.Components
+                .SelectMany(componentInfo => componentInfo.Implementation.CustomAttributes
+                    .Select(ad => new { componentInfo, type = componentInfo.Implementation, ad.AttributeType }))
                 .Where(x => x.AttributeType == typeof(RegisterMicroServiceAttribute))
                 .SelectMany(x => x.type.GetCustomAttributes<RegisterMicroServiceAttribute>()
-                    .Select(attribute => new { x.type, attribute, x.handler }))
-                .SelectMany(x => x.attribute.MicroServiceContracts
-                    .Select(contract => new { contract, x.handler, x.type, factory = container.Resolve(typeof(IMicroServiceInstanceFactory<>).MakeGenericType(contract)) }))
+                    .Select(attribute => new { x.type, attribute, x.componentInfo }))
+                .SelectMany(x => x.attribute.MicroServiceContracts.Concat(new[] { x.type }).Distinct()
+                    .Select(contract => new { contract, x.componentInfo, x.type, factory = container.Resolve(typeof(IMicroServiceInstanceFactory<>).MakeGenericType(contract)) }))
                 .ToArray();
 
             var bindingsToAdd = items
-                .SelectMany(x => x.type.GetMethods()
+                .SelectMany(x => x.contract.GetMethods()
                     .SelectMany(method => method.GetCustomAttributes<MicroServiceBindingAttribute>()
                         .Select(attribute => attribute.ToBinding(method, x.contract))))
                 .Do(x => Log.DebugFormat("MicroServiceBinding: Address = {0}, Service = {1}, Method = {2}", x.Address, x.Service, x.Method))
