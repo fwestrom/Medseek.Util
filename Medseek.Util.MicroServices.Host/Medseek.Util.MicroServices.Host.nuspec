@@ -20,6 +20,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="$id$.exe.config" target="lib" />
+    <file src="$id$.exe.config" target="content" />
+    <file src="log4net.config" target="content" />
   </files>
 </package>

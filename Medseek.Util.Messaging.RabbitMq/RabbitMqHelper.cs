@@ -19,6 +19,8 @@
         public IBasicProperties CreateBasicProperties(IModel model, MessageProperties properties)
         {
             var basicProperties = model.CreateBasicProperties();
+            if (properties.ContentType != null)
+                basicProperties.ContentType = properties.ContentType;
             if (properties.CorrelationId != null)
                 basicProperties.CorrelationId = properties.CorrelationId;
             if (properties.ReplyTo != null)
@@ -41,12 +43,11 @@
         /// </summary>
         public MessageProperties ToProperties(IBasicProperties basicProperties)
         {
-            object contentType;
             return new MessageProperties
             {
                 CorrelationId = basicProperties.CorrelationId,
                 ReplyTo = new MqAddress(basicProperties.ReplyTo),
-                ContentType = basicProperties.Headers.TryGetValue("Content-Type", out contentType) ? Encoding.Default.GetString((byte[])contentType) : null
+                ContentType = basicProperties.ContentType,
             };
         }
 
