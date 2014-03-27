@@ -87,7 +87,7 @@
         {
             get
             {
-                return defaultMethod ?? (defaultMethod = Contract.GetMethods().Single());
+                return defaultMethod ?? (defaultMethod = Contract.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).Single());
             }
         }
 
