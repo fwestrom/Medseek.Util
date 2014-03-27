@@ -21,13 +21,13 @@ namespace Medseek.Util.Logging.NLog
         private NLogComponents()
         {
             var log = logManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-            log.Info("Initialized log4net.");
+            log.Info("Initialized NLog.");
             LogManager.Default = logManager;
         }
 
         /// <summary>
         /// Gets the plugin that provides the logging functionality using 
-        /// log4net.
+        /// NLog.
         /// </summary>
         public static ILoggingPlugin Plugin
         {
