@@ -40,5 +40,31 @@
                 yield return value;
             }
         }
+
+        /// <summary>
+        /// Enumerates the values from a sequence and performs an action on 
+        /// each value.
+        /// </summary>
+        /// <typeparam name="TSource">
+        /// The type of elements in the source sequence.
+        /// </typeparam>
+        /// <param name="source">
+        /// The source sequence.
+        /// </param>
+        /// <param name="onNext">
+        /// An optional action to invoke as each element is enumerated from the
+        /// sequence.
+        /// </param>
+        public static void ForEach<TSource>(this IEnumerable<TSource> source, Action<TSource> onNext = null)
+        {
+            if (source == null)
+                throw new ArgumentNullException("source");
+
+            foreach (var value in source)
+            {
+                if (onNext != null)
+                    onNext(value);
+            }
+        }
     }
 }

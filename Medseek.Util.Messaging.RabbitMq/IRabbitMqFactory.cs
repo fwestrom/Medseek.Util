@@ -18,7 +18,7 @@
         /// <summary>
         /// Returns an instance of the message consumer component.
         /// </summary>
-        IMqConsumer GetRabbitMqConsumer(IModel model, MqAddress address, bool autoDelete);
+        IMqConsumer GetRabbitMqConsumer(IModel model, RabbitMqAddress[] addresses, bool autoDelete);
 
         /// <summary>
         /// Returns an instance of the message publisher component.

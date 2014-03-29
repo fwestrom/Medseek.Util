@@ -18,7 +18,8 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="RabbitMqConnection"/> class.
         /// </summary>
-        public RabbitMqConnection(ConnectionFactory connectionFactory, IRabbitMqFactory factory)
+        public RabbitMqConnection(ConnectionFactory connectionFactory, IRabbitMqFactory factory, IMqPlugin plugin)
+            : base(plugin)
         {
             if (connectionFactory == null)
                 throw new ArgumentNullException("connectionFactory");

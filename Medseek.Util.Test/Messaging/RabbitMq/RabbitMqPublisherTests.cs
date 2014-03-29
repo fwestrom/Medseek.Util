@@ -22,7 +22,7 @@
         [SetUp]
         public void Setup()
         {
-            Use(address = new MqAddress { Value = "address" });
+            Use(address = new MqAddress("address"));
             helper = Mock<IRabbitMqHelper>();
             model = Mock<IModel>();
         }
@@ -46,7 +46,7 @@
             var basicProperties = new Mock<IBasicProperties>();
             var correlationId = "CorrelationId-" + Guid.NewGuid();
             var exchange = "Exchange-" + Guid.NewGuid();
-            var replyTo = new MqAddress();
+            var replyTo = new MqAddress("address");
             var routingKey = "RoutingKey-" + Guid.NewGuid();
             var pa = new PublicationAddress("topic", exchange, routingKey);
             helper.Setup(x =>

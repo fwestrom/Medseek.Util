@@ -2,6 +2,7 @@
 {
     using System;
     using System.IO;
+    using System.Linq;
     using Medseek.Util.Logging;
 
     /// <summary>
@@ -10,12 +11,17 @@
     public abstract class MqChannelBase : MqSynchronizedDisposable, IMqChannel
     {
         private readonly ILog log;
+        private readonly IMqPlugin plugin;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MqChannelBase"/> class.
         /// </summary>
-        protected MqChannelBase()
+        protected MqChannelBase(IMqPlugin plugin)
         {
+            if (plugin == null)
+                throw new ArgumentNullException("plugin");
+
+            this.plugin = plugin;
             log = LogManager.GetLogger(GetType());
             log.DebugFormat("Creating channel.");
         }
@@ -49,6 +55,17 @@
         }
 
         /// <summary>
+        /// Gets the messaging system plugin associated with the channel.
+        /// </summary>
+        public IMqPlugin Plugin
+        {
+            get
+            {
+                return plugin;
+            }
+        }
+
+        /// <summary>
         /// Creates a consumer that can be used to receive messages from the 
         /// messaging system channel.
         /// </summary>
@@ -71,6 +88,34 @@
                 var consumer = OnCreateConsumer(address, autoDelete);
                 OnDisposableCreated(consumer);
                 return consumer;
+            }
+        }
+
+        /// <summary>
+        /// Creates a consumer that can be used to receive messages from the 
+        /// messaging system channel.
+        /// </summary>
+        /// <param name="addresses">
+        /// A set of consumer addresses describing the messaging primitives to 
+        /// which the consumer binds for incoming messages, all of which must 
+        /// have the same <see cref="MqConsumerAddress.SourceKey"/>.
+        /// </param>
+        /// <param name="autoDelete">
+        /// A value indicating whether closing the consumer should cause any 
+        /// applicable services and messaging primitives to be removed.
+        /// </param>
+        /// <returns>
+        /// The message consumer component that was created.
+        /// </returns>
+        public IMqConsumer[] CreateConsumers(MqConsumerAddress[] addresses, bool autoDelete)
+        {
+            using (EnterDisposeLock())
+            {
+                log.DebugFormat("Creating consumer; Addresses = {0}, AutoDelete = {1}.", string.Join(", ", addresses.Select(x => x.ToString())), autoDelete);
+                var consumers = OnCreateConsumers(addresses, autoDelete);
+                foreach (var consumer in consumers)
+                    OnDisposableCreated(consumer);
+                return consumers;
             }
         }
 
@@ -133,6 +178,27 @@
         /// The message consumer component that was created.
         /// </returns>
         protected abstract IMqConsumer OnCreateConsumer(MqAddress address, bool autoDelete);
+
+        /// <summary>
+        /// Creates a consumer that can be used to receive messages from the 
+        /// messaging system channel.
+        /// </summary>
+        /// <param name="addresses">
+        /// A set of consumer addresses describing the messaging primitives to 
+        /// which the consumer binds for incoming messages, all of which must 
+        /// have the same <see cref="MqConsumerAddress.SourceKey"/>.
+        /// </param>
+        /// <param name="autoDelete">
+        /// A value indicating whether closing the consumer should cause any 
+        /// applicable services and messaging primitives to be removed.
+        /// </param>
+        /// <returns>
+        /// The message consumer components that were created.
+        /// </returns>
+        protected virtual IMqConsumer[] OnCreateConsumers(MqConsumerAddress[] addresses, bool autoDelete)
+        {
+            throw new NotSupportedException();
+        }
 
         /// <summary>
         /// Creates a publisher that can be used to send messages over to the 

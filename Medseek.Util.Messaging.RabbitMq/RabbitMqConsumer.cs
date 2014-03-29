@@ -1,6 +1,8 @@
 ﻿namespace Medseek.Util.Messaging.RabbitMq
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using Medseek.Util.Ioc;
     using RabbitMQ.Client;
     using RabbitMQ.Client.Events;
@@ -12,6 +14,7 @@
     public class RabbitMqConsumer : MqConsumerBase
     {
         private readonly EventingBasicConsumer consumer = new EventingBasicConsumer();
+        private readonly RabbitMqAddress[] addresses;
         private readonly IRabbitMqHelper helper;
         private readonly IModel model;
 
@@ -19,26 +22,30 @@
         /// Initializes a new instance of the <see cref="RabbitMqConsumer" 
         /// /> class.
         /// </summary>
-        public RabbitMqConsumer(MqAddress address, bool autoDelete, IRabbitMqHelper helper, IModel model)
-            : base(address)
+        public RabbitMqConsumer(RabbitMqAddress[] addresses, bool autoDelete, IRabbitMqHelper helper, IModel model)
+            : base(addresses.Cast<MqAddress>().ToArray())
         {
+            if (addresses.Select(x => x.QueueName).Distinct().Count() > 1)
+                throw new ArgumentException("All addresses must share the same source key.", "addresses");
             if (helper == null)
                 throw new ArgumentNullException("helper");
             if (model == null)
                 throw new ArgumentNullException("model");
 
+            this.addresses = addresses;
             this.helper = helper;
             this.model = model;
             consumer.Received += OnConsumerReceived;
 
-            var queue = helper.Queue(address);
+            var queue = addresses.Select(x => x.QueueName).Distinct().Single();
             model.QueueDeclare(queue, false, false, autoDelete, null);
 
-            var pa = helper.ToPublicationAddress(address);
-            if (!(string.IsNullOrEmpty(pa.ExchangeName) || string.IsNullOrEmpty(pa.ExchangeType)))
+            var declaredExchanges = new List<string>();
+            foreach (var address in addresses.Where(DoBindQueue))
             {
-                model.ExchangeDeclare(pa.ExchangeName, pa.ExchangeType);
-                model.QueueBind(queue, pa.ExchangeName, pa.RoutingKey);
+                if (!declaredExchanges.Contains(address.ExchangeName))
+                    model.ExchangeDeclare(address.ExchangeName, address.ExchangeType);
+                model.QueueBind(queue, address.ExchangeName, address.RoutingKey);
             }
 
             model.BasicConsume(queue, true, consumer);
@@ -49,19 +56,20 @@
         /// </summary>
         protected override void OnDisposingConsumer()
         {
-            var pa = helper.ToPublicationAddress(Address);
-            if (!(string.IsNullOrEmpty(pa.ExchangeName) || string.IsNullOrEmpty(pa.ExchangeType)))
-            {
-                var queue = helper.Queue(Address);
-                model.QueueUnbind(queue, pa.ExchangeName, pa.RoutingKey, null);
-            }
+            foreach (var address in addresses.Where(DoBindQueue))
+                model.QueueUnbind(address.QueueName, address.ExchangeName, address.RoutingKey, null);
 
             model.BasicCancel(consumer.ConsumerTag);
         }
 
+        private static bool DoBindQueue(RabbitMqAddress address)
+        {
+            return !(string.IsNullOrEmpty(address.ExchangeName) || string.IsNullOrEmpty(address.ExchangeType));
+        }
+
         private void OnConsumerReceived(IBasicConsumer sender, BasicDeliverEventArgs e)
         {
-            var properties = helper.ToProperties(e.BasicProperties);
+            var properties = helper.ToProperties(e);
             RaiseReceived(e.Body, 0, e.Body.Length, properties);
         }
     }

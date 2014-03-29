@@ -28,6 +28,14 @@ namespace Medseek.Util.Messaging
         }
 
         /// <summary>
+        /// Gets the messaging system plugin associated with the channel.
+        /// </summary>
+        IMqPlugin Plugin
+        {
+            get;
+        }
+
+        /// <summary>
         /// Creates a consumer that can be used to receive messages from the 
         /// messaging system channel.
         /// </summary>
@@ -43,6 +51,24 @@ namespace Medseek.Util.Messaging
         /// The message consumer component that was created.
         /// </returns>
         IMqConsumer CreateConsumer(MqAddress address, bool autoDelete);
+
+        /// <summary>
+        /// Creates a set of consumers consumer that can be used to receive 
+        /// messages from the messaging system channel.
+        /// </summary>
+        /// <param name="addresses">
+        /// A set of consumer addresses describing the messaging primitives to 
+        /// which the consumer binds for incoming messages, all of which must 
+        /// have the same <see cref="MqConsumerAddress.SourceKey"/>.
+        /// </param>
+        /// <param name="autoDelete">
+        /// A value indicating whether closing the consumer should cause any 
+        /// applicable services and messaging primitives to be removed.
+        /// </param>
+        /// <returns>
+        /// The message consumer component that was created.
+        /// </returns>
+        IMqConsumer[] CreateConsumers(MqConsumerAddress[] addresses, bool autoDelete);
 
         /// <summary>
         /// Creates a publisher that can be used to send messages over to the 

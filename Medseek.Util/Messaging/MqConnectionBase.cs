@@ -1,5 +1,6 @@
 ﻿namespace Medseek.Util.Messaging
 {
+    using System;
     using Medseek.Util.Logging;
 
     /// <summary>
@@ -8,16 +9,32 @@
     /// </summary>
     public abstract class MqConnectionBase : MqSynchronizedDisposable, IMqConnection
     {
+        private readonly IMqPlugin plugin;
         private readonly ILog log;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MqConnectionBase" /> 
         /// class.
         /// </summary>
-        protected MqConnectionBase()
+        protected MqConnectionBase(IMqPlugin plugin)
         {
+            if (plugin == null)
+                throw new ArgumentNullException("plugin");
+            
+            this.plugin = plugin;
             log = LogManager.GetLogger(GetType());
             log.DebugFormat("Creating the connection.");
+        }
+
+        /// <summary>
+        /// Gets the messaging system plugin associated with the connection.
+        /// </summary>
+        public IMqPlugin Plugin
+        {
+            get
+            {
+                return plugin;
+            }
         }
 
         /// <summary>

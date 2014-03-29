@@ -20,6 +20,7 @@
         /// /> class.
         /// </summary>
         public ActiveMqConnection(IConnectionFactory connectionFactory)
+            : base(null)
         {
             if (connectionFactory == null)
                 throw new ArgumentNullException("connectionFactory");

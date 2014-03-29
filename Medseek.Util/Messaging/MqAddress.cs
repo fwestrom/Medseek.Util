@@ -1,26 +1,55 @@
 namespace Medseek.Util.Messaging
 {
+    using System;
+
     /// <summary>
     /// Describes an address that corresponds to a messaging system entity to 
     /// which messages can be sent or from which messages can be received.
     /// </summary>
     public class MqAddress
     {
+        private readonly string value;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MqAddress"/> class.
         /// </summary>
         public MqAddress(string value = null)
         {
-            Value = value;
+            if (value == null)
+                throw new ArgumentNullException("value");
+
+            this.value = value;
         }
 
         /// <summary>
-        /// Gets or sets the string value describing to the address.
+        /// Gets the string value describing to the address.
         /// </summary>
-        public string Value
-        { 
-            get;
-            set;
+        internal string Value
+        {
+            get
+            {
+                return value;
+            }
+        }
+
+        /// <summary>
+        /// Determines whether another object is equal to the address.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            var other = obj as MqAddress;
+            return other != null && Value.Equals(other.Value);
+        }
+
+        /// <summary>
+        /// Serves as a hash function for a particular type. 
+        /// </summary>
+        /// <returns>
+        /// A hash code for the current <see cref="T:System.Object"/>.
+        /// </returns>
+        public override int GetHashCode()
+        {
+            return Value != null ? Value.GetHashCode() : 0;
         }
 
         /// <summary>

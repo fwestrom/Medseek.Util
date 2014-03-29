@@ -11,4 +11,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("1.1.*")]
 [assembly: ComVisible(false)]
 [assembly: InternalsVisibleTo("Medseek.Util")]
+[assembly: InternalsVisibleTo("Medseek.Util.Messaging.ActiveMq")]
+[assembly: InternalsVisibleTo("Medseek.Util.Messaging.RabbitMq")]
 [assembly: InternalsVisibleTo("Medseek.Util.Test")]

@@ -21,20 +21,24 @@
         private readonly Dictionary<object, MyBinding> instanceMap = new Dictionary<object, MyBinding>();
         private readonly IMqConnection connection;
         private readonly IIocContainer container;
+        private readonly IMicroServicesFactory microServicesFactory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MicroServiceLocator" 
         /// /> class.
         /// </summary>
-        public MicroServiceLocator(IMqConnection connection, IIocContainer container)
+        public MicroServiceLocator(IMqConnection connection, IIocContainer container, IMicroServicesFactory microServicesFactory)
         {
             if (connection == null)
                 throw new ArgumentNullException("connection");
             if (container == null)
                 throw new ArgumentNullException("container");
+            if (microServicesFactory == null)
+                throw new ArgumentNullException("microServicesFactory");
 
             this.connection = connection;
             this.container = container;
+            this.microServicesFactory = microServicesFactory;
         }
 
         /// <summary>
@@ -55,27 +59,14 @@
         {
             Log.Debug(MethodBase.GetCurrentMethod().Name);
 
+            var bindingProviders = microServicesFactory.GetBindingProviders();
             bindings.Clear();
-            
-            var items = container.Components
-                .SelectMany(componentInfo => componentInfo.Implementation.CustomAttributes
-                    .Select(ad => new { componentInfo, type = componentInfo.Implementation, ad.AttributeType }))
-                .Where(x => x.AttributeType == typeof(RegisterMicroServiceAttribute))
-                .SelectMany(x => x.type.GetCustomAttributes<RegisterMicroServiceAttribute>()
-                    .Select(attribute => new { x.type, attribute, x.componentInfo }))
-                .SelectMany(x => x.attribute.MicroServiceContracts.Concat(new[] { x.type }).Distinct()
-                    .Select(contract => new { contract, x.componentInfo, x.type, factory = container.Resolve(typeof(IMicroServiceInstanceFactory<>).MakeGenericType(contract)) }))
-                .ToArray();
-
-            var bindingsToAdd = items
-                .SelectMany(x => x.contract.GetMethods()
-                    .SelectMany(method => method.GetCustomAttributes<MicroServiceBindingAttribute>()
-                        .Select(attribute => attribute.ToBinding<MyBinding>(method, x.contract))
-                        .Do(binding => binding.Factory = FactoryHelper.Create(x.contract, x.factory))))
-                .Do(x => Log.DebugFormat("MicroServiceBinding: Address = {0}, Service = {1}, Method = {2}", x.Address, x.Service, x.Method))
-                .ToArray();
-            foreach (var binding in bindingsToAdd)
-                bindings.Add(binding);
+            container.Components
+                .SelectMany(ci => bindingProviders
+                    .SelectMany(x => x.GetBindings<MyBinding>(ci.Implementation)))
+                .Do(b => b.Address = connection.Plugin.ToConsumerAddress(b.Address))
+                .Do(b => b.Factory = FactoryHelper.Create(b.Service, container.Resolve(typeof(IMicroServiceInstanceFactory<>).MakeGenericType(b.Service))))
+                .ForEach(bindings.Add);
         }
 
         /// <summary>

@@ -50,6 +50,7 @@
     <Compile Include="IRabbitMqFactory.cs" />
     <Compile Include="IRabbitMqHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RabbitMqAddress.cs" />
     <Compile Include="RabbitMqChannel.cs" />
     <Compile Include="RabbitMqComponents.cs" />
     <Compile Include="RabbitMqConnection.cs" />

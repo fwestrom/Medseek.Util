@@ -10,7 +10,7 @@ namespace Medseek.Util.Messaging
     /// </summary>
     public class MqRpcClient : MqSynchronizedDisposable, IMqRpcClient<byte[], Stream>
     {
-        private readonly MqAddress replyTo = new MqAddress { Value = "RpcClient-" + Guid.NewGuid().ToString("N") };
+        private readonly MqAddress replyTo = new MqAddress("RpcClient-" + Guid.NewGuid().ToString("N"));
         private readonly IMqConsumer consumer;
         private readonly IMqPublisher publisher;
 

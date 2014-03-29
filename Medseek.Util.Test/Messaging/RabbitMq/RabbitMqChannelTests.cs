@@ -1,6 +1,7 @@
 ﻿namespace Medseek.Util.Messaging.RabbitMq
 {
     using System;
+    using System.Linq;
     using Medseek.Util.Testing;
     using Moq;
     using NUnit.Framework;
@@ -35,11 +36,16 @@
                 .Returns(model.Object);
 
             factory.Setup(x => 
-                x.GetRabbitMqConsumer(model.Object, It.IsAny<MqAddress>(), It.IsAny<bool>()))
+                x.GetRabbitMqConsumer(model.Object, It.IsAny<RabbitMqAddress[]>(), It.IsAny<bool>()))
                 .Returns(consumer.Object);
             factory.Setup(x =>
                 x.GetRabbitMqPublisher(model.Object, It.IsAny<MqAddress>()))
                 .Returns(publisher.Object);
+
+            var plugin = Mock<IMqPlugin>();
+            plugin.Setup(x => 
+                x.ToConsumerAddress(It.IsAny<MqAddress>()))
+                .Returns((MqAddress a) => a as RabbitMqAddress ?? RabbitMqAddress.Parse(a.Value));
         }
 
         /// <summary>
@@ -58,11 +64,11 @@
         [Theory]
         public void CreateConsumerReturnsInstanceFromFactory(bool autoDelete)
         {
-            var address = new MqAddress();
+            var address = new RabbitMqAddress("topic", "exchange-name", "routing-key", "queue-name");
             var result = Obj.CreateConsumer(address, autoDelete);
 
             factory.Verify(x => 
-                x.GetRabbitMqConsumer(model.Object, address, autoDelete));
+                x.GetRabbitMqConsumer(model.Object, It.Is<RabbitMqAddress[]>(a => a.Contains(address)), autoDelete));
             Assert.That(result, Is.SameAs(consumer.Object));
         }
 
@@ -72,7 +78,7 @@
         [Test]
         public void CreatePublisherReturnsInstanceFromFactory()
         {
-            var address = new MqAddress();
+            var address = new MqAddress("address");
             var result = Obj.CreatePublisher(address);
 
             factory.Verify(x =>
@@ -101,7 +107,7 @@
         [Theory]
         public void DisposeConsumerReleasesInstanceToFactory(bool autoDelete)
         {
-            var address = new MqAddress();
+            var address = RabbitMqAddress.Parse(string.Empty);
             var createdConsumer = Obj.CreateConsumer(address, autoDelete);
             Assume.That(createdConsumer, Is.SameAs(consumer.Object));
 
@@ -121,7 +127,7 @@
         [Test]
         public void DisposePublisherReleasesInstanceToFactory()
         {
-            var address = new MqAddress();
+            var address = RabbitMqAddress.Parse(string.Empty);
             var createdPublisher = Obj.CreatePublisher(address);
             Assume.That(createdPublisher, Is.SameAs(publisher.Object));
 

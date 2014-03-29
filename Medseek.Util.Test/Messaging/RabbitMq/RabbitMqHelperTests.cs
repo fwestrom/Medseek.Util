@@ -33,10 +33,10 @@
         /// Verifies that the queue is returned correctly.
         /// </summary>
         [Test]
-        public void QueueReturnsCorrectValue()
+        public void ToRabbitMqAddressReturnsCorrectQueue()
         {
-            var result = Obj.Queue(address);
-            Assert.That(result, Is.EqualTo(queueName));
+            var result = Obj.ToRabbitMqAddress(address);
+            Assert.That(result.QueueName, Is.EqualTo(queueName));
         }
 
         /// <summary>

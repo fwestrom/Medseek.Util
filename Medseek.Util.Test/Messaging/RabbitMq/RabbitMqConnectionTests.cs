@@ -16,6 +16,7 @@
         private Mock<IConnection> connection;
         private Mock<ConnectionFactory> connectionFactory;
         private Mock<IRabbitMqFactory> factory;
+        private Mock<IMqPlugin> plugin;
 
         /// <summary>
         /// Sets up before each test is executed.
@@ -28,6 +29,7 @@
             connectionFactory = new Mock<ConnectionFactory>();
             Use(connectionFactory.Object);
             factory = Mock<IRabbitMqFactory>();
+            plugin = Mock<IMqPlugin>();
 
             connectionFactory.Setup(x => 
                 x.CreateConnection())
@@ -45,7 +47,7 @@
         [Test]
         public void CtorRequiresDependencies0()
         {
-            TestDelegate action = () => new RabbitMqConnection(null, factory.Object);
+            TestDelegate action = () => new RabbitMqConnection(null, factory.Object, plugin.Object);
             Assert.That(action, Throws.InstanceOf<ArgumentNullException>());
         }
 
@@ -56,7 +58,7 @@
         [Test]
         public void CtorRequiresDependencies1()
         {
-            TestDelegate action = () => new RabbitMqConnection(connectionFactory.Object, null);
+            TestDelegate action = () => new RabbitMqConnection(connectionFactory.Object, null, plugin.Object);
             Assert.That(action, Throws.InstanceOf<ArgumentNullException>());
         }
 

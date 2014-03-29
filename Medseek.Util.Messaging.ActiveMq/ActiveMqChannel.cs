@@ -18,6 +18,7 @@
         /// class.
         /// </summary>
         public ActiveMqChannel(IConnection connection)
+            : base(null)
         {
             if (connection == null)
                 throw new ArgumentNullException("connection");

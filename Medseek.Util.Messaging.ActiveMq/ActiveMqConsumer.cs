@@ -1,6 +1,7 @@
 ﻿namespace Medseek.Util.Messaging.ActiveMq
 {
     using System;
+    using System.Linq;
     using System.Reflection;
     using Apache.NMS;
     using Medseek.Util.Ioc;
@@ -24,7 +25,7 @@
         /// class.
         /// </summary>
         public ActiveMqConsumer(ISession session, MqAddress address, bool autoDelete)
-            : base(address)
+            : base(new[] { address })
         {
             if (session == null)
                 throw new ArgumentNullException("session");
@@ -49,7 +50,7 @@
             }
             catch (Exception ex)
             {
-                var message = string.Format("Failed while trying to delete consumer destination; Address = {0}, Destination = {1}, Cause = {2}: {3}.", Address, destination, ex.GetType().Name, ex.Message.TrimEnd('.'));
+                var message = string.Format("Failed while trying to delete consumer destination; Address = {0}, Destination = {1}, Cause = {2}: {3}.", string.Join(", ", Addresses.Select(x => x.ToString())), destination, ex.GetType().Name, ex.Message.TrimEnd('.'));
                 Log.Error(message, ex);
             }
         }

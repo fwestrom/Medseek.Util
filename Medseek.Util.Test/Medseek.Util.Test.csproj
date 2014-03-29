@@ -109,10 +109,12 @@
     <Compile Include="Ioc\Castle\WindsorIntegrationHttpModuleTests.cs" />
     <Compile Include="Logging\Log4Net\Log4NetLogTests.cs" />
     <Compile Include="Logging\NLog\NLogTests.cs" />
+    <Compile Include="Messaging\MqAddressTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqChannelTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqConnectionTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqConsumerTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqHelperTests.cs" />
+    <Compile Include="Messaging\RabbitMq\RabbitMqPluginTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqPublisherTests.cs" />
     <Compile Include="MicroServices\Host\ExampleMicroService.cs" />
     <Compile Include="MicroServices\Host\MicroServiceHostTests.cs" />

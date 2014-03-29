@@ -45,7 +45,20 @@ namespace Medseek.Util.Messaging
         /// <summary>
         /// Gets or sets the type of the content.
         /// </summary>
-        public string ContentType { get; set; }
+        public string ContentType
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the routing key associated with the message.
+        /// </summary>
+        public string RoutingKey
+        {
+            get; 
+            set;
+        }
 
         /// <summary>
         /// Gets the value of a property by its identifier, name, or key.

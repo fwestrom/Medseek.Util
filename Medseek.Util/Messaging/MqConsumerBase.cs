@@ -10,21 +10,21 @@
     /// </summary>
     public abstract class MqConsumerBase : MqSynchronizedDisposable, IMqConsumer
     {
-        private readonly MqAddress address;
+        private readonly MqAddress[] addresses;
         private readonly ILog log;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MqConsumerBase" /> 
         /// class.
         /// </summary>
-        protected MqConsumerBase(MqAddress address)
+        protected MqConsumerBase(MqAddress[] addresses)
         {
-            if (address == null)
-                throw new ArgumentNullException("address");
+            if (addresses == null)
+                throw new ArgumentNullException("addresses");
 
-            this.address = address;
+            this.addresses = addresses;
             log = LogManager.GetLogger(GetType());
-            log.DebugFormat("Creating the consumer; Address = {0}.", address);
+            log.DebugFormat("Creating the consumer; Addresses = {0}.", string.Join(", ", addresses.Select(x => x.ToString())));
         }
 
         /// <summary>
@@ -36,11 +36,11 @@
         /// <summary>
         /// Gets the address from which messages are received by the consumer.
         /// </summary>
-        public MqAddress Address
+        public MqAddress[] Addresses
         {
             get
             {
-                return address;
+                return addresses;
             }
         }
 
@@ -54,7 +54,7 @@
         /// </summary>
         protected override void OnDisposingMqDisposable()
         {
-            log.DebugFormat("Disposing the consumer; Address = {0}.", address);
+            log.DebugFormat("Disposing the consumer; Addresses = {0}.", string.Join(", ", addresses.Select(x => x.ToString())));
             OnDisposingConsumer();
         }
 
@@ -66,7 +66,7 @@
         {
             using (EnterDisposeLock(false))
             {
-                log.DebugFormat("Received a message with {0} bytes; Address = {1}, CorrelationId = {2}, ReplyTo = {3}.", count, address, properties.CorrelationId, properties.ReplyTo);
+                log.DebugFormat("Received a message with {0} bytes; RoutingKey = {1}, CorrelationId = {2}, ReplyTo = {3}.", count, properties.RoutingKey, properties.CorrelationId, properties.ReplyTo);
                 var received = Received;
                 if (received != null)
                 {

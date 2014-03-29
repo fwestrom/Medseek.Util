@@ -2,10 +2,12 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
+    using Medseek.Util.Interactive;
     using Medseek.Util.Ioc;
     using Medseek.Util.Logging;
     using Medseek.Util.Messaging;
@@ -15,14 +17,17 @@
     /// <summary>
     /// Provides a micro-service dispatcher using a messaging system connection.
     /// </summary>
+    [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "MQ->MessageQueue is not hungarian notation.")]
     [Register(Lifestyle = Lifestyle.Singleton, Start = true)]
     public class MicroServiceDispatcher : IStartable, IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly Dictionary<IMqConsumer, MicroServiceBinding> bindingMap = new Dictionary<IMqConsumer, MicroServiceBinding>();
+        private readonly List<MicroServiceBinding> bindings = new List<MicroServiceBinding>(); 
+        private readonly List<IMqConsumer> consumers = new List<IMqConsumer>();
         private readonly IMqChannel channel;
         private readonly IMessageContextAccess messageContextAccess;
         private readonly IMicroServiceLocator microServiceLocator;
+        private readonly IMqPlugin mqPlugin;
         private readonly ISerializer[] serializers;
         private readonly IDispatchedThread thread;
         private long dispatcherDepth;
@@ -38,6 +43,7 @@
             IMqConnection connection, 
             IMessageContextAccess messageContextAccess,
             IMicroServiceLocator microServiceLocator,
+            IMqPlugin mqPlugin,
             ISerializerFactory serializerFactory,
             IDispatchedThread thread)
         {
@@ -47,6 +53,8 @@
                 throw new ArgumentNullException("messageContextAccess");
             if (microServiceLocator == null)
                 throw new ArgumentNullException("microServiceLocator");
+            if (mqPlugin == null)
+                throw new ArgumentNullException("mqPlugin");
             if (serializerFactory == null)
                 throw new ArgumentNullException("serializerFactory");
             if (thread == null)
@@ -55,6 +63,7 @@
             channel = connection.CreateChannnel();
             this.messageContextAccess = messageContextAccess;
             this.microServiceLocator = microServiceLocator;
+            this.mqPlugin = mqPlugin;
             serializers = serializerFactory.GetAllSerializers();
             this.thread = thread;
             thread.Name = "MicroServices.Dispatch";
@@ -79,16 +88,24 @@
             }
 
             microServiceLocator.Initialize();
+            var consumerGroups = microServiceLocator.Bindings
+                .Do(bindings.Add)
+                .Select(binding => new { binding, address = mqPlugin.ToConsumerAddress(binding.Address) })
+                .GroupBy(x => x.address.SourceKey)
+                .ToArray();
 
             thread.Invoke(() =>
             {
-                foreach (var binding in microServiceLocator.Bindings)
+                foreach (var consumerGroup in consumerGroups)
                 {
-                    Log.InfoFormat("Starting message consumer for binding; Address = {0}, Service = {1}, Method = {2}.", binding.Address, binding.Service, binding.Method);
-
-                    var consumer = channel.CreateConsumer(binding.Address, true);
-                    consumer.Received += OnReceived;
-                    bindingMap[consumer] = binding;
+                    Log.InfoFormat("Starting message consumer; SourceKey = {0}, Bindings = {1}.", consumerGroup.Key, string.Join(", ", consumerGroup.Select(x => x.binding).Select(x => string.Format("(Addresses = {0}, Service = {1}, Method = {2})", x.Address, x.Service, x.Method))));
+                    var addresses = consumerGroup.Select(x => x.address).ToArray();
+                    var createdConsumers = channel.CreateConsumers(addresses, true);
+                    foreach (var consumer in createdConsumers)
+                    {
+                        consumer.Received += OnReceived;
+                        consumers.Add(consumer);
+                    }
                 }
             });
         }
@@ -108,10 +125,11 @@
 
             thread.Invoke(() =>
             {
-                foreach (var consumer in bindingMap.Keys.ToArray())
+                bindings.Clear();
+                foreach (var consumer in consumers.ToArray())
                 {
                     consumer.Dispose();
-                    bindingMap.Remove(consumer);
+                    consumers.Remove(consumer);
                 }
             });
         }
@@ -141,23 +159,23 @@
                     channel.IsPaused = Interlocked.Read(ref dispatcherDepth) > 10;
                 try
                 {
-                    var binding = bindingMap[(IMqConsumer)sender];
+                    var contentType = e.Properties.ContentType ?? "application/xml";
+                    var binding = bindings.First(x => mqPlugin.IsMatch(e.Properties, x.Address));
                     var instance = microServiceLocator.Get(binding.Service);
                     var method = binding.Method;
                     var parameterType = method.GetParameters().Single().ParameterType;
                     
-                    ISerializer serializer = null;
-                    
-                    var contentType = e.Properties.ContentType ?? "application/xml";
-                    var parameterValue = parameterType == typeof(Stream) 
-                        ? e.Body 
-                        : Deserialize(parameterType, e.Body, contentType, out serializer);
+                    ISerializer serializer = null;                    
+                    var parameterValue = parameterType != typeof(Stream) 
+                        ? Deserialize(parameterType, e.Body, contentType, out serializer)
+                        : e.Body;
+
                     messageContextAccess.Push(new MessageContext(e.Properties));
                     try
                     {
                         Log.DebugFormat("Invoking micro-service; Instance = {0}, Method = {1}, Parameter = {2}.", instance.Instance, method, parameterValue);
                         var invokeResult = instance.Invoke(method, parameterValue);
-                        if (e.Properties.ReplyTo.Value != null && !binding.IsOneWay)
+                        if (e.Properties.ReplyTo != null && !binding.IsOneWay)
                         {
                             Log.DebugFormat("Sending reply message; CorrelationId = {0}, ReplyTo = {1}, Response = {2}.", e.Properties.CorrelationId, e.Properties.ReplyTo, invokeResult);
                             var body = Serialize(method.ReturnType, invokeResult, contentType, serializer);

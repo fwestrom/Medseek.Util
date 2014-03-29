@@ -1,10 +1,9 @@
 ﻿namespace Medseek.Util.Messaging.RabbitMq
 {
     using System.Linq;
-    using System.Text;
-
     using Medseek.Util.Ioc;
     using RabbitMQ.Client;
+    using RabbitMQ.Client.Events;
 
     /// <summary>
     /// Provides helper functionality for working with messaging and RabbitMQ.
@@ -29,15 +28,6 @@
         }
 
         /// <summary>
-        /// Gets the name of the queue associated with the address.
-        /// </summary>
-        public string Queue(MqAddress address)
-        {
-            var parts = address.Value.Split('/');
-            return parts.Length > 4 ? parts[4] : string.Empty;
-        }
-
-        /// <summary>
         /// Gets a message properties object set with the values from a
         /// RabbitMQ basic properties object.
         /// </summary>
@@ -52,13 +42,30 @@
         }
 
         /// <summary>
+        /// Gets a message properties object set with the values from a
+        /// RabbitMQ basic deliver event notification data object.
+        /// </summary>
+        public MessageProperties ToProperties(BasicDeliverEventArgs e)
+        {
+            var properties = ToProperties(e.BasicProperties);
+            properties.RoutingKey = e.RoutingKey;
+            return properties;
+        }
+
+        /// <summary>
         /// Gets a publication address from the messaging system address.
         /// </summary>
         public PublicationAddress ToPublicationAddress(MqAddress address)
         {
-            var parts = address.Value.Split('/');
-            var text = string.Join("/", parts.Take(4));
-            var result = PublicationAddress.Parse(text);
+            var ra = ToRabbitMqAddress(address);
+            var result = new PublicationAddress(ra.ExchangeType, ra.ExchangeName, ra.RoutingKey);
+            return result;
+        }
+
+        public RabbitMqAddress ToRabbitMqAddress(MqAddress address)
+        {
+            var ra = address as RabbitMqAddress;
+            var result = ra ?? RabbitMqAddress.Parse(address.Value);
             return result;
         }
     }

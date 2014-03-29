@@ -55,10 +55,14 @@
     <Compile Include="Logging\ILoggingPlugin.cs" />
     <Compile Include="Messaging\IMessageProperties.cs" />
     <Compile Include="Messaging\IMqPlugin.cs" />
+    <Compile Include="Messaging\MqConsumerAddress.cs" />
+    <Compile Include="MicroServices\BindingProviders\MicroServiceBindingAttributeBindingProvider.cs" />
     <Compile Include="MicroServices\IMessageContext.cs" />
     <Compile Include="MicroServices\IMessageContextAccess.cs" />
+    <Compile Include="MicroServices\BindingProviders\IMicroServiceBindingProvider.cs" />
     <Compile Include="MicroServices\IMicroServiceInstanceFactory.cs" />
     <Compile Include="MicroServices\IMicroServiceLocator.cs" />
+    <Compile Include="MicroServices\IMicroServicesFactory.cs" />
     <Compile Include="MicroServices\MessageContext.cs" />
     <Compile Include="MicroServices\MicroServiceBinding.cs" />
     <Compile Include="MicroServices\MicroServiceInstance.cs" />
@@ -120,6 +124,7 @@
   <ItemGroup>
     <Compile Include="Ioc\ReferencePluginAttribute.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
