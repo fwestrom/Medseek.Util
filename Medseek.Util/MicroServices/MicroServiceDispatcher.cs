@@ -22,6 +22,7 @@
     public class MicroServiceDispatcher : IStartable, IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly Dictionary<IMqConsumer, List<MicroServiceBinding>> bindingMap = new Dictionary<IMqConsumer, List<MicroServiceBinding>>(); 
         private readonly List<MicroServiceBinding> bindings = new List<MicroServiceBinding>(); 
         private readonly List<IMqConsumer> consumers = new List<IMqConsumer>();
         private readonly IMqChannel channel;
@@ -103,6 +104,7 @@
                     var createdConsumers = channel.CreateConsumers(addresses, true);
                     foreach (var consumer in createdConsumers)
                     {
+                        bindingMap[consumer] = consumerGroup.Select(x => x.binding).ToList();
                         consumer.Received += OnReceived;
                         consumers.Add(consumer);
                     }
@@ -125,6 +127,7 @@
 
             thread.Invoke(() =>
             {
+                bindingMap.Clear();
                 bindings.Clear();
                 foreach (var consumer in consumers.ToArray())
                 {
@@ -160,7 +163,9 @@
                 try
                 {
                     var contentType = e.Properties.ContentType ?? "application/xml";
-                    var binding = bindings.First(x => mqPlugin.IsMatch(e.Properties, x.Address));
+                    var consumer = (IMqConsumer)sender;
+                    var bindingsFromMap = bindingMap[consumer];
+                    var binding = bindingsFromMap.First(x => mqPlugin.IsMatch(e.Properties, x.Address));
                     var instance = microServiceLocator.Get(binding.Service);
                     var method = binding.Method;
                     var parameterType = method.GetParameters().Single().ParameterType;

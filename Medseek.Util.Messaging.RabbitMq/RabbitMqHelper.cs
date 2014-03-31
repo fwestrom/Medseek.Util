@@ -36,7 +36,7 @@
             return new MessageProperties
             {
                 CorrelationId = basicProperties.CorrelationId,
-                ReplyTo = new MqAddress(basicProperties.ReplyTo),
+                ReplyTo = basicProperties.ReplyTo != null ? new MqAddress(basicProperties.ReplyTo) : null,
                 ContentType = basicProperties.ContentType,
             };
         }
