@@ -146,10 +146,6 @@
       <Project>{ee3c7441-166a-4435-8b0f-c67f650f0be5}</Project>
       <Name>Medseek.Util.Logging.NLog</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Medseek.Util.Messaging.ActiveMq\Medseek.Util.Messaging.ActiveMq.csproj">
-      <Project>{731165bd-266b-4fb2-8316-8f03d4b01d16}</Project>
-      <Name>Medseek.Util.Messaging.ActiveMq</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Medseek.Util.Messaging.RabbitMq\Medseek.Util.Messaging.RabbitMq.csproj">
       <Project>{cee14ab7-0d49-4432-9184-7aa8fa008f14}</Project>
       <Name>Medseek.Util.Messaging.RabbitMq</Name>

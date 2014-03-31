@@ -30,8 +30,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Logging.Log4Ne
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Messaging.RabbitMq", "Medseek.Util.Messaging.RabbitMq\Medseek.Util.Messaging.RabbitMq.csproj", "{CEE14AB7-0D49-4432-9184-7AA8FA008F14}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Messaging.ActiveMq", "Medseek.Util.Messaging.ActiveMq\Medseek.Util.Messaging.ActiveMq.csproj", "{731165BD-266B-4FB2-8316-8F03D4B01D16}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.MicroServices.Host", "Medseek.Util.MicroServices.Host\Medseek.Util.MicroServices.Host.csproj", "{40E5B6C1-6598-4FB4-84D2-623DB6626239}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medseek.Util.Logging.NLog", "Medseek.Util.Logging.NLog\Medseek.Util.Logging.NLog.csproj", "{EE3C7441-166A-4435-8B0F-C67F650F0BE5}"
@@ -74,10 +72,6 @@ Global
 		{CEE14AB7-0D49-4432-9184-7AA8FA008F14}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CEE14AB7-0D49-4432-9184-7AA8FA008F14}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CEE14AB7-0D49-4432-9184-7AA8FA008F14}.Release|Any CPU.Build.0 = Release|Any CPU
-		{731165BD-266B-4FB2-8316-8F03D4B01D16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{731165BD-266B-4FB2-8316-8F03D4B01D16}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{731165BD-266B-4FB2-8316-8F03D4B01D16}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{731165BD-266B-4FB2-8316-8F03D4B01D16}.Release|Any CPU.Build.0 = Release|Any CPU
 		{40E5B6C1-6598-4FB4-84D2-623DB6626239}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{40E5B6C1-6598-4FB4-84D2-623DB6626239}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40E5B6C1-6598-4FB4-84D2-623DB6626239}.Release|Any CPU.ActiveCfg = Release|Any CPU
