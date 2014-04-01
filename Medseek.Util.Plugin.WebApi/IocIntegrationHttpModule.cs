@@ -22,7 +22,7 @@
         /// A callback delegate that will be used to obtain the container the 
         /// first time the container is used.
         /// </param>
-        internal IocIntegrationHttpModule(Func<IIocContainer> getContainer)
+        public IocIntegrationHttpModule(Func<IIocContainer> getContainer)
         {
             if (getContainer == null)
                 throw new ArgumentNullException("getContainer");
