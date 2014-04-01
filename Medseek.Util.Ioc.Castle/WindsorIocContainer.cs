@@ -3,9 +3,13 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using global::Castle.Facilities.Startable;
+    using global::Castle.Facilities.TypedFactory;
+    using global::Castle.Facilities.WcfIntegration;
     using global::Castle.MicroKernel;
     using global::Castle.MicroKernel.Registration;
     using global::Castle.Windsor;
+    using global::Castle.Windsor.Installer;
 
     /// <summary>
     /// Provides the pluggable functionality of an inversion of control 
@@ -64,8 +68,20 @@
         /// </param>
         public IIocContainer Install(params IInstallable[] installables)
         {
-            var installer = new InstallablesInstaller(installables.Distinct());
-            Install(installer);
+            if (plugin.AddStartableFacility)
+                AddFacility<StartableFacility>(x => x.DeferredStart());
+            if (plugin.AddTypedFactoryFacility)
+                AddFacility<TypedFactoryFacility>();
+            if (plugin.AddWcfFacility)
+                AddFacility<WcfFacility>();
+            if (plugin.RegisterIWindsorContainer)
+                Register(Component.For<IWindsorContainer, IIocContainer>().Instance(this));
+
+            var installers = new List<IWindsorInstaller> { new InstallablesInstaller(installables.Distinct()) };
+            if (plugin.InstallFromConfiguration)
+                installers.Insert(0, Configuration.FromAppConfig());
+
+            Install(installers.ToArray());
             return this;
         }
 

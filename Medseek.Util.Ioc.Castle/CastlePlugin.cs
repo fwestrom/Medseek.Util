@@ -98,17 +98,6 @@
         public IIocContainer NewContainer()
         {
             var container = new WindsorIocContainer(this);
-            if (AddStartableFacility)
-                container.AddFacility<StartableFacility>(x => x.DeferredStart());
-            if (AddTypedFactoryFacility)
-                container.AddFacility<TypedFactoryFacility>();
-            if (AddWcfFacility)
-                container.AddFacility<WcfFacility>();
-            if (InstallFromConfiguration)
-                container.Install(Configuration.FromAppConfig());
-            if (RegisterIWindsorContainer)
-                container.Register(Component.For<IWindsorContainer, IIocContainer>().Instance(container));
-
             return container;
         }
 
