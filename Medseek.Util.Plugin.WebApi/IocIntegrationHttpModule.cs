@@ -1,42 +1,33 @@
-﻿namespace Medseek.Util.Ioc.Castle
+﻿namespace Medseek.Util.Plugin.WebApi
 {
     using System;
     using System.Web;
     using System.Web.Http;
     using System.Web.Http.Dependencies;
-    using global::Castle.Windsor;
+    using Medseek.Util.Ioc;
 
     /// <summary>
     /// Provides an integration with the Castle Windsor container for web 
     /// applications.
     /// </summary>
-    public class WindsorIntegrationHttpModule : IHttpModule
+    public class IocIntegrationHttpModule : IHttpModule
     {
-        private readonly Lazy<IWindsorContainer> container;
+        private readonly Lazy<IIocContainer> container;
 
         /// <summary>
         /// Initializes a new instance of the <see 
-        /// cref="WindsorIntegrationHttpModule" /> class.
-        /// </summary>
-        public WindsorIntegrationHttpModule()
-            : this(WindsorBootstrapper.GetContainer)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see 
-        /// cref="WindsorIntegrationHttpModule" /> class.
+        /// cref="IocIntegrationHttpModule" /> class.
         /// </summary>
         /// <param name="getContainer">
         /// A callback delegate that will be used to obtain the container the 
         /// first time the container is used.
         /// </param>
-        internal WindsorIntegrationHttpModule(Func<IWindsorContainer> getContainer)
+        internal IocIntegrationHttpModule(Func<IIocContainer> getContainer)
         {
             if (getContainer == null)
                 throw new ArgumentNullException("getContainer");
 
-            container = new Lazy<IWindsorContainer>(getContainer);
+            container = new Lazy<IIocContainer>(getContainer);
         }
 
         /// <summary>
@@ -49,12 +40,24 @@
         /// </param>
         public void Init(HttpApplication app)
         {
-            var dependencyResolver = container.Value.Resolve<IDependencyResolver>();
-            GlobalConfiguration.Configuration.DependencyResolver = dependencyResolver;
+            container.Value.Register(
+                new Registration
+                {
+                    Services = new[] { typeof(IDependencyResolver) },
+                    Implementation = typeof(IocDependencyResolver),
+                },
+                new Registration
+                {
+                    Services = new[] { typeof(IIocContainer) },
+                    Instance = container.Value,
+                    OnlyNewServices = true,
+                });
+
+            GlobalConfiguration.Configuration.DependencyResolver = (IDependencyResolver)container.Value.Resolve(typeof(IDependencyResolver));
         }
 
         /// <summary>
-        /// Disposes of the resources (other than memory) used by the module that implements <see cref="IHttpModule"/>.
+        /// Disposes the HTTP module.
         /// </summary>
         public void Dispose()
         {

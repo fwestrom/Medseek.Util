@@ -89,6 +89,20 @@
             return this;
         }
 
+        /// <summary>
+        /// Resolves the available components by a required service type.
+        /// </summary>
+        /// <param name="service">
+        /// The required service type provided by the components.
+        /// </param>
+        /// <returns>
+        /// The component instances that were resolved.
+        /// </returns>
+        public new IEnumerable<object> ResolveAll(Type service)
+        {
+            return base.ResolveAll(service).Cast<object>();
+        }
+
         private void OnKernelComponentRegistered(string key, IHandler handler)
         {
             var registeredComponent = RegisteredComponent;
