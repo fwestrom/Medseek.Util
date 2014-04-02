@@ -22,7 +22,7 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="WindsorIocContainer"/> class.
         /// </summary>
-        internal WindsorIocContainer(CastlePlugin plugin)
+        public WindsorIocContainer(CastlePlugin plugin)
         {
             if (plugin == null)
                 throw new ArgumentNullException("plugin");
@@ -68,13 +68,14 @@
         /// </param>
         public IIocContainer Install(params IInstallable[] installables)
         {
-            if (plugin.AddStartableFacility)
+            var facilities = Kernel.GetFacilities();
+            if (plugin.AddStartableFacility && !facilities.Any(f => f is StartableFacility))
                 AddFacility<StartableFacility>(x => x.DeferredStart());
-            if (plugin.AddTypedFactoryFacility)
+            if (plugin.AddTypedFactoryFacility && !facilities.Any(f => f is TypedFactoryFacility))
                 AddFacility<TypedFactoryFacility>();
-            if (plugin.AddWcfFacility)
+            if (plugin.AddWcfFacility && !facilities.Any(f => f is WcfFacility))
                 AddFacility<WcfFacility>();
-            if (plugin.RegisterIWindsorContainer)
+            if (plugin.RegisterIWindsorContainer && !Kernel.HasComponent(typeof(IIocContainer)))
                 Register(Component.For<IWindsorContainer, IIocContainer>().Instance(this));
 
             var installers = new List<IWindsorInstaller> { new InstallablesInstaller(installables.Distinct()) };

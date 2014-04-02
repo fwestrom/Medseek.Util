@@ -27,7 +27,7 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="CastlePlugin"/> class.
         /// </summary>
-        internal CastlePlugin()
+        public CastlePlugin()
         {
             AddStartableFacility = true;
             AddTypedFactoryFacility = true;

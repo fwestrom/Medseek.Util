@@ -105,6 +105,7 @@
     <Compile Include="..\Medseek.Util\Properties\AssemblyInfoShared.cs">
       <Link>Properties\AssemblyInfoShared.cs</Link>
     </Compile>
+    <Compile Include="Ioc\Castle\WindsorIocContainerTests.cs" />
     <Compile Include="Logging\Log4Net\Log4NetLogTests.cs" />
     <Compile Include="Logging\NLog\NLogTests.cs" />
     <Compile Include="Messaging\MqAddressTests.cs" />
@@ -130,7 +131,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Ioc\Castle\" />
     <Folder Include="Objects\" />
     <Folder Include="Threading\" />
   </ItemGroup>
