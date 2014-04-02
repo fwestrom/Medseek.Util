@@ -75,12 +75,14 @@
                 AddFacility<TypedFactoryFacility>();
             if (plugin.AddWcfFacility && !facilities.Any(f => f is WcfFacility))
                 AddFacility<WcfFacility>();
-            if (plugin.RegisterIWindsorContainer && !Kernel.HasComponent(typeof(IIocContainer)))
+            if (plugin.RegisterIWindsorContainer 
+                && !Kernel.HasComponent(typeof(IIocContainer))
+                && !Kernel.HasComponent(typeof(IWindsorContainer)))
                 Register(Component.For<IWindsorContainer, IIocContainer>().Instance(this));
 
             var installers = new List<IWindsorInstaller> { new InstallablesInstaller(installables.Distinct()) };
             if (plugin.InstallFromConfiguration)
-                installers.Insert(0, Configuration.FromAppConfig());
+                installers.Add(Configuration.FromAppConfig());
 
             Install(installers.ToArray());
             return this;
