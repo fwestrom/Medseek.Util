@@ -168,15 +168,22 @@
                     var binding = bindingsFromMap.First(x => mqPlugin.IsMatch(e.Properties, x.Address));
                     var instance = microServiceLocator.Get(binding.Service);
                     try
-                    {
+                    {                    
                         var method = binding.Method;
-                        var parameterType = method.GetParameters().Single().ParameterType;
-                    
-                        ISerializer serializer = null;                    
-                        var parameterValue = parameterType != typeof(Stream) 
-                            ? Deserialize(parameterType, e.Body, contentType, out serializer)
-                            : e.Body;
-
+                        var parameter = method.GetParameters().SingleOrDefault();
+                        object parameterValue = null;
+                        ISerializer serializer = null;
+                        if (parameter != null)
+                        {
+                            parameterValue = parameter.ParameterType != typeof(Stream)
+                                                 ? Deserialize(parameter.ParameterType, e.Body, contentType, serializer)
+                                                 : e.Body;
+                        }
+                        else
+                        {
+                            var type = method.ReturnType;
+                            serializer = serializers.First(s => s.CanDeserialize(type, e.Body, contentType));
+                        }
                         messageContextAccess.Push(new MessageContext(e.Properties));
                         try
                         {
@@ -216,9 +223,8 @@
             });
         }
 
-        private object Deserialize(Type type, Stream data, string contentType, out ISerializer serializer)
+        private object Deserialize(Type type, Stream data, string contentType, ISerializer serializer)
         {
-            serializer = serializers.First(s => s.CanDeserialize(type, data, contentType));
             var result = serializer.Deserialize(type, data);
             return result;
         }
