@@ -114,7 +114,7 @@
                 instanceMap.Remove(instance);
             }
 
-            binding.Factory.Release(instance);
+            binding.Factory.Release(instance.Instance);
         }
 
         private class MyBinding : MicroServiceBinding
