@@ -20,14 +20,15 @@
         [SetUp]
         public void SetUp()
         {
+            var iocPlugin = new CastlePlugin();
             container = new WindsorContainer();
             container.AddFacility<TypedFactoryFacility>()
            .Register(Registrations.FromAssemblyContaining(typeof(UtilComponents))
-                .Select(WindsorBootstrapper.ToRegistration)
+                .Select(iocPlugin.ToRegistration)
                 .Cast<IRegistration>()
                 .ToArray())
             .Register(Registrations.FromAssemblyContaining(typeof(NewtonsoftJsonComponents))
-                .Select(WindsorBootstrapper.ToRegistration)
+                .Select(iocPlugin.ToRegistration)
                 .Cast<IRegistration>()
                 .ToArray());
         }

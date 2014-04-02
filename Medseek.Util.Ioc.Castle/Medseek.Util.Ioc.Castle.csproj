@@ -68,7 +68,6 @@
     <Compile Include="CastlePlugin.cs" />
     <Compile Include="InstallablesInstaller.cs" />
     <Compile Include="MicroServiceComponentSelector.cs" />
-    <Compile Include="WindsorBootstrapper.cs" />
     <Compile Include="WindsorIocContainer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

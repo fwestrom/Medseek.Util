@@ -83,8 +83,8 @@
             if (installed)
                 throw new InvalidOperationException("Installation of plugins may only be performed once.");
 
-            container.Install(plugins);
             installed = true;
+            container.Install(plugins);
         }
 
         private void OnContainerRegisteredComponent(object sender, RegisterComponentEventArgs e)

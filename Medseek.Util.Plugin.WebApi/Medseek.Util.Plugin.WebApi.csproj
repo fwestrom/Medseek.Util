@@ -60,7 +60,6 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IocDependencyResolver.cs" />
-    <Compile Include="IocIntegrationHttpModule.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Medseek.Util\Medseek.Util.csproj">

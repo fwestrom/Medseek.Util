@@ -102,7 +102,7 @@
         {
             Register(
                 registrations
-                    .Select(WindsorBootstrapper.ToRegistration)
+                    .Select(plugin.ToRegistration)
                     .Cast<IRegistration>()
                     .ToArray());
             return this;
