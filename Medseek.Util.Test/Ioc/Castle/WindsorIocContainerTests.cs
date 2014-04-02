@@ -1,22 +1,23 @@
-﻿
-
-namespace Medseek.Util.Ioc.Castle
+﻿namespace Medseek.Util.Ioc.Castle
 {
-
     using global::Castle.Facilities.Startable;
     using global::Castle.Facilities.TypedFactory;
     using global::Castle.Facilities.WcfIntegration;
     using global::Castle.MicroKernel;
-
     using Medseek.Util.Testing;
-
     using NUnit.Framework;
+
+    /// <summary>
+    /// Tests for the <see cref="WindsorIocContainer"/> class.
+    /// </summary>
     [TestFixture]
     public class WindsorIocContainerTests : TestFixture<WindsorIocContainer>
     {
-        
+        /// <summary>
+        /// Sets up before each test is executed.
+        /// </summary>
         [SetUp]
-        public void SetUp()
+        public void Setup()
         {
             Use(new CastlePlugin
             {
@@ -31,7 +32,6 @@ namespace Medseek.Util.Ioc.Castle
         [Test]
         public void InstallTwiceDoesntThrowOnAddFacility()
         {
-            
             Obj.Install(new IInstallable[0]);
 
             TestDelegate action = () => Obj.Install(new IInstallable[0]);

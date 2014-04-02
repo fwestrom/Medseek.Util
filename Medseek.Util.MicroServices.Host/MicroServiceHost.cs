@@ -16,7 +16,7 @@
     public class MicroServiceHost : IDisposable
     {
         private readonly List<IInstallable> installables = new List<IInstallable> { UtilComponents.Framework };
-        private readonly IIocContainer container;
+        private readonly IocBootstrapper iocBootstrapper;
         private readonly ILog log;
 
         /// <summary>
@@ -34,8 +34,7 @@
 
             log = logging.GetLogManager().GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
             log.InfoFormat("Creating micro-service host; Plugins = {0}, {1}, {2}, AssembliesToInstall = {3}.", ioc, logging, mqPlugin, string.Join(", ", assembliesToInstall.Select(x => x.GetName().Name)));
-            container = ioc.NewContainer();
-            container.RegisteredComponent += OnRegisteredComponent;
+            iocBootstrapper = new IocBootstrapper(ioc);
             installables.Add(ioc);
             installables.Add(logging);
             installables.Add(mqPlugin);
@@ -55,7 +54,7 @@
         public void Dispose()
         {
             log.Info("Disposing micro-service host.");
-            container.Dispose();
+            iocBootstrapper.Dispose();
         }
 
         /// <summary>
@@ -65,12 +64,7 @@
         {
             log.Info("Starting micro-service host.");
 
-            container.Install(installables);
-        }
-
-        private void OnRegisteredComponent(object sender, RegisterComponentEventArgs e)
-        {
-            log.DebugFormat("{0}: Key = {1}, Handler = {2}", MethodBase.GetCurrentMethod().Name, e.Id, e.Detail);
+            iocBootstrapper.Install(installables);
         }
     }
 }

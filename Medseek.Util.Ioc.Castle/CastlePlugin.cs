@@ -6,10 +6,7 @@
     using System.Linq;
     using global::Castle.Facilities.Startable;
     using global::Castle.Facilities.TypedFactory;
-    using global::Castle.Facilities.WcfIntegration;
     using global::Castle.MicroKernel.Registration;
-    using global::Castle.Windsor;
-    using global::Castle.Windsor.Installer;
 
     /// <summary>
     /// Provides a pluggable integration with the Castle project, including 

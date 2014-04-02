@@ -167,38 +167,46 @@
                     var bindingsFromMap = bindingMap[consumer];
                     var binding = bindingsFromMap.First(x => mqPlugin.IsMatch(e.Properties, x.Address));
                     var instance = microServiceLocator.Get(binding.Service);
-                    var method = binding.Method;
-                    var parameter = method.GetParameters().SingleOrDefault();
-                    object parameterValue = null;
-                    ISerializer serializer = null;
-                    if (parameter != null)
-                    {
-                        parameterValue = parameter.ParameterType != typeof(Stream)
-                                             ? Deserialize(parameter.ParameterType, e.Body, contentType, serializer)
-                                             : e.Body;
-                    }
-                    else
-                    {
-                        var type = method.ReturnType;
-                        serializer = serializers.First(s => s.CanDeserialize(type, e.Body, contentType));
-                    }
-                    messageContextAccess.Push(new MessageContext(e.Properties));
                     try
-                    {
-                        Log.DebugFormat("Invoking micro-service; Instance = {0}, Method = {1}, Parameter = {2}.", instance.Instance, method, parameterValue);
-                        var invokeResult = instance.Invoke(method, parameterValue);
-                        if (e.Properties.ReplyTo != null && !binding.IsOneWay)
+                    {                    
+                        var method = binding.Method;
+                        var parameter = method.GetParameters().SingleOrDefault();
+                        object parameterValue = null;
+                        ISerializer serializer = null;
+                        if (parameter != null)
                         {
-                            Log.DebugFormat("Sending reply message; CorrelationId = {0}, ReplyTo = {1}, Response = {2}.", e.Properties.CorrelationId, e.Properties.ReplyTo, invokeResult);
-                            var body = Serialize(method.ReturnType, invokeResult, contentType, serializer);
-                            using (var publisher = channel.CreatePublisher(e.Properties.ReplyTo))
-                                publisher.Publish(body, e.Properties.CorrelationId);
+                            parameterValue = parameter.ParameterType != typeof(Stream)
+                                                 ? Deserialize(parameter.ParameterType, e.Body, contentType, serializer)
+                                                 : e.Body;
                         }
-                        //channel.BasicAck(e.DeliveryTag, false);
+                        else
+                        {
+                            var type = method.ReturnType;
+                            serializer = serializers.First(s => s.CanDeserialize(type, e.Body, contentType));
+                        }
+                        messageContextAccess.Push(new MessageContext(e.Properties));
+                        try
+                        {
+                            Log.DebugFormat("Invoking micro-service; Instance = {0}, Method = {1}, Parameter = {2}.", instance.Instance, method, parameterValue);
+                            var invokeResult = instance.Invoke(method, parameterValue);
+                            if (e.Properties.ReplyTo != null && !binding.IsOneWay)
+                            {
+                                Log.DebugFormat("Sending reply message; CorrelationId = {0}, ReplyTo = {1}, Response = {2}.", e.Properties.CorrelationId, e.Properties.ReplyTo, invokeResult);
+                                var body = Serialize(method.ReturnType, invokeResult, contentType, serializer);
+                                using (var publisher = channel.CreatePublisher(e.Properties.ReplyTo))
+                                    publisher.Publish(body, e.Properties.CorrelationId);
+                            }
+
+                            //channel.BasicAck(e.DeliveryTag, false);
+                        }
+                        finally
+                        {
+                            messageContextAccess.Pop();
+                        }
                     }
                     finally
                     {
-                        messageContextAccess.Pop();
+                        microServiceLocator.Release(instance);
                     }
                 }
                 catch (Exception ex)
