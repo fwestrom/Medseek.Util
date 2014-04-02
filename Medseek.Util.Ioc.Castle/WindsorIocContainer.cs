@@ -3,9 +3,13 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using global::Castle.Facilities.Startable;
+    using global::Castle.Facilities.TypedFactory;
+    using global::Castle.Facilities.WcfIntegration;
     using global::Castle.MicroKernel;
     using global::Castle.MicroKernel.Registration;
     using global::Castle.Windsor;
+    using global::Castle.Windsor.Installer;
 
     /// <summary>
     /// Provides the pluggable functionality of an inversion of control 
@@ -18,7 +22,7 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="WindsorIocContainer"/> class.
         /// </summary>
-        internal WindsorIocContainer(CastlePlugin plugin)
+        public WindsorIocContainer(CastlePlugin plugin)
         {
             if (plugin == null)
                 throw new ArgumentNullException("plugin");
@@ -64,8 +68,23 @@
         /// </param>
         public IIocContainer Install(params IInstallable[] installables)
         {
-            var installer = new InstallablesInstaller(installables.Distinct());
-            Install(installer);
+            var facilities = Kernel.GetFacilities();
+            if (plugin.AddStartableFacility && !facilities.Any(f => f is StartableFacility))
+                AddFacility<StartableFacility>(x => x.DeferredStart());
+            if (plugin.AddTypedFactoryFacility && !facilities.Any(f => f is TypedFactoryFacility))
+                AddFacility<TypedFactoryFacility>();
+            if (plugin.AddWcfFacility && !facilities.Any(f => f is WcfFacility))
+                AddFacility<WcfFacility>();
+            if (plugin.RegisterIWindsorContainer 
+                && !Kernel.HasComponent(typeof(IIocContainer))
+                && !Kernel.HasComponent(typeof(IWindsorContainer)))
+                Register(Component.For<IWindsorContainer, IIocContainer>().Instance(this));
+
+            var installers = new List<IWindsorInstaller> { new InstallablesInstaller(installables.Distinct()) };
+            if (plugin.InstallFromConfiguration)
+                installers.Add(Configuration.FromAppConfig());
+
+            Install(installers.ToArray());
             return this;
         }
 
@@ -87,6 +106,20 @@
                     .Cast<IRegistration>()
                     .ToArray());
             return this;
+        }
+
+        /// <summary>
+        /// Resolves the available components by a required service type.
+        /// </summary>
+        /// <param name="service">
+        /// The required service type provided by the components.
+        /// </param>
+        /// <returns>
+        /// The component instances that were resolved.
+        /// </returns>
+        public new IEnumerable<object> ResolveAll(Type service)
+        {
+            return base.ResolveAll(service).Cast<object>();
         }
 
         private void OnKernelComponentRegistered(string key, IHandler handler)

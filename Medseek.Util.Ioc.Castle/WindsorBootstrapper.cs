@@ -1,7 +1,6 @@
 ﻿namespace Medseek.Util.Ioc.Castle
 {
     using System;
-    using System.Web.Http.Dependencies;
     using global::Castle.MicroKernel.Registration;
     using global::Castle.Windsor;
 
@@ -71,9 +70,6 @@
         private static WindsorIocContainer Init()
         {
             var container = new WindsorIocContainer(Plugin);
-            container.Register(
-                Component
-                    .For<WindsorDependencyResolver, IDependencyResolver>());
             return container;
         }
     }

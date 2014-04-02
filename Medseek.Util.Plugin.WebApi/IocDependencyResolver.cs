@@ -1,33 +1,32 @@
-﻿namespace Medseek.Util.Ioc.Castle
+﻿namespace Medseek.Util.Plugin.WebApi
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Web.Http.Dependencies;
-    using global::Castle.Windsor;
-    using IDependencyResolver = System.Web.Http.Dependencies.IDependencyResolver;
+    using Medseek.Util.Ioc;
 
     /// <summary>
     /// Provides a dependency resolver for the Castle Windsor container.
     /// </summary>
     [Register(typeof(IDependencyResolver))]
-    public class WindsorDependencyResolver : IDependencyResolver
+    public class IocDependencyResolver : IDependencyResolver
     {
-        private readonly IWindsorContainer container;
+        private readonly IIocContainer container;
         private readonly List<object> toRelease = new List<object>();
         private readonly bool isScope;
         private bool disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see 
-        /// cref="WindsorDependencyResolver" /> class.
+        /// cref="IocDependencyResolver" /> class.
         /// </summary>
-        public WindsorDependencyResolver(IWindsorContainer container)
+        public IocDependencyResolver(IIocContainer container)
             : this(container, false)
         {
         }
 
-        private WindsorDependencyResolver(IWindsorContainer container, bool isScope)
+        private IocDependencyResolver(IIocContainer container, bool isScope)
         {
             if (container == null)
                 throw new ArgumentNullException("container");
@@ -47,7 +46,7 @@
             if (disposed)
                 throw new ObjectDisposedException(GetType().Name);
 
-            var resolver = new WindsorDependencyResolver(container, true);
+            var resolver = new IocDependencyResolver(container, true);
             return resolver;
         }
 
@@ -78,7 +77,7 @@
                 throw new ObjectDisposedException(GetType().Name);
 
             object result = null;
-            var hasComponent = container.Kernel.HasComponent(serviceType);
+            var hasComponent = HasComponent(serviceType);
             if (hasComponent)
             {
                 result = container.Resolve(serviceType);
@@ -104,15 +103,21 @@
                 throw new ObjectDisposedException(GetType().Name);
 
             var results = new object[0];
-            var hasComponent = container.Kernel.HasComponent(serviceType);
+            var hasComponent = HasComponent(serviceType);
             if (hasComponent)
             {
-                results = container.ResolveAll(serviceType).Cast<object>().ToArray();
+                results = container.ResolveAll(serviceType).ToArray();
                 if (isScope)
                     toRelease.AddRange(results);
             }
 
             return results;
+        }
+
+        private bool HasComponent(Type serviceType)
+        {
+            var result = container.Components.SelectMany(x => x.Services).Contains(serviceType);
+            return result;
         }
     }
 }

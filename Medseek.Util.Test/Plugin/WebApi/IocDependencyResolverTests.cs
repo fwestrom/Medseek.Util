@@ -1,23 +1,21 @@
-﻿namespace Medseek.Util.Ioc.Castle
+﻿namespace Medseek.Util.Plugin.WebApi
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using global::Castle.MicroKernel;
-    using global::Castle.Windsor;
+    using Medseek.Util.Ioc;
     using Medseek.Util.Testing;
     using Moq;
     using NUnit.Framework;
 
     /// <summary>
-    /// Test fixture for the <see cref="WindsorDependencyResolver" /> class.
+    /// Test fixture for the <see cref="IocDependencyResolver" /> class.
     /// </summary>
     [TestFixture]
-    public class WindsorDependencyResolverTests : TestFixture<WindsorDependencyResolver>
+    public class IocDependencyResolverTests : TestFixture<IocDependencyResolver>
     {
         private static readonly Random Rand = new Random();
-        private Mock<IWindsorContainer> container;
-        private Mock<IKernel> kernel;
+        private Mock<IIocContainer> container;
 
         /// <summary>
         /// Sets up before each test is executed.
@@ -25,11 +23,7 @@
         [SetUp]
         public void Setup()
         {
-            kernel = Mock<IKernel>();
-            container = Mock<IWindsorContainer>();
-            container.Setup(x =>
-                x.Kernel)
-                .Returns(kernel.Object);
+            container = Mock<IIocContainer>();
         }
 
         /// <summary>
@@ -66,7 +60,7 @@
         [Test]
         public void BeginScopeThrowsIfScopeAlreadyDisposed()
         {
-            var scope = (WindsorDependencyResolver)Obj.BeginScope();
+            var scope = (IocDependencyResolver)Obj.BeginScope();
             scope.Dispose();
             TestDelegate action = () => scope.BeginScope();
             Assert.That(action, Throws.InstanceOf<ObjectDisposedException>());
@@ -79,7 +73,7 @@
         [Test]
         public void ConstructorRequiresContainerDependency()
         {
-            TestDelegate action = () => new WindsorDependencyResolver(null);
+            TestDelegate action = () => new IocDependencyResolver(null);
             Assert.That(action, Throws.TypeOf<ArgumentNullException>());
         }
 
@@ -106,13 +100,13 @@
         {
             var myComponents = new List<object>();
             var scope = Obj.BeginScope();
+            container.Setup(x =>
+                x.Components)
+                .Returns(new[] { new ComponentInfo(typeof(object), new[] { typeof(IMyService) }) });
             container.Setup(x => 
                 x.Resolve(typeof(IMyService)))
                 .Callback(() => myComponents.Add(new Mock<IMyService>().Object))
                 .Returns((Type a) => myComponents.Last());
-            kernel.Setup(x =>
-                x.HasComponent(typeof(IMyService)))
-                .Returns(true);
 
             var results = Enumerable.Range(1, Rand.Next(1, 10))
                 .Select(n => scope.GetService(typeof(IMyService)))
@@ -140,12 +134,12 @@
             var myComponents = new List<object>();
             var scope = Obj.BeginScope();
             container.Setup(x =>
+                x.Components)
+                .Returns(new[] { new ComponentInfo(typeof(object), new[] { typeof(IMyService) }) });
+            container.Setup(x =>
                 x.ResolveAll(typeof(IMyService)))
                 .Callback(() => myComponents.AddRange(Enumerable.Range(0, ++invokeGetServicesCounter).Select(n => new Mock<IMyService>().Object)))
                 .Returns((Type a) => myComponents.AsEnumerable().Reverse().Take(invokeGetServicesCounter).Reverse().ToArray());
-            kernel.Setup(x =>
-                x.HasComponent(typeof(IMyService)))
-                .Returns(true);
 
             var results = Enumerable.Range(1, Rand.Next(1, 10))
                 .SelectMany(n => scope.GetServices(typeof(IMyService)))
@@ -170,11 +164,11 @@
         {
             var myService = new Mock<IMyService>().Object;
             container.Setup(x =>
+                x.Components)
+                .Returns(new[] { new ComponentInfo(myService.GetType(), new[] { typeof(IMyService) }) });
+            container.Setup(x =>
                 x.Resolve(typeof(IMyService)))
                 .Returns(myService);
-            kernel.Setup(x => 
-                x.HasComponent(typeof(IMyService)))
-                .Returns(true);
 
             var result = Obj.GetService(typeof(IMyService));
 
@@ -188,9 +182,9 @@
         [Test]
         public void GetServiceReturnsNullIfNotRegistered()
         {
-            kernel.Setup(x =>
-                x.HasComponent(typeof(IMyService)))
-                .Returns(false);
+            container.Setup(x =>
+                x.Components)
+                .Returns(new ComponentInfo[0]);
 
             var result = Obj.GetService(typeof(IMyService));
 
@@ -233,11 +227,11 @@
         {
             var myServices = Enumerable.Range(0, Rand.Next(1, 100)).Select(x => new Mock<IMyService>().Object).ToArray();
             container.Setup(x =>
+                x.Components)
+                .Returns(new[] { new ComponentInfo(myServices.First().GetType(), new[] { typeof(IMyService) }) });
+            container.Setup(x =>
                 x.ResolveAll(typeof(IMyService)))
                 .Returns(myServices);
-            kernel.Setup(x =>
-                x.HasComponent(typeof(IMyService)))
-                .Returns(true);
 
             var result = Obj.GetServices(typeof(IMyService));
 
@@ -251,9 +245,9 @@
         [Test]
         public void GetServicesReturnsEmptyEnumerableIfNotRegistered()
         {
-            kernel.Setup(x =>
-                x.HasComponent(typeof(IMyService)))
-                .Returns(false);
+            container.Setup(x =>
+                x.Components)
+                .Returns(new ComponentInfo[0]);
 
             var result = Obj.GetServices(typeof(IMyService));
 

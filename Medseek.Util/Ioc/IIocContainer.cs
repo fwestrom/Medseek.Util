@@ -80,5 +80,17 @@
         /// </returns>
         /// <seealso cref="Release" />
         object Resolve(Type service);
+
+        /// <summary>
+        /// Resolves the available components by a required service type.
+        /// </summary>
+        /// <param name="service">
+        /// The required service type provided by the components.
+        /// </param>
+        /// <returns>
+        /// The component instances that were resolved.
+        /// </returns>
+        /// <seealso cref="Release" />
+        IEnumerable<object> ResolveAll(Type service);
     }
 }

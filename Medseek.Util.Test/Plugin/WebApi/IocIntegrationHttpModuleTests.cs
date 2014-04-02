@@ -1,19 +1,20 @@
-﻿namespace Medseek.Util.Ioc.Castle
+﻿namespace Medseek.Util.Plugin.WebApi
 {
     using System.Web;
     using System.Web.Http;
     using System.Web.Http.Dependencies;
-    using global::Castle.Windsor;
+    using Medseek.Util.Ioc;
+    using Medseek.Util.Ioc.Castle;
     using Moq;
     using NUnit.Framework;
 
     /// <summary>
-    /// Test fixture for the <see cref="WindsorIntegrationHttpModule" /> class.
+    /// Test fixture for the <see cref="IocIntegrationHttpModule" /> class.
     /// </summary>
-    public class WindsorIntegrationHttpModuleTests
+    public class IocIntegrationHttpModuleTests
     {
-        private Mock<IWindsorContainer> container;
-        private WindsorIntegrationHttpModule obj;
+        private Mock<IIocContainer> container;
+        private IocIntegrationHttpModule obj;
 
         /// <summary>
         /// Sets up before each test is executed.
@@ -23,8 +24,8 @@
         {
             WindsorBootstrapper.InstallFromConfiguration = false;
 
-            container = new Mock<IWindsorContainer>();
-            obj = new WindsorIntegrationHttpModule(() => container.Object);
+            container = new Mock<IIocContainer>();
+            obj = new IocIntegrationHttpModule(() => container.Object);
         }
 
         /// <summary>
@@ -49,8 +50,8 @@
         public void InitSetsGlobalConfigurationDependencyReolver()
         {
             var dependencyResolver = new Mock<IDependencyResolver>();
-            container.Setup(x => 
-                x.Resolve<IDependencyResolver>())
+            container.Setup(x =>
+                x.Resolve(typeof(IDependencyResolver)))
                 .Returns(dependencyResolver.Object);
 
             obj.Init(new HttpApplication());
