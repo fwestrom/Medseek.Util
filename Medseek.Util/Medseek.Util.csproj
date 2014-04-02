@@ -48,6 +48,7 @@
     <Compile Include="Ioc\IInstallable.cs" />
     <Compile Include="Ioc\IIocContainer.cs" />
     <Compile Include="Ioc\IIocPlugin.cs" />
+    <Compile Include="Ioc\IocBootstrapper.cs" />
     <Compile Include="Ioc\IocExtensions.cs" />
     <Compile Include="Ioc\IStartable.cs" />
     <Compile Include="Interactive\EnumerableExt.cs" />
