@@ -27,7 +27,14 @@
             this.plugin = plugin;
             container = plugin.NewContainer();
             container.RegisteredComponent += OnContainerRegisteredComponent;
+            container.RegisteringComponent += OnContainerRegisteringComponent;
         }
+
+        /// <summary>
+        /// Raised to indicate that a component has been registered with the 
+        /// container.
+        /// </summary>
+        public event EventHandler<RegisteringComponentEventArgs> RegisteringComponent;
 
         /// <summary>
         /// Gets the inversion of control plugin associated with the 
@@ -90,6 +97,13 @@
         private void OnContainerRegisteredComponent(object sender, RegisterComponentEventArgs e)
         {
             log.DebugFormat("{0}: Id = {1}, Detail = {2}", MethodBase.GetCurrentMethod().Name, e.Id, e.Detail);
+        }
+
+        private void OnContainerRegisteringComponent(object sender, RegisteringComponentEventArgs e)
+        {
+            var registeringComponent = RegisteringComponent;
+            if (registeringComponent != null)
+                registeringComponent(this, e);
         }
     }
 }

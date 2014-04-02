@@ -35,6 +35,12 @@
         /// Raised to indicate that a component has been registered with the 
         /// container.
         /// </summary>
+        public event EventHandler<RegisteringComponentEventArgs> RegisteringComponent;
+
+        /// <summary>
+        /// Raised to indicate that a component has been registered with the 
+        /// container.
+        /// </summary>
         public event EventHandler<RegisterComponentEventArgs> RegisteredComponent;
 
         /// <summary>
@@ -102,6 +108,9 @@
         {
             Register(
                 registrations
+                    .Select(RaiseRegisteringComponent)
+                    .Where(x => !x.Cancel)
+                    .Select(x => x.Registration)
                     .Select(plugin.ToRegistration)
                     .Cast<IRegistration>()
                     .ToArray());
@@ -127,6 +136,15 @@
             var registeredComponent = RegisteredComponent;
             if (registeredComponent != null)
                 registeredComponent(this, new RegisterComponentEventArgs(key, handler));
+        }
+
+        private RegisteringComponentEventArgs RaiseRegisteringComponent(Registration registration)
+        {
+            var e = new RegisteringComponentEventArgs { Registration = registration };
+            var registeringComponent = RegisteringComponent;
+            if (registeringComponent != null)
+                registeringComponent(this, e);
+            return e;
         }
     }
 }

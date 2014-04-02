@@ -13,6 +13,12 @@
         /// Raised to indicate that a component has been registered with the 
         /// container.
         /// </summary>
+        event EventHandler<RegisteringComponentEventArgs> RegisteringComponent;
+
+        /// <summary>
+        /// Raised to indicate that a component has been registered with the 
+        /// container.
+        /// </summary>
         event EventHandler<RegisterComponentEventArgs> RegisteredComponent;
 
         /// <summary>

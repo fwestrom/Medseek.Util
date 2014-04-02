@@ -137,5 +137,33 @@
             var result = Obj.Plugin;
             Assert.That(result, Is.SameAs(plugin.Object));
         }
+
+        /// <summary>
+        /// Verifies that the component registration events are raised.
+        /// </summary>
+        [Test]
+        public void RegisteringComponentIsRaisedWhenContainerRaisesRegisteringComponent()
+        {
+            var subscriber = new Mock<IEventSubscriber>();
+            Obj.RegisteringComponent += subscriber.Object.OnRegisteringComponent;
+
+            var e = new RegisteringComponentEventArgs();
+            subscriber.Setup(x => 
+                x.OnRegisteringComponent(Obj, e))
+                .Verifiable();
+
+            container.Raise(x => 
+                x.RegisteringComponent += null, e);
+
+            subscriber.Verify();
+        }
+
+        /// <summary>
+        /// Helper interface used for verifying event notification behavior.
+        /// </summary>
+        public interface IEventSubscriber
+        {
+            void OnRegisteringComponent(object sender, RegisteringComponentEventArgs e);
+        }
     }
 }
