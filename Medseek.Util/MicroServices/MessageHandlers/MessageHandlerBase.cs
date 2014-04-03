@@ -4,14 +4,14 @@
 	/// Generic base class for one-way message handlers.
 	/// </summary>
 	/// <typeparam name="TMessage"></typeparam>
-	public abstract class MessageHandler<TMessage> : IMessageHandler
-		where TMessage : Message
+	public abstract class MessageHandlerBase<TMessage> : IMessageHandler
+		where TMessage : MessageBase
 	{
 		/// <summary>
 		/// Handles the message.
 		/// </summary>
 		/// <param name="message"></param>
-		public void Handle(Message message)
+		public void Handle(MessageBase message)
 		{
 			Handle(message as TMessage);
 		}

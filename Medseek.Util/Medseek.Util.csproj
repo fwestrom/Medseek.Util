@@ -59,13 +59,13 @@
     <Compile Include="MicroServices\IMicroServiceSerializer.cs" />
     <Compile Include="MicroServices\MessageHandlers\IMessageHandler.cs" />
     <Compile Include="MicroServices\MessageHandlers\IRpcMessageHandler.cs" />
-    <Compile Include="MicroServices\MessageHandlers\Message.cs" />
+    <Compile Include="MicroServices\MessageHandlers\MessageBase.cs" />
     <Compile Include="MicroServices\MessageHandlers\MessageHandlerBinding.cs" />
     <Compile Include="MicroServices\MessageHandlers\MessageBindingKey.cs" />
-    <Compile Include="MicroServices\MessageHandlers\MessageHandler.cs" />
-    <Compile Include="MicroServices\MessageHandlers\Reply.cs" />
+    <Compile Include="MicroServices\MessageHandlers\MessageHandlerBase.cs" />
+    <Compile Include="MicroServices\MessageHandlers\ReplyBase.cs" />
     <Compile Include="MicroServices\MessageHandlers\BindingKeyNameAttribute.cs" />
-    <Compile Include="MicroServices\MessageHandlers\RpcMessageHandler.cs" />
+    <Compile Include="MicroServices\MessageHandlers\RpcMessageHandlerBase.cs" />
     <Compile Include="Messaging\IMessageProperties.cs" />
     <Compile Include="Messaging\IMqPlugin.cs" />
     <Compile Include="Messaging\MqConsumerAddress.cs" />

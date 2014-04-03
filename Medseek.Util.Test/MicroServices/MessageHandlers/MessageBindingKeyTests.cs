@@ -41,12 +41,12 @@
 		}
 	}
 
-	class TestBindingKeyMessage : Message
+	class TestBindingKeyMessage : MessageBase
 	{
 	}
 
 	[BindingKeyName("CustomAction")]
-	class AttributedMessage : Message
+	class AttributedMessage : MessageBase
 	{
 	}
 }

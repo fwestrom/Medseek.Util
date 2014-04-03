@@ -9,6 +9,6 @@
 		/// Handles the message.
 		/// </summary>
 		/// <param name="message"></param>
-		void Handle(Message message);
+		void Handle(MessageBase message);
 	}
 }

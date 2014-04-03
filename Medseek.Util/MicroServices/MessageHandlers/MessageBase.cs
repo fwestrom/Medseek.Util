@@ -3,7 +3,7 @@
 	/// <summary>
 	/// Base class for all messages.
 	/// </summary>
-	public class Message
+	public class MessageBase
 	{
 	}
 }

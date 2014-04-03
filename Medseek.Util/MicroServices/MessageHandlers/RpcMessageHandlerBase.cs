@@ -5,16 +5,16 @@
 	/// </summary>
 	/// <typeparam name="TMessage"></typeparam>
 	/// <typeparam name="TReply"></typeparam>
-	public abstract class RpcMessageHandler<TMessage, TReply> : IRpcMessageHandler
-		where TMessage : Message
-		where TReply : Reply
+	public abstract class RpcMessageHandlerBase<TMessage, TReply> : IRpcMessageHandler
+		where TMessage : MessageBase
+		where TReply : ReplyBase
 	{
 		/// <summary>
 		/// Handles the message.
 		/// </summary>
 		/// <param name="message"></param>
 		/// <returns></returns>
-		public Reply Handle(Message message)
+		public ReplyBase Handle(MessageBase message)
 		{
 			return Handle(message as TMessage);
 		}
