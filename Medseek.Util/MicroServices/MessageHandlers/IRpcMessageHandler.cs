@@ -10,6 +10,6 @@
 		/// </summary>
 		/// <param name="message"></param>
 		/// <returns></returns>
-		Reply Handle(Message message);
+		ReplyBase Handle(MessageBase message);
 	}
 }

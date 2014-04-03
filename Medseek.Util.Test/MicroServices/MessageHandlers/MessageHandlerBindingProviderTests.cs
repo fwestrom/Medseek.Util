@@ -117,16 +117,16 @@
 	}
 
 #region Test Types
-	class TestMessage : Message
+	class TestMessage : MessageBase
 	{
 	}
 
-	class TestReply : Reply
+	class TestReply : ReplyBase
 	{
 
 	}
 
-	class TestMessageHandler : MessageHandler<TestMessage>
+	class TestMessageHandler : MessageHandlerBase<TestMessage>
 	{
 		public override void Handle(TestMessage message)
 		{
@@ -134,7 +134,7 @@
 		}
 	}
 
-	class TestRpcMessageHandler : RpcMessageHandler<TestMessage, TestReply>
+	class TestRpcMessageHandler : RpcMessageHandlerBase<TestMessage, TestReply>
 	{
 		public override TestReply Handle(TestMessage message)
 		{
@@ -150,7 +150,7 @@
 		}
 	}
 
-	abstract class AbstractTestRpcMessageHandler : RpcMessageHandler<TestMessage, TestReply>
+	abstract class AbstractTestRpcMessageHandler : RpcMessageHandlerBase<TestMessage, TestReply>
 	{
 	}
 
