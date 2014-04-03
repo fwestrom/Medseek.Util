@@ -18,7 +18,6 @@
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly List<MyBinding> bindings = new List<MyBinding>();
-        private readonly Dictionary<object, MyBinding> instanceMap = new Dictionary<object, MyBinding>();
         private readonly IMqConnection connection;
         private readonly IIocContainer container;
         private readonly IMicroServicesFactory microServicesFactory;
@@ -75,51 +74,42 @@
         }
 
         /// <summary>
-        /// Retrieves a micro-service component instance for the specified 
-        /// contract.
+        /// Retrieves a micro-service invoker for the specified binding.
         /// </summary>
         /// <remarks>
         /// Micro-service instance descriptor objects obtained using this 
-        /// method must be released using <see cref="Release"/> when they are 
-        /// no longer needed.
+        /// method must be disposed when they are no longer needed.
         /// </remarks>
-        /// <param name="contract">
-        /// The contract type provided by the micro-service.
+        /// <param name="binding">
+        /// The micro-service binding identifying the desired invoker.
         /// </param>
         /// <param name="dependencies">
         /// Additional dependencies to provide to the micro-service.
         /// </param>
         /// <returns>
-        /// A micro-service instance descriptor object.
+        /// A micro-service invoker, which must be disposed when it is no 
+        /// longer needed.
         /// </returns>
-        /// <seealso cref="Release" />
-        public MicroServiceInstance Get(Type contract, params object[] dependencies)
+        public IMicroServiceInvoker Get(MicroServiceBinding binding, params object[] dependencies)
         {
-            var binding = bindings.First(x => x.Service == contract);
-            var instance = new MicroServiceInstance(binding, binding.Factory.Get(connection));
-            lock (instanceMap)
-                instanceMap.Add(instance, binding);
-            return instance;
-        }
+            if (binding == null)
+                throw new ArgumentNullException("binding");
+            var myBinding = binding as MyBinding;
+            if (myBinding == null)
+                throw new ArgumentException("Invokers can only be obtained for bindings retrieved from the micro-service locator.");
 
-        /// <summary>
-        /// Releases a micro-service component instance that was previously 
-        /// obtained from the locator.
-        /// </summary>
-        /// <param name="instance">
-        /// The micro-service instance descriptor object.
-        /// </param>
-        /// <seealso cref="Get" />
-        public void Release(MicroServiceInstance instance)
-        {
-            MyBinding binding;
-            lock (instanceMap)
+            Log.DebugFormat("Getting micro-service component instance; Service = {0}, Method = {1}", binding.Service, binding.Method);
+            var factory = myBinding.Factory;
+            var instance = factory.Get(connection);
+            
+            var result = new MicroServiceInvoker(myBinding, instance);
+            result.Disposing += (sender, e) =>
             {
-                binding = instanceMap[instance];
-                instanceMap.Remove(instance);
-            }
-
-            binding.Factory.Release(instance.Instance);
+                Log.DebugFormat("Disposing micro-service component instance; Service = {0}, Method = {1}", binding.Service, binding.Method);
+                factory.Release(instance);
+            };
+            
+            return result;
         }
 
         private class MyBinding : MicroServiceBinding
