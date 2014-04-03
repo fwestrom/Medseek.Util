@@ -60,12 +60,17 @@
             Log.Debug(MethodBase.GetCurrentMethod().Name);
 
             var bindingProviders = microServicesFactory.GetBindingProviders();
+            bindingProviders.ForEach(x => 
+                Log.DebugFormat("Binding Provider: {0}", x));
+
             bindings.Clear();
             container.Components
+                .Do(x => Log.DebugFormat("Analyzing Component: Implementation = {0}, Services = {1}", x.Implementation, string.Join(", ", x.Services.Cast<object>())))
                 .SelectMany(ci => bindingProviders
                     .SelectMany(x => x.GetBindings<MyBinding>(ci.Implementation)))
                 .Do(b => b.Address = connection.Plugin.ToConsumerAddress(b.Address))
                 .Do(b => b.Factory = FactoryHelper.Create(b.Service, container.Resolve(typeof(IMicroServiceInstanceFactory<>).MakeGenericType(b.Service))))
+                .Do(b => Log.DebugFormat("Binding: Address = {0}, Service = {1}, Method = {2}, IsOneWay = {3}", b.Address, b.Service, b.Method, b.IsOneWay))
                 .ForEach(bindings.Add);
         }
 

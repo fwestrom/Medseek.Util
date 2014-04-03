@@ -6,6 +6,15 @@ namespace Medseek.Util.Messaging
     public interface IMessageProperties
     {
         /// <summary>
+        /// Gets or sets the type of the content.
+        /// </summary>
+        string ContentType
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets the correlation identifier associated with the message.
         /// </summary>
         string CorrelationId
@@ -20,6 +29,15 @@ namespace Medseek.Util.Messaging
         MqAddress ReplyTo
         {
             get;
+        }
+
+        /// <summary>
+        /// Gets or sets the routing key associated with the message.
+        /// </summary>
+        string RoutingKey
+        {
+            get; 
+            set;
         }
 
         /// <summary>

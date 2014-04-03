@@ -55,6 +55,7 @@
     <Compile Include="Ioc\RegisterComponentEventArgs.cs" />
     <Compile Include="Ioc\RegisteringComponentEventArgs.cs" />
     <Compile Include="Logging\ILoggingPlugin.cs" />
+    <Compile Include="MicroServices\IMicroServiceSerializer.cs" />
     <Compile Include="MicroServices\MessageHandlers\IMessageHandler.cs" />
     <Compile Include="MicroServices\MessageHandlers\IRpcMessageHandler.cs" />
     <Compile Include="MicroServices\MessageHandlers\Message.cs" />
@@ -81,6 +82,7 @@
     <Compile Include="MicroServices\MicroServiceInstance.cs" />
     <Compile Include="MicroServices\MicroServiceDispatcher.cs" />
     <Compile Include="MicroServices\MicroServiceLocator.cs" />
+    <Compile Include="MicroServices\MicroServiceSerializer.cs" />
     <Compile Include="MicroServices\RegisterMicroServiceAttribute.cs" />
     <Compile Include="MicroServices\ThreadLocalMessageContext.cs" />
     <Compile Include="MicroServices\MicroServiceBindingAttribute.cs" />

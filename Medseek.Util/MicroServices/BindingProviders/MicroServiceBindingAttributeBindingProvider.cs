@@ -11,13 +11,16 @@ namespace Medseek.Util.MicroServices.BindingProviders
     /// micro-service binding attributes on prospective types.
     /// </summary>
     /// <seealso cref="MicroServiceBindingAttribute" />
-    [Register(typeof(IMicroServiceBindingProvider))]
+    [Register(typeof(IMicroServiceBindingProvider), OnlyNewServices = false)]
     public class MicroServiceBindingAttributeBindingProvider : IMicroServiceBindingProvider
     {
         /// <summary>
         /// Identifies the micro-service bindings associated with the specified
         /// type, which may or may not be expected to be bound.
         /// </summary>
+        /// <typeparam name="T">
+        /// The type of binding objects to return.
+        /// </typeparam>
         /// <param name="type">
         /// The type to analyze for micro-service bindings.
         /// </param>

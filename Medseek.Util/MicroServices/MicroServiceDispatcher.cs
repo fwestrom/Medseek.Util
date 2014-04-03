@@ -11,7 +11,6 @@
     using Medseek.Util.Ioc;
     using Medseek.Util.Logging;
     using Medseek.Util.Messaging;
-    using Medseek.Util.Serialization;
     using Medseek.Util.Threading;
 
     /// <summary>
@@ -28,8 +27,8 @@
         private readonly IMqChannel channel;
         private readonly IMessageContextAccess messageContextAccess;
         private readonly IMicroServiceLocator microServiceLocator;
+        private readonly IMicroServiceSerializer microServiceSerializer;
         private readonly IMqPlugin mqPlugin;
-        private readonly ISerializer[] serializers;
         private readonly IDispatchedThread thread;
         private long dispatcherDepth;
         private bool disposed;
@@ -44,8 +43,8 @@
             IMqConnection connection, 
             IMessageContextAccess messageContextAccess,
             IMicroServiceLocator microServiceLocator,
+            IMicroServiceSerializer microServiceSerializer,
             IMqPlugin mqPlugin,
-            ISerializerFactory serializerFactory,
             IDispatchedThread thread)
         {
             if (connection == null)
@@ -54,18 +53,18 @@
                 throw new ArgumentNullException("messageContextAccess");
             if (microServiceLocator == null)
                 throw new ArgumentNullException("microServiceLocator");
+            if (microServiceSerializer == null)
+                throw new ArgumentNullException("microServiceSerializer");
             if (mqPlugin == null)
                 throw new ArgumentNullException("mqPlugin");
-            if (serializerFactory == null)
-                throw new ArgumentNullException("serializerFactory");
             if (thread == null)
                 throw new ArgumentNullException("thread");
 
             channel = connection.CreateChannnel();
             this.messageContextAccess = messageContextAccess;
             this.microServiceLocator = microServiceLocator;
+            this.microServiceSerializer = microServiceSerializer;
             this.mqPlugin = mqPlugin;
-            serializers = serializerFactory.GetAllSerializers();
             this.thread = thread;
             thread.Name = "MicroServices.Dispatch";
         }
@@ -162,39 +161,34 @@
                     channel.IsPaused = Interlocked.Read(ref dispatcherDepth) > 10;
                 try
                 {
-                    var contentType = e.Properties.ContentType ?? "application/xml";
                     var consumer = (IMqConsumer)sender;
                     var bindingsFromMap = bindingMap[consumer];
                     var binding = bindingsFromMap.First(x => mqPlugin.IsMatch(e.Properties, x.Address));
                     var instance = microServiceLocator.Get(binding.Service);
                     try
-                    {                    
-                        var method = binding.Method;
-                        var parameter = method.GetParameters().SingleOrDefault();
-                        object parameterValue = null;
-                        ISerializer serializer = null;
-                        if (parameter != null)
-                        {
-                            parameterValue = parameter.ParameterType != typeof(Stream)
-                                                 ? Deserialize(parameter.ParameterType, e.Body, contentType, serializer)
-                                                 : e.Body;
-                        }
-                        else
-                        {
-                            var type = method.ReturnType;
-                            serializer = serializers.First(s => s.CanDeserialize(type, e.Body, contentType));
-                        }
-                        messageContextAccess.Push(new MessageContext(e.Properties));
+                    {
+                        var messageContext = new MessageContext(e.Properties);
+
+                        object serializerState = null;
+                        var parameterTypes = binding.Method.GetParameters().Select(x => x.ParameterType).ToArray();
+                        var parameterValues = microServiceSerializer.Deserialize(messageContext, parameterTypes, e.Body, ref serializerState);
+
+                        messageContextAccess.Push(messageContext);
                         try
                         {
-                            Log.DebugFormat("Invoking micro-service; Instance = {0}, Method = {1}, Parameter = {2}.", instance.Instance, method, parameterValue);
-                            var invokeResult = instance.Invoke(method, parameterValue);
+                            Log.DebugFormat("Invoking micro-service; Instance = {0}, Method = {1}, Parameters = {2}.", instance.Instance, binding.Method, string.Join(", ", parameterValues));
+                            var returnValue = instance.Invoke(binding.Method, parameterValues);
                             if (e.Properties.ReplyTo != null && !binding.IsOneWay)
                             {
-                                Log.DebugFormat("Sending reply message; CorrelationId = {0}, ReplyTo = {1}, Response = {2}.", e.Properties.CorrelationId, e.Properties.ReplyTo, invokeResult);
-                                var body = Serialize(method.ReturnType, invokeResult, contentType, serializer);
-                                using (var publisher = channel.CreatePublisher(e.Properties.ReplyTo))
-                                    publisher.Publish(body, e.Properties.CorrelationId);
+                                Log.DebugFormat("Sending reply message; CorrelationId = {0}, ReplyTo = {1}, Response = {2}.", e.Properties.CorrelationId, e.Properties.ReplyTo, returnValue);
+                                using (var ms = new MemoryStream())
+                                {
+                                    var returnType = binding.Method.ReturnType;
+                                    microServiceSerializer.Serialize(messageContext, returnType, returnValue, ms, ref serializerState);
+                                    var body = ms.ToArray();
+                                    using (var publisher = channel.CreatePublisher(e.Properties.ReplyTo))
+                                        publisher.Publish(body, e.Properties.CorrelationId);
+                                }
                             }
 
                             //channel.BasicAck(e.DeliveryTag, false);
@@ -221,27 +215,6 @@
                         channel.IsPaused = 10 < depth;
                 }
             });
-        }
-
-        private object Deserialize(Type type, Stream data, string contentType, ISerializer serializer)
-        {
-            var result = serializer.Deserialize(type, data);
-            return result;
-        }
-
-        private byte[] Serialize(Type type, object obj, string contentType, ISerializer serializer)
-        {
-            if (type == typeof(void))
-                return new byte[0];
-
-            if (serializer == null || !serializer.CanSerialize(type, contentType))
-                serializer = serializers.First(x => x.CanSerialize(type, contentType));
-            
-            using (var ms = new MemoryStream())
-            {
-                serializer.Serialize(type, obj, ms);
-                return ms.ToArray();
-            }
         }
     }
 }

@@ -125,6 +125,7 @@
     <Compile Include="MicroServices\Host\ExampleMicroService.cs" />
     <Compile Include="MicroServices\Host\MicroServiceHostTests.cs" />
     <Compile Include="MicroServices\MicroServiceBindingDefaultsAttributeTests.cs" />
+    <Compile Include="MicroServices\MicroServiceSerializerTests.cs" />
     <Compile Include="Plugin\WebApi\IocDependencyResolverTests.cs" />
     <Compile Include="UtilComponentsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

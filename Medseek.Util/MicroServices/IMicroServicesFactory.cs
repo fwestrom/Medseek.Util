@@ -4,7 +4,7 @@ namespace Medseek.Util.MicroServices
     using Medseek.Util.MicroServices.BindingProviders;
 
     /// <summary>
-    /// Interface for types that can provide instances of the micro-servies 
+    /// Interface for types that can provide instances of the micro-services
     /// components.
     /// </summary>
     [RegisterFactory(Lifestyle = Lifestyle.Transient)]
