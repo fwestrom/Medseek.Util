@@ -1,6 +1,8 @@
 ﻿namespace Medseek.Util.Messaging.RabbitMq
 {
     using System.Linq;
+    using System.Text;
+
     using Medseek.Util.Ioc;
     using RabbitMQ.Client;
     using RabbitMQ.Client.Events;
@@ -33,12 +35,17 @@
         /// </summary>
         public MessageProperties ToProperties(IBasicProperties basicProperties)
         {
-            return new MessageProperties
+            var properties = new MessageProperties
             {
                 CorrelationId = basicProperties.CorrelationId,
                 ReplyTo = basicProperties.ReplyTo != null ? new MqAddress(basicProperties.ReplyTo) : null,
-                ContentType = basicProperties.ContentType,
+                ContentType = basicProperties.ContentType
             };
+            basicProperties.Headers.ToList().ForEach(h =>
+            {
+                properties.Set(h.Key, Encoding.UTF8.GetString((byte[])h.Value));
+            });
+            return properties;
         }
 
         /// <summary>
