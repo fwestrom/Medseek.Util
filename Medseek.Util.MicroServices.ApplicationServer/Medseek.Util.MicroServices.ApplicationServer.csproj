@@ -53,7 +53,7 @@
     <Compile Include="WindowsServiceInstaller.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="XmlExtensions.cs" />
+    <Compile Include="Extensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

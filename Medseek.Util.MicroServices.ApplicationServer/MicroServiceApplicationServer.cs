@@ -22,6 +22,7 @@
         private readonly string broker;
         private readonly DirectoryInfo directory;
         private readonly DispatcherTimer refreshTimer;
+        private readonly Dictionary<string, string> cmdLineParams = new Dictionary<string, string>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MicroServiceApplicationServer" /> 
@@ -32,8 +33,10 @@
             if (args == null)
                 throw new ArgumentNullException("args");
 
-            broker = args.ArgValue("broker");
-            directory = new DirectoryInfo(args.ArgValue("dir"));
+            cmdLineParams = args.ToArgDictionary();
+
+            broker = cmdLineParams.Get("broker");
+            directory = new DirectoryInfo(cmdLineParams.Get("dir"));
             refreshTimer = new DispatcherTimer(DispatcherPriority.Normal, dispatcher);
             refreshTimer.Tick += OnTick;
         }
@@ -92,7 +95,7 @@
                     var descriptors = directory.GetFiles("services.xml", SearchOption.AllDirectories)
                         .SelectMany(file => XDocument.Load(file.FullName)
                             .Descendants(XName.Get("service", string.Empty))
-                            .Select(xe => new ServiceDescriptor(xe.Attrib("id"), xe.Attrib("run"), xe.Attrib("args"), file.FullName)))
+                            .Select(xe => new ServiceDescriptor(xe.Attrib("id"), xe.Attrib("run"), MapArgumentTokens(xe.Attrib("args")), file.FullName)))
                         .ToArray();
 
                     var removed = runners.Where(r => !descriptors.Contains(r.Descriptor)).ToArray();
@@ -118,6 +121,17 @@
                 Log.DebugFormat("{0}: Refresh completed; Elapsed = {1}.", MethodBase.GetCurrentMethod().Name, sw.Elapsed);
                 refreshTimer.Interval = TimeSpan.FromSeconds(10);
             }
+        }
+
+        private string MapArgumentTokens(string args)
+        {
+            foreach (var cmdLineParam in cmdLineParams)
+            {
+                var token = string.Format("$({0})", cmdLineParam.Key);
+                args = args.Replace(token, cmdLineParam.Value);
+            }
+
+            return args;
         }
     }
 }
