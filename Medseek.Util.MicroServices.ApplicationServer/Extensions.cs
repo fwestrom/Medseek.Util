@@ -8,7 +8,7 @@
     using Medseek.Util.Interactive;
     using Medseek.Util.Logging;
 
-    internal static class XmlExtensions
+    internal static class Extensions
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -27,6 +27,20 @@
                 .Select(x => x.Substring(prefix.Length))
                 .Do(x => Log.DebugFormat("ArgValue: value = {0}", x))
                 .FirstOrDefault();
+        }
+
+        internal static Dictionary<string, string> ToArgDictionary(this IEnumerable<string> args)
+        {
+            return args.Where(x => x.StartsWith("/") && x.Contains("="))
+                        .Select(x => x.TrimStart('/').Split('='))
+                        .ToDictionary(x => x[0], x => x[1]);
+        }
+
+        internal static string Get(this Dictionary<string, string> dict, string key)
+        {
+            string value = null;
+            dict.TryGetValue(key, out value);
+            return value;
         }
     }
 }

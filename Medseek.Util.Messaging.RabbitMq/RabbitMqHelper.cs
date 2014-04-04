@@ -32,12 +32,17 @@
         /// </summary>
         public MessageProperties ToProperties(IBasicProperties basicProperties)
         {
-            return new MessageProperties
+            var properties = new MessageProperties
             {
                 CorrelationId = basicProperties.CorrelationId,
                 ReplyTo = basicProperties.ReplyTo != null ? new MqAddress(basicProperties.ReplyTo) : null,
                 ContentType = basicProperties.ContentType,
             };
+            basicProperties.Headers.ToList().ForEach(h =>
+            {
+                properties.Set(h.Key, Encoding.UTF8.GetString((byte[])h.Value));
+            });
+            return properties;
         }
 
         /// <summary>

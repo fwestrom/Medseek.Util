@@ -34,33 +34,26 @@
 
         private void OnBeforeInstall(object sender, InstallEventArgs e)
         {
+            var parameters = string.Empty;
             foreach (string key in Context.Parameters.Keys)
-                Console.WriteLine("Context.Parameters[{0}] = {1}", key, Context.Parameters[key]);
-            
-            if (Context.Parameters.ContainsKey("id"))
             {
-                var id = Context.Parameters["id"];
-                Console.WriteLine("[id] = " + id);
+                Console.WriteLine("Context.Parameters[{0}] = {1}", key, Context.Parameters[key]);
 
-                serviceInstaller.DisplayName += " (" + id + ")";
-                serviceInstaller.ServiceName += "-" + id;
+                if (key == "id")
+                {
+                    serviceInstaller.DisplayName += " (" + Context.Parameters[key] + ")";
+                    serviceInstaller.ServiceName += "-" + Context.Parameters[key];
+                }
+                else
+                {
+                    parameters += string.Format("\" \"/{0}={1}", key, Context.Parameters[key]);
+                }
             }
 
             var commandLine = '"' + Context.Parameters["assemblypath"].Trim('"') + "\" \"/service";
-            if (Context.Parameters.ContainsKey("dir"))
-            {
-                var dir = Context.Parameters["dir"];
-                Console.WriteLine("[dir] = " + dir);
-                commandLine += "\" \"/dir=" + dir;
-            }
-            if (Context.Parameters.ContainsKey("broker"))
-            {
-                var broker = Context.Parameters["broker"];
-                Console.WriteLine("[broker] = " + broker);
-                commandLine += "\" \"/broker=" + broker;
-            }
-
+            commandLine += parameters;
             commandLine += '"';
+
             Console.WriteLine("[assemblypath] = " + commandLine);
             Context.Parameters["assemblypath"] = commandLine;
         }
