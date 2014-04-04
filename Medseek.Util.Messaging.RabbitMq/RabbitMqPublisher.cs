@@ -46,7 +46,7 @@
         /// <param name="properties">
         /// The properties associated with the message.
         /// </param>
-        protected override void OnPublish(byte[] body, MessageProperties properties)
+        protected override void OnPublish(byte[] body, IMessageProperties properties)
         {
             var basicProperties = helper.CreateBasicProperties(model, properties);
             var pa = helper.ToPublicationAddress(Address);

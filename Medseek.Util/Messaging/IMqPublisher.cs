@@ -1,5 +1,7 @@
 namespace Medseek.Util.Messaging
 {
+    using System;
+
     /// <summary>
     /// Interface for types that can be used to publish messages to a messaging
     /// system channel.
@@ -19,6 +21,18 @@ namespace Medseek.Util.Messaging
         /// An optional description of the location to which reply messages 
         /// should be published.
         /// </param>
+        [Obsolete("Use Publish(byte[], IMessageProperties) instead.")]
         void Publish(byte[] body, string correlationId = null, MqAddress replyTo = null);
+
+        /// <summary>
+        /// Publishes a message to the messaging system channel.
+        /// </summary>
+        /// <param name="body">
+        /// A array containing the raw bytes of the message body.
+        /// </param>
+        /// <param name="properties">
+        /// The message properties to use when publishing the message.
+        /// </param>
+        void Publish(byte[] body, IMessageProperties properties);
     }
 }

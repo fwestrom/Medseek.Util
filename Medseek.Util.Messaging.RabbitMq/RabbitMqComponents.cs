@@ -114,6 +114,23 @@
         }
 
         /// <summary>
+        /// Converts an address into a detailed publisher oriented address 
+        /// representing same original address.
+        /// </summary>
+        /// <param name="address">
+        /// The address to convert.
+        /// </param>
+        /// <returns>
+        /// A detailed publisher oriented address.
+        /// </returns>
+        public MqPublisherAddress ToPublisherAddress(MqAddress address)
+        {
+            var ra = helper.ToRabbitMqAddress(address);
+            var result = new MqPublisherAddress(ra.Value, ra.RoutingKey);
+            return result;
+        }
+
+        /// <summary>
         /// Returns the collection of installable types associated with the 
         /// subclass assembly.
         /// </summary>

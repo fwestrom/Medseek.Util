@@ -6,7 +6,7 @@ namespace Medseek.Util.Messaging
     /// Describes an address that corresponds to a messaging system entity to 
     /// which messages can be sent or from which messages can be received.
     /// </summary>
-    public class MqAddress
+    public class MqAddress : ICloneable
     {
         private readonly string value;
 
@@ -30,6 +30,18 @@ namespace Medseek.Util.Messaging
             {
                 return value;
             }
+        }
+
+        /// <summary>
+        /// Creates a new object that is a copy of the current instance.
+        /// </summary>
+        /// <returns>
+        /// A new object that is a copy of this instance.
+        /// </returns>
+        public virtual object Clone()
+        {
+            var result = MemberwiseClone();
+            return result;
         }
 
         /// <summary>

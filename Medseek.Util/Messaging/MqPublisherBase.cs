@@ -51,14 +51,29 @@
         /// </param>
         public void Publish(byte[] body, string correlationId = null, MqAddress replyTo = null)
         {
+            Publish(body, new MessageProperties
+            {
+                CorrelationId = correlationId,
+                ReplyTo = replyTo,
+            });
+        }
+
+        /// <summary>
+        /// Publishes a message to the messaging system channel.
+        /// </summary>
+        /// <param name="body">
+        /// A stream that can be read to obtain the raw bytes of the message 
+        /// body.
+        /// </param>
+        /// <param name="properties">
+        /// The message properties to use when publishing the message.
+        /// </param>
+        public void Publish(byte[] body, IMessageProperties properties)
+        {
             using (EnterDisposeLock())
             {
-                log.DebugFormat("Publishing a message of {0} bytes; Address = {1}, CorrelationId = {2}, ReplyTo = {3}.", body.Length, address, correlationId, replyTo);
-                OnPublish(body, new MessageProperties
-                {
-                    CorrelationId = correlationId,
-                    ReplyTo = replyTo,
-                });
+                log.DebugFormat("Publishing a message of {0} bytes; Address = {1}, ContentType = {2}, ReplyTo = {3}, CorrelationId = {4}.", body.Length, address, properties.ContentType, properties.ReplyTo, properties.CorrelationId);
+                OnPublish(body, properties);
             }
         }
 
@@ -85,6 +100,6 @@
         /// <param name="properties">
         /// The properties associated with the message.
         /// </param>
-        protected abstract void OnPublish(byte[] body, MessageProperties properties);
+        protected abstract void OnPublish(byte[] body, IMessageProperties properties);
     }
 }

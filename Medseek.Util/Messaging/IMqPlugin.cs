@@ -34,5 +34,17 @@ namespace Medseek.Util.Messaging
         /// A detailed consumer oriented address.
         /// </returns>
         MqConsumerAddress ToConsumerAddress(MqAddress address);
+
+        /// <summary>
+        /// Converts an address into a detailed publisher oriented address 
+        /// representing same original address.
+        /// </summary>
+        /// <param name="address">
+        /// The address to convert.
+        /// </param>
+        /// <returns>
+        /// A detailed publisher oriented address.
+        /// </returns>
+        MqPublisherAddress ToPublisherAddress(MqAddress address);
     }
 }

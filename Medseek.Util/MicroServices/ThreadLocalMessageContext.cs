@@ -5,6 +5,7 @@
     using System.Threading;
     using Medseek.Util.Ioc;
     using Medseek.Util.Messaging;
+    using Medseek.Util.Objects;
 
     /// <summary>
     /// Provides a message context that provides access to thread-local 
@@ -49,6 +50,47 @@
         }
 
         /// <summary>
+        /// Pushes a new current message context onto the stack, which will 
+        /// be popped from the stack upon disposing the object returned by the 
+        /// method.
+        /// </summary>
+        /// <param name="messageContext">
+        /// The new current message context, or null to use a copy of the 
+        /// current message context.
+        /// </param>
+        /// <returns>
+        /// An object that will cause the message context to be popped when it 
+        /// is disposed.
+        /// </returns>
+        public IDisposable Enter(IMessageContext messageContext)
+        {
+            var disposable = new Disposable();
+            var stack = contextStack.Value;
+            disposable.Disposing += (sender, e) => stack.Pop();
+
+            var value = messageContext ?? Clone();
+            stack.Push(value);
+
+            return disposable;
+        }
+
+        /// <summary>
+        /// Pushes a new cloned-copy of the current message context onto the 
+        /// stack, making it the new current context.
+        /// </summary>
+        /// <returns>
+        /// The new current message context that was cloned from the previous 
+        /// current message context.
+        /// </returns>
+        public IMessageContext PushClone()
+        {
+            var original = (ICloneable)GetCurrent();
+            var result = (IMessageContext)original.Clone();
+            Push(result);
+            return result;
+        }
+
+        /// <summary>
         /// Gets the message properties.
         /// </summary>
         public IMessageProperties Properties
@@ -57,6 +99,17 @@
             {
                 return GetCurrent().Properties;
             }
+        }
+
+        /// <summary>
+        /// Creates an independent copy of the message context.
+        /// </summary>
+        /// <returns>
+        /// The new message context that was created from the original.
+        /// </returns>
+        public IMessageContext Clone()
+        {
+            return GetCurrent().Clone();
         }
 
         // ReSharper disable once UnusedParameter.Local

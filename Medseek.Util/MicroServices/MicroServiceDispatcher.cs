@@ -187,9 +187,16 @@
                                     body = ms.ToArray();
                                 }
 
+                                var publishAddress = channel.Plugin.ToPublisherAddress(e.Properties.ReplyTo);
+                                var properties = new MessageProperties
+                                {
+                                    ContentType = e.Properties.ContentType,
+                                    CorrelationId = e.Properties.CorrelationId,
+                                    RoutingKey = publishAddress.RoutingKey,
+                                };
                                 Log.DebugFormat("Sending reply message; ReplyTo = {0}, ContentType = {1}, CorrelationId = {2}, Body.Length = {3}, Value = {4}.", e.Properties.ReplyTo, e.Properties.ContentType, e.Properties.CorrelationId, body.Length, returnValue);
-                                using (var publisher = channel.CreatePublisher(e.Properties.ReplyTo))
-                                    publisher.Publish(body, e.Properties.CorrelationId);
+                                using (var publisher = channel.CreatePublisher(publishAddress))
+                                    publisher.Publish(body, properties);
                             }
 
                             //channel.BasicAck(e.DeliveryTag, false);

@@ -1,6 +1,5 @@
 ﻿namespace Medseek.Util.Messaging.RabbitMq
 {
-    using System.Linq;
     using Medseek.Util.Ioc;
     using RabbitMQ.Client;
     using RabbitMQ.Client.Events;
@@ -15,7 +14,7 @@
         /// Gets a basic properties object set with the values from a message
         /// properties object.
         /// </summary>
-        public IBasicProperties CreateBasicProperties(IModel model, MessageProperties properties)
+        public IBasicProperties CreateBasicProperties(IModel model, IMessageProperties properties)
         {
             var basicProperties = model.CreateBasicProperties();
             if (properties.ContentType != null)

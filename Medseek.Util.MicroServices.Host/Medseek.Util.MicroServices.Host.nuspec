@@ -12,11 +12,11 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <tags/>
     <dependencies>
-      <dependency id="Medseek.Util" version="1.1" />
-      <dependency id="Medseek.Util.Ioc.Castle" version="1.1" />
-      <dependency id="Medseek.Util.Logging.NLog" version="1.1" />
-      <dependency id="Medseek.Util.Messaging.RabbitMq" version="1.1" />
-      <dependency id="Medseek.Util.Serialization.Newtonsoft.Json" version="1.1" />
+      <dependency id="Medseek.Util" version="1.2" />
+      <dependency id="Medseek.Util.Ioc.Castle" version="1.2" />
+      <dependency id="Medseek.Util.Logging.NLog" version="1.2" />
+      <dependency id="Medseek.Util.Messaging.RabbitMq" version="1.2" />
+      <dependency id="Medseek.Util.Serialization.Newtonsoft.Json" version="1.2" />
     </dependencies>
   </metadata>
   <files>

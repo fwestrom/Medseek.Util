@@ -17,6 +17,11 @@
         /// <summary>
         /// Serializes the result from invoking a micro-service operation.
         /// </summary>
+        void Serialize(IMessageContext messageContext, Type type, object value, Stream destination);
+
+        /// <summary>
+        /// Serializes the result from invoking a micro-service operation.
+        /// </summary>
         void Serialize(IMessageContext messageContext, Type type, object value, Stream destination, ref object serializerState);
     }
 }

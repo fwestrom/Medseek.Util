@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCulture("")]
 [assembly: AssemblyProduct("Medseek.Util")]
 [assembly: AssemblyTrademark("")]
-[assembly: AssemblyVersion("1.1.*")]
+[assembly: AssemblyVersion("1.2.*")]
 [assembly: ComVisible(false)]
 [assembly: InternalsVisibleTo("Medseek.Util")]
 [assembly: InternalsVisibleTo("Medseek.Util.Messaging.ActiveMq")]

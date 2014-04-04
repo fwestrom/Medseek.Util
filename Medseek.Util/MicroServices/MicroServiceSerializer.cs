@@ -56,6 +56,15 @@
         /// <summary>
         /// Serializes the result from invoking a micro-service operation.
         /// </summary>
+        public void Serialize(IMessageContext messageContext, Type type, object value, Stream destination)
+        {
+            object serializerState = null;
+            Serialize(messageContext, type, value, destination, ref serializerState);
+        }
+
+        /// <summary>
+        /// Serializes the result from invoking a micro-service operation.
+        /// </summary>
         public void Serialize(IMessageContext messageContext, Type type, object value, Stream destination, ref object serializerState)
         {
             var contentType = messageContext.Properties.ContentType;

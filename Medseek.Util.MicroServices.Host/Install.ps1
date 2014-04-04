@@ -21,8 +21,6 @@ foreach($PropertyGroup in $prjXml.project.ChildNodes)
 	}
 }
 
-$exeName = "Medseek.Util.MicroServices.Host.exe"
-
 $propertyGroupElement = $prjXml.CreateElement("PropertyGroup", $prjXml.Project.GetAttribute("xmlns"));
 $startActionElement = $prjXml.CreateElement("StartAction", $prjXml.Project.GetAttribute("xmlns"));
 $propertyGroupElement.AppendChild($startActionElement) | Out-Null

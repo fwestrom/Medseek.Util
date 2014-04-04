@@ -1,9 +1,11 @@
 namespace Medseek.Util.Messaging
 {
+    using System;
+
     /// <summary>
     /// Interface for types that provide access to the message properties.
     /// </summary>
-    public interface IMessageProperties
+    public interface IMessageProperties : ICloneable
     {
         /// <summary>
         /// Gets or sets the type of the content.
@@ -15,20 +17,22 @@ namespace Medseek.Util.Messaging
         }
 
         /// <summary>
-        /// Gets the correlation identifier associated with the message.
+        /// Gets or sets the correlation identifier associated with the message.
         /// </summary>
         string CorrelationId
         {
-            get;
+            get; 
+            set;
         }
 
         /// <summary>
-        /// Gets the location to which reply messages should be
+        /// Gets or sets the location to which reply messages should be
         /// published.
         /// </summary>
         MqAddress ReplyTo
         {
             get;
+            set;
         }
 
         /// <summary>
@@ -36,7 +40,7 @@ namespace Medseek.Util.Messaging
         /// </summary>
         string RoutingKey
         {
-            get; 
+            get;
             set;
         }
 

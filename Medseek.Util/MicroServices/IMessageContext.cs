@@ -15,5 +15,13 @@
         {
             get;
         }
+
+        /// <summary>
+        /// Creates an independent copy of the message context.
+        /// </summary>
+        /// <returns>
+        /// The new message context that was created from the original.
+        /// </returns>
+        IMessageContext Clone();
     }
 }

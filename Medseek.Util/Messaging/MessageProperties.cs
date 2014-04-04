@@ -17,7 +17,10 @@ namespace Medseek.Util.Messaging
         {
             get
             {
-                return properties["correlation_id"];
+                string value;
+                return properties.TryGetValue("correlation_id", out value)
+                    ? value
+                    : null;
             }
             set
             {
@@ -33,7 +36,10 @@ namespace Medseek.Util.Messaging
         {
             get
             {
-                return replyTo;
+                string value;
+                return replyTo ?? (properties.TryGetValue("reply_to", out value) 
+                    ? replyTo = new MqAddress(value) 
+                    : null);
             }
             set
             {
@@ -47,8 +53,17 @@ namespace Medseek.Util.Messaging
         /// </summary>
         public string ContentType
         {
-            get;
-            set;
+            get
+            {
+                string value;
+                return properties.TryGetValue("content_type", out value)
+                    ? value
+                    : null;
+            }
+            set
+            {
+                properties["content_type"] = value;
+            }
         }
 
         /// <summary>
@@ -87,6 +102,21 @@ namespace Medseek.Util.Messaging
         public void Set(string id, string value)
         {
             properties[id] = value;
+        }
+
+        /// <summary>
+        /// Creates a new object that is a copy of the current instance.
+        /// </summary>
+        /// <returns>
+        /// A new object that is a copy of this instance.
+        /// </returns>
+        public virtual object Clone()
+        {
+            var result = (MessageProperties)MemberwiseClone();
+            result.properties.Clear();
+            foreach (var entry in properties)
+                properties[entry.Key] = entry.Value;
+            return result;
         }
     }
 }
