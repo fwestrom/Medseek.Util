@@ -1,5 +1,7 @@
 ﻿namespace Medseek.Util.Messaging.RabbitMq
 {
+    using System.Text;
+    using Medseek.Util.Interactive;
     using Medseek.Util.Ioc;
     using RabbitMQ.Client;
     using RabbitMQ.Client.Events;
@@ -38,10 +40,8 @@
                 ReplyTo = basicProperties.ReplyTo != null ? new MqAddress(basicProperties.ReplyTo) : null,
                 ContentType = basicProperties.ContentType,
             };
-            basicProperties.Headers.ToList().ForEach(h =>
-            {
-                properties.Set(h.Key, Encoding.UTF8.GetString((byte[])h.Value));
-            });
+            basicProperties.Headers.ForEach(h =>
+                properties.Set(h.Key, Encoding.UTF8.GetString((byte[])h.Value)));
             return properties;
         }
 
