@@ -3,15 +3,16 @@ namespace Medseek.Util.MicroServices
     using System;
     using System.IO;
     using System.Linq;
+    using Medseek.Util.Ioc;
     using Medseek.Util.Messaging;
     using Medseek.Util.Objects;
 
     /// <summary>
     /// Provides the ability to invoke a remote micro-service.
     /// </summary>
-    public class RemoteMicroServiceInvoker : Disposable, IMicroServiceInvoker
+    [Register(typeof(IRemoteMicroServiceInvoker), Lifestyle = Lifestyle.Transient)]
+    public class RemoteMicroServiceInvoker : Disposable, IRemoteMicroServiceInvoker
     {
-        private readonly MicroServiceBinding binding;
         private readonly IMqChannel channel;
         private readonly IMessageContextAccess messageContextAccess;
         private readonly IMicroServiceSerializer serializer;
@@ -21,13 +22,10 @@ namespace Medseek.Util.MicroServices
         /// cref="RemoteMicroServiceInvoker"/> class.
         /// </summary>
         public RemoteMicroServiceInvoker(
-            MicroServiceBinding binding, 
             IMqChannel channel, 
             IMessageContextAccess messageContextAccess, 
             IMicroServiceSerializer serializer)
         {
-            if (binding == null)
-                throw new ArgumentNullException("binding");
             if (channel == null)
                 throw new ArgumentNullException("channel");
             if (messageContextAccess == null)
@@ -35,35 +33,22 @@ namespace Medseek.Util.MicroServices
             if (serializer == null)
                 throw new ArgumentNullException("serializer");
 
-            this.binding = binding;
             this.channel = channel;
             this.messageContextAccess = messageContextAccess;
             this.serializer = serializer;
         }
 
         /// <summary>
-        /// Gets the micro-service binding description associated with the 
-        /// invoker.
-        /// </summary>
-        public MicroServiceBinding Binding
-        {
-            get
-            {
-                return binding;
-            }
-        }
-
-        /// <summary>
         /// Invokes the bound method that provides the micro-service operation.
         /// </summary>
-        /// <param name="parameters">
-        /// The values to pass as the method parameters.
+        /// <param name="binding">
+        /// The micro-service binding description identifying the micro-service
+        /// invocation to perform.
         /// </param>
-        /// <returns>
-        /// The return value produced by the method, or null if the method 
-        /// has a void return type.
-        /// </returns>
-        public object Invoke(object[] parameters)
+        /// <param name="parameters">
+        /// The values to pass as the parameters to the micro-service.
+        /// </param>
+        public void Send(MicroServiceBinding binding, params object[] parameters)
         {
             ThrowIfDisposed();
             var parameterTypes = binding.Method.GetParameters().Select(x => x.ParameterType).ToArray();
@@ -86,7 +71,6 @@ namespace Medseek.Util.MicroServices
                 properties.ReplyTo = null;
                 properties.RoutingKey = address.RoutingKey;
 
-                object serializerState = null;
                 foreach (var parameterType in parameterTypes)
                 {
                     var parameterValue = parameters.Single();
@@ -95,11 +79,7 @@ namespace Medseek.Util.MicroServices
 
                 var body = ms.ToArray();
                 publisher.Publish(body, properties);
-
-                // TODO: Wait for reply if appropriate.
             }
-
-            return null;
         }
     }
 }

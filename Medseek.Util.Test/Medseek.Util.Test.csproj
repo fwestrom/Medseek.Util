@@ -109,6 +109,7 @@
     <Compile Include="..\Medseek.Util\Properties\AssemblyInfoShared.cs">
       <Link>Properties\AssemblyInfoShared.cs</Link>
     </Compile>
+    <Compile Include="Ioc\Castle\MicroServiceProxyInterceptorTests.cs" />
     <Compile Include="Ioc\Castle\WindsorIocContainerTests.cs" />
     <Compile Include="Ioc\IocBootstrapperTests.cs" />
     <Compile Include="Logging\Log4Net\Log4NetLogTests.cs" />

@@ -17,8 +17,8 @@
     /// Provides a micro-service dispatcher using a messaging system connection.
     /// </summary>
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "MQ->MessageQueue is not hungarian notation.")]
-    [Register(Lifestyle = Lifestyle.Singleton, Start = true)]
-    public class MicroServiceDispatcher : IStartable, IDisposable
+    [Register(typeof(IMicroServiceDispatcher), Lifestyle = Lifestyle.Singleton, Start = true)]
+    public class MicroServiceDispatcher : IMicroServiceDispatcher, IStartable, IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Dictionary<IMqConsumer, List<MicroServiceBinding>> bindingMap = new Dictionary<IMqConsumer, List<MicroServiceBinding>>(); 
@@ -29,6 +29,7 @@
         private readonly IMicroServiceLocator microServiceLocator;
         private readonly IMicroServiceSerializer microServiceSerializer;
         private readonly IMqPlugin mqPlugin;
+        private readonly IRemoteMicroServiceInvoker remoteMicroServiceInvoker;
         private readonly IDispatchedThread thread;
         private long dispatcherDepth;
         private bool disposed;
@@ -44,6 +45,7 @@
             IMessageContextAccess messageContextAccess,
             IMicroServiceLocator microServiceLocator,
             IMicroServiceSerializer microServiceSerializer,
+            IMicroServicesFactory microServicesFactory,
             IMqPlugin mqPlugin,
             IDispatchedThread thread)
         {
@@ -55,18 +57,32 @@
                 throw new ArgumentNullException("microServiceLocator");
             if (microServiceSerializer == null)
                 throw new ArgumentNullException("microServiceSerializer");
+            if (microServicesFactory == null)
+                throw new ArgumentNullException("microServicesFactory");
             if (mqPlugin == null)
                 throw new ArgumentNullException("mqPlugin");
             if (thread == null)
                 throw new ArgumentNullException("thread");
 
             channel = connection.CreateChannnel();
+            remoteMicroServiceInvoker = microServicesFactory.GetRemoteMicroServiceInvoker(channel);
             this.messageContextAccess = messageContextAccess;
             this.microServiceLocator = microServiceLocator;
             this.microServiceSerializer = microServiceSerializer;
             this.mqPlugin = mqPlugin;
             this.thread = thread;
             thread.Name = "MicroServices.Dispatch";
+        }
+
+        /// <summary>
+        /// Gets the remote micro-service invoker.
+        /// </summary>
+        public IRemoteMicroServiceInvoker RemoteMicroServiceInvoker
+        {
+            get
+            {
+                return remoteMicroServiceInvoker;
+            }
         }
 
         /// <summary>
@@ -166,45 +182,38 @@
                     var binding = bindingsFromMap.First(x => mqPlugin.IsMatch(e.Properties, x.Address));
                     var messageContext = new MessageContext(e.Properties);
 
-                    object serializerState = null;
-                    var parameterTypes = binding.Method.GetParameters().Select(x => x.ParameterType).ToArray();
-                    var parameterValues = microServiceSerializer.Deserialize(messageContext, parameterTypes, e.Body, ref serializerState);
-
-                    messageContextAccess.Push(messageContext);
-                    try
+                    using (messageContextAccess.Enter(messageContext))
+                    using (var instance = microServiceLocator.Get(binding))
                     {
-                        Log.DebugFormat("Invoking micro-service; Address = {0}, IsOneWay = {1}, Method = {2}, Parameters = {3}.", binding.Address, binding.IsOneWay, binding.Method, string.Join(", ", parameterValues));
-                        using (var instance = microServiceLocator.Get(binding))
-                        {
-                            var returnValue = instance.Invoke(parameterValues);
-                            if (e.Properties.ReplyTo != null && !binding.IsOneWay)
-                            {
-                                byte[] body;
-                                using (var ms = new MemoryStream())
-                                {
-                                    var returnType = binding.Method.ReturnType;
-                                    microServiceSerializer.Serialize(messageContext, returnType, returnValue, ms, ref serializerState);
-                                    body = ms.ToArray();
-                                }
+                        object serializerState = null;
+                        var parameterTypes = binding.Method.GetParameters().Select(x => x.ParameterType).ToArray();
+                        var parameterValues = microServiceSerializer.Deserialize(messageContext, parameterTypes, e.Body, ref serializerState);
 
-                                var publishAddress = channel.Plugin.ToPublisherAddress(e.Properties.ReplyTo);
-                                var properties = new MessageProperties
-                                {
-                                    ContentType = e.Properties.ContentType,
-                                    CorrelationId = e.Properties.CorrelationId,
-                                    RoutingKey = publishAddress.RoutingKey,
-                                };
-                                Log.DebugFormat("Sending reply message; ReplyTo = {0}, ContentType = {1}, CorrelationId = {2}, Body.Length = {3}, Value = {4}.", e.Properties.ReplyTo, e.Properties.ContentType, e.Properties.CorrelationId, body.Length, returnValue);
-                                using (var publisher = channel.CreatePublisher(publishAddress))
-                                    publisher.Publish(body, properties);
+                        Log.DebugFormat("Invoking micro-service; Address = {0}, IsOneWay = {1}, Method = {2}, Parameters = {3}.", binding.Address, binding.IsOneWay, binding.Method, string.Join(", ", parameterValues));
+                        var returnValue = instance.Invoke(parameterValues);
+                        if (e.Properties.ReplyTo != null && !binding.IsOneWay)
+                        {
+                            byte[] body;
+                            using (var ms = new MemoryStream())
+                            {
+                                var returnType = binding.Method.ReturnType;
+                                microServiceSerializer.Serialize(messageContext, returnType, returnValue, ms, ref serializerState);
+                                body = ms.ToArray();
                             }
 
-                            //channel.BasicAck(e.DeliveryTag, false);
+                            var publishAddress = channel.Plugin.ToPublisherAddress(e.Properties.ReplyTo);
+                            var properties = new MessageProperties
+                            {
+                                ContentType = e.Properties.ContentType,
+                                CorrelationId = e.Properties.CorrelationId,
+                                RoutingKey = publishAddress.RoutingKey,
+                            };
+                            Log.DebugFormat("Sending reply message; ReplyTo = {0}, ContentType = {1}, CorrelationId = {2}, Body.Length = {3}, Value = {4}.", e.Properties.ReplyTo, e.Properties.ContentType, e.Properties.CorrelationId, body.Length, returnValue);
+                            using (var publisher = channel.CreatePublisher(publishAddress))
+                                publisher.Publish(body, properties);
                         }
-                    }
-                    finally
-                    {
-                        messageContextAccess.Pop();
+
+                        //channel.BasicAck(e.DeliveryTag, false);
                     }
                 }
                 catch (Exception ex)

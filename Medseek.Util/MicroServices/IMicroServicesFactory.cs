@@ -1,6 +1,7 @@
 namespace Medseek.Util.MicroServices
 {
     using Medseek.Util.Ioc;
+    using Medseek.Util.Messaging;
     using Medseek.Util.MicroServices.BindingProviders;
 
     /// <summary>
@@ -14,5 +15,10 @@ namespace Medseek.Util.MicroServices
         /// Returns the set of available micro-service binding providers.
         /// </summary>
         IMicroServiceBindingProvider[] GetBindingProviders();
+
+        /// <summary>
+        /// Returns a remote micro-service invoker.
+        /// </summary>
+        IRemoteMicroServiceInvoker GetRemoteMicroServiceInvoker(IMqChannel channel);
     }
 }

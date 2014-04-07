@@ -68,7 +68,7 @@
             var stack = contextStack.Value;
             disposable.Disposing += (sender, e) => stack.Pop();
 
-            var value = messageContext ?? Clone();
+            var value = messageContext ?? (IMessageContext)Clone();
             stack.Push(value);
 
             return disposable;
@@ -107,7 +107,7 @@
         /// <returns>
         /// The new message context that was created from the original.
         /// </returns>
-        public IMessageContext Clone()
+        public object Clone()
         {
             return GetCurrent().Clone();
         }

@@ -34,7 +34,7 @@
             var helperType = typeof(IHelperMicroService);
             var helperDoItMethod = helperType.GetMethod("DoIt");
             var helperDoItAttribute = helperDoItMethod.GetCustomAttribute<MicroServiceBindingAttribute>();
-            Use(binding = helperDoItAttribute.ToBinding<MicroServiceBinding>(helperDoItMethod, helperType));
+            binding = helperDoItAttribute.ToBinding<MicroServiceBinding>(helperDoItMethod, helperType);
             binding.Address = new MqPublisherAddress(binding.Address.Value, DoItRoutingKey);
             channel = Mock<IMqChannel>();
             messageContextAccess = Mock<IMessageContextAccess>();
@@ -58,16 +58,6 @@
         }
 
         /// <summary>
-        /// Verifies that the property value is returned from the constructor 
-        /// dependency.
-        /// </summary>
-        [Test]
-        public void BindingReturnsConstructorDependency()
-        {
-            Assert.That(Obj.Binding, Is.SameAs(binding));
-        }
-
-        /// <summary>
         /// Verifies that the disposing notification is raised.
         /// </summary>
         [Test]
@@ -86,7 +76,7 @@
         /// Verifies that the remote micro-service is invoked.
         /// </summary>
         [Test]
-        public void InvokeOneWayPublishesOutgoingMessage()
+        public void SendOneWayPublishesOutgoingMessage()
         {
             var request = new object();
             var requestData = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
@@ -116,7 +106,7 @@
                         x.RoutingKey = DoItRoutingKey);
                 });
 
-            Obj.Invoke(new[] { request });
+            Obj.Send(binding, request);
 
             publisher.Verify();
         }
@@ -126,11 +116,11 @@
         /// disposed.
         /// </summary>
         [Test]
-        public void InvokeThrowsIfAlreadyDisposed()
+        public void SendThrowsIfAlreadyDisposed()
         {
             Obj.Dispose();
 
-            TestDelegate action = () => Obj.Invoke(new[] { new object() });
+            TestDelegate action = () => Obj.Send(binding, new object());
             Assert.That(action, Throws.InstanceOf<ObjectDisposedException>());
         }
 

@@ -17,14 +17,11 @@ namespace Medseek.Util.Messaging
         {
             get
             {
-                string value;
-                return properties.TryGetValue("correlation_id", out value)
-                    ? value
-                    : null;
+                return Get("correlation_id");
             }
             set
             {
-                properties["correlation_id"] = value;
+                Set("correlation_id", value);
             }
         }
 
@@ -37,14 +34,15 @@ namespace Medseek.Util.Messaging
             get
             {
                 string value;
-                return replyTo ?? (properties.TryGetValue("reply_to", out value) 
-                    ? replyTo = new MqAddress(value) 
-                    : null);
+                return replyTo ?? (replyTo = 
+                    (value = Get("reply_to")) != null
+                        ? new MqAddress(value) 
+                        : null);
             }
             set
             {
                 replyTo = value;
-                properties["reply_to"] = value != null ? value.ToString() : null;
+                Set("reply_to", value != null ? value.Value : null);
             }
         }
 
@@ -55,14 +53,11 @@ namespace Medseek.Util.Messaging
         {
             get
             {
-                string value;
-                return properties.TryGetValue("content_type", out value)
-                    ? value
-                    : null;
+                return Get("content_type");
             }
             set
             {
-                properties["content_type"] = value;
+                Set("content_type", value);
             }
         }
 
@@ -110,12 +105,12 @@ namespace Medseek.Util.Messaging
         /// <returns>
         /// A new object that is a copy of this instance.
         /// </returns>
-        public virtual object Clone()
+        public object Clone()
         {
-            var result = (MessageProperties)MemberwiseClone();
-            result.properties.Clear();
+            var result = new MessageProperties();
             foreach (var entry in properties)
-                properties[entry.Key] = entry.Value;
+                result.properties[entry.Key] = entry.Value;
+            result.RoutingKey = RoutingKey;
             return result;
         }
     }
