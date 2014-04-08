@@ -16,6 +16,14 @@
         public const string MicroServiceComponentSelector = "Medseek.Util.MicroServices.MicroServiceComponentSelector";
 
         /// <summary>
+        /// The component name for the micro-service proxy interceptor used 
+        /// to provide instances of components that can invoke remote 
+        /// micro-services.
+        /// </summary>
+        /// <seealso cref="RegisterMicroServiceProxyAttribute" />
+        public const string MicroServiceProxyInterceptor = "Medseek.Util.MicroServices.MicroServiceProxyInterceptor";
+
+        /// <summary>
         /// The XML namespace used by the Utility components.
         /// </summary>
         public const string Xmlns = "http://schema.medseek.com/util";

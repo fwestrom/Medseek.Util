@@ -1,78 +1,90 @@
 namespace Medseek.Util.Messaging
 {
     using System.Collections.Generic;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Describes additional properties associated with a message.
     /// </summary>
+    [DataContract(Namespace = "")]
     public class MessageProperties : IMessageProperties
     {
-        private readonly Dictionary<string, string> properties = new Dictionary<string, string>();
-        private MqAddress replyTo;
+        private readonly Dictionary<string, object> additionalProperties = new Dictionary<string, object>();
+
+        /// <summary>
+        /// Gets or sets the type of the content.
+        /// </summary>
+        [DataMember]
+        public string ContentType
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the correlation identifier associated with the message.
         /// </summary>
+        [DataMember]
         public string CorrelationId
         {
-            get
-            {
-                string value;
-                return properties.TryGetValue("correlation_id", out value)
-                    ? value
-                    : null;
-            }
-            set
-            {
-                properties["correlation_id"] = value;
-            }
+            get; 
+            set;
         }
 
         /// <summary>
         /// Gets or sets the location to which reply messages should be
         /// published.
         /// </summary>
+        [DataMember]
         public MqAddress ReplyTo
         {
-            get
-            {
-                string value;
-                return replyTo ?? (properties.TryGetValue("reply_to", out value) 
-                    ? replyTo = new MqAddress(value) 
-                    : null);
-            }
-            set
-            {
-                replyTo = value;
-                properties["reply_to"] = value != null ? value.ToString() : null;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the type of the content.
-        /// </summary>
-        public string ContentType
-        {
-            get
-            {
-                string value;
-                return properties.TryGetValue("content_type", out value)
-                    ? value
-                    : null;
-            }
-            set
-            {
-                properties["content_type"] = value;
-            }
+            get; 
+            set;
         }
 
         /// <summary>
         /// Gets or sets the routing key associated with the message.
         /// </summary>
+        [DataMember]
         public string RoutingKey
         {
             get; 
             set;
+        }
+
+        /// <summary>
+        /// Gets or sets the additional properties dictionary.
+        /// </summary>
+        [DataMember]
+        public Dictionary<string, object> AdditionalProperties 
+        {
+            get
+            {
+                return additionalProperties;
+            }
+            set
+            {
+                additionalProperties.Clear();
+                foreach (var item in value)
+                    additionalProperties[item.Key] = item.Value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value in the additional properties dictionary.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>The value.</returns>
+        public object this[string key]
+        {
+            get
+            {
+                return Get(key);
+            }
+            set
+            {
+                Set(key, value);
+            }
         }
 
         /// <summary>
@@ -84,10 +96,10 @@ namespace Medseek.Util.Messaging
         /// <returns>
         /// The value of the property, or null if it was not present.
         /// </returns>
-        public string Get(string id)
+        public object Get(string id)
         {
-            string value;
-            return properties.TryGetValue(id, out value) ? value : null;
+            object value;
+            return AdditionalProperties.TryGetValue(id, out value) ? value : null;
         }
 
         /// <summary>
@@ -99,9 +111,9 @@ namespace Medseek.Util.Messaging
         /// <param name="value">
         /// The value to set for the property.
         /// </param>
-        public void Set(string id, string value)
+        public void Set(string id, object value)
         {
-            properties[id] = value;
+            AdditionalProperties[id] = value;
         }
 
         /// <summary>
@@ -110,12 +122,12 @@ namespace Medseek.Util.Messaging
         /// <returns>
         /// A new object that is a copy of this instance.
         /// </returns>
-        public virtual object Clone()
+        public object Clone()
         {
-            var result = (MessageProperties)MemberwiseClone();
-            result.properties.Clear();
-            foreach (var entry in properties)
-                properties[entry.Key] = entry.Value;
+            var result = new MessageProperties();
+            foreach (var entry in AdditionalProperties)
+                result[entry.Key] = entry.Value;
+            result.RoutingKey = RoutingKey;
             return result;
         }
     }

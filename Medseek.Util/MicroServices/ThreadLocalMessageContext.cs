@@ -28,6 +28,17 @@
         }
 
         /// <summary>
+        /// Gets the message properties.
+        /// </summary>
+        public IMessageProperties Properties
+        {
+            get
+            {
+                return GetCurrent().Properties;
+            }
+        }
+
+        /// <summary>
         /// Pops the current message context from the stack.
         /// </summary>
         public void Pop()
@@ -68,37 +79,10 @@
             var stack = contextStack.Value;
             disposable.Disposing += (sender, e) => stack.Pop();
 
-            var value = messageContext ?? Clone();
+            var value = messageContext ?? (IMessageContext)Clone();
             stack.Push(value);
 
             return disposable;
-        }
-
-        /// <summary>
-        /// Pushes a new cloned-copy of the current message context onto the 
-        /// stack, making it the new current context.
-        /// </summary>
-        /// <returns>
-        /// The new current message context that was cloned from the previous 
-        /// current message context.
-        /// </returns>
-        public IMessageContext PushClone()
-        {
-            var original = (ICloneable)GetCurrent();
-            var result = (IMessageContext)original.Clone();
-            Push(result);
-            return result;
-        }
-
-        /// <summary>
-        /// Gets the message properties.
-        /// </summary>
-        public IMessageProperties Properties
-        {
-            get
-            {
-                return GetCurrent().Properties;
-            }
         }
 
         /// <summary>
@@ -107,7 +91,7 @@
         /// <returns>
         /// The new message context that was created from the original.
         /// </returns>
-        public IMessageContext Clone()
+        public object Clone()
         {
             return GetCurrent().Clone();
         }

@@ -7,7 +7,7 @@
     /// Provides information about the current context for executing 
     /// micro-service operations.
     /// </summary>
-    public class MessageContext : IMessageContext, ICloneable
+    public class MessageContext : IMessageContext
     {
         private readonly IMessageProperties properties;
 
@@ -39,21 +39,11 @@
         /// <returns>
         /// The new message context that was created from the original.
         /// </returns>
-        public IMessageContext Clone()
+        public object Clone()
         {
-            var result = (MessageContext)MemberwiseClone();
+            var cloneProperties = (IMessageProperties)properties.Clone();
+            var result = new MessageContext(cloneProperties);
             return result;
-        }
-
-        /// <summary>
-        /// Creates an independent copy of the message context.
-        /// </summary>
-        /// <returns>
-        /// The new message context that was created from the original.
-        /// </returns>
-        object ICloneable.Clone()
-        {
-            return Clone();
         }
     }
 }
