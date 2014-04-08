@@ -5,6 +5,7 @@
     using Medseek.Util.Ioc;
     using RabbitMQ.Client;
     using RabbitMQ.Client.Events;
+    using System.Collections.Generic;
 
     /// <summary>
     /// Provides helper functionality for working with messaging and RabbitMQ.
@@ -25,7 +26,14 @@
                 basicProperties.CorrelationId = properties.CorrelationId;
             if (properties.ReplyTo != null)
                 basicProperties.ReplyTo = ToPublicationAddress(properties.ReplyTo).ToString();
-            return basicProperties;
+            if (basicProperties.Headers == null)
+                basicProperties.Headers = new Dictionary<string, object>();
+
+            // Add AdditionalProperties to the BasicProperties headers.
+            properties.AdditionalProperties
+                .ForEach(p => basicProperties.Headers[p.Key] = p.Value);
+            
+            return basicProperties; 
         }
 
         /// <summary>
@@ -40,8 +48,14 @@
                 ReplyTo = basicProperties.ReplyTo != null ? new MqAddress(basicProperties.ReplyTo) : null,
                 ContentType = basicProperties.ContentType,
             };
-            basicProperties.Headers.ForEach(h =>
-                properties.Set(h.Key, Encoding.UTF8.GetString((byte[])h.Value)));
+
+            if (basicProperties.Headers != null)
+            {
+                // Add Headers to the MessageProperties dictionary.
+                basicProperties.Headers
+                    .ForEach(h => properties[h.Key] = h.Value);
+            }
+
             return properties;
         }
 

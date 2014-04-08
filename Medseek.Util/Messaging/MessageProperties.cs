@@ -7,67 +7,52 @@ namespace Medseek.Util.Messaging
     /// </summary>
     public class MessageProperties : IMessageProperties
     {
-        private readonly Dictionary<string, string> properties = new Dictionary<string, string>();
-        private MqAddress replyTo;
-
         /// <summary>
         /// Gets or sets the correlation identifier associated with the message.
         /// </summary>
-        public string CorrelationId
-        {
-            get
-            {
-                return Get("correlation_id");
-            }
-            set
-            {
-                Set("correlation_id", value);
-            }
-        }
+        public string CorrelationId { get; set; }
 
         /// <summary>
         /// Gets or sets the location to which reply messages should be
         /// published.
         /// </summary>
-        public MqAddress ReplyTo
-        {
-            get
-            {
-                string value;
-                return replyTo ?? (replyTo = 
-                    (value = Get("reply_to")) != null
-                        ? new MqAddress(value) 
-                        : null);
-            }
-            set
-            {
-                replyTo = value;
-                Set("reply_to", value != null ? value.Value : null);
-            }
-        }
+        public MqAddress ReplyTo { get; set; }
 
         /// <summary>
         /// Gets or sets the type of the content.
         /// </summary>
-        public string ContentType
-        {
-            get
-            {
-                return Get("content_type");
-            }
-            set
-            {
-                Set("content_type", value);
-            }
-        }
+        public string ContentType { get; set; }
 
         /// <summary>
         /// Gets or sets the routing key associated with the message.
         /// </summary>
-        public string RoutingKey
+        public string RoutingKey { get; set; }
+
+        /// <summary>
+        /// Gets or sets the additional properties dictionary.
+        /// </summary>
+        public Dictionary<string, object> AdditionalProperties 
+        { 
+            get { return _additionalProperties; }
+            set { _additionalProperties = value; }
+        }
+        private Dictionary<string, object> _additionalProperties = new Dictionary<string, object>();
+
+        /// <summary>
+        /// Gets or sets a value in the additional properties dictionary.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>The value.</returns>
+        public object this[string key]
         {
-            get; 
-            set;
+            get
+            {
+                return Get(key);
+            }
+            set
+            {
+                Set(key, value);
+            }
         }
 
         /// <summary>
@@ -79,10 +64,10 @@ namespace Medseek.Util.Messaging
         /// <returns>
         /// The value of the property, or null if it was not present.
         /// </returns>
-        public string Get(string id)
+        public object Get(string id)
         {
-            string value;
-            return properties.TryGetValue(id, out value) ? value : null;
+            object value;
+            return AdditionalProperties.TryGetValue(id, out value) ? value : null;
         }
 
         /// <summary>
@@ -94,9 +79,9 @@ namespace Medseek.Util.Messaging
         /// <param name="value">
         /// The value to set for the property.
         /// </param>
-        public void Set(string id, string value)
+        public void Set(string id, object value)
         {
-            properties[id] = value;
+            AdditionalProperties[id] = value;
         }
 
         /// <summary>
@@ -108,8 +93,8 @@ namespace Medseek.Util.Messaging
         public object Clone()
         {
             var result = new MessageProperties();
-            foreach (var entry in properties)
-                result.properties[entry.Key] = entry.Value;
+            foreach (var entry in AdditionalProperties)
+                result[entry.Key] = entry.Value;
             result.RoutingKey = RoutingKey;
             return result;
         }
