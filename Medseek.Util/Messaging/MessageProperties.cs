@@ -1,42 +1,74 @@
 namespace Medseek.Util.Messaging
 {
     using System.Collections.Generic;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Describes additional properties associated with a message.
     /// </summary>
+    [DataContract(Namespace = "")]
     public class MessageProperties : IMessageProperties
     {
+        private readonly Dictionary<string, object> additionalProperties = new Dictionary<string, object>();
+
+        /// <summary>
+        /// Gets or sets the type of the content.
+        /// </summary>
+        [DataMember]
+        public string ContentType
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// Gets or sets the correlation identifier associated with the message.
         /// </summary>
-        public string CorrelationId { get; set; }
+        [DataMember]
+        public string CorrelationId
+        {
+            get; 
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the location to which reply messages should be
         /// published.
         /// </summary>
-        public MqAddress ReplyTo { get; set; }
-
-        /// <summary>
-        /// Gets or sets the type of the content.
-        /// </summary>
-        public string ContentType { get; set; }
+        [DataMember]
+        public MqAddress ReplyTo
+        {
+            get; 
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the routing key associated with the message.
         /// </summary>
-        public string RoutingKey { get; set; }
+        [DataMember]
+        public string RoutingKey
+        {
+            get; 
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the additional properties dictionary.
         /// </summary>
+        [DataMember]
         public Dictionary<string, object> AdditionalProperties 
-        { 
-            get { return _additionalProperties; }
-            set { _additionalProperties = value; }
+        {
+            get
+            {
+                return additionalProperties;
+            }
+            set
+            {
+                additionalProperties.Clear();
+                foreach (var item in value)
+                    additionalProperties[item.Key] = item.Value;
+            }
         }
-        private Dictionary<string, object> _additionalProperties = new Dictionary<string, object>();
 
         /// <summary>
         /// Gets or sets a value in the additional properties dictionary.
