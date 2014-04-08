@@ -127,7 +127,10 @@ namespace Medseek.Util.Messaging
             var result = new MessageProperties();
             foreach (var entry in AdditionalProperties)
                 result[entry.Key] = entry.Value;
-            result.RoutingKey = RoutingKey;
+			result.ContentType = ContentType;
+			result.CorrelationId = CorrelationId;
+			result.ReplyTo = ReplyTo;
+			result.RoutingKey = RoutingKey;
             return result;
         }
     }
