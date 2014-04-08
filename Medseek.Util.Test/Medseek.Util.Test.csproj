@@ -114,6 +114,7 @@
     <Compile Include="Ioc\IocBootstrapperTests.cs" />
     <Compile Include="Logging\Log4Net\Log4NetLogTests.cs" />
     <Compile Include="Logging\NLog\NLogTests.cs" />
+    <Compile Include="Messaging\MessagePropertiesTests.cs" />
     <Compile Include="Messaging\MqAddressTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqChannelTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqConnectionTests.cs" />
