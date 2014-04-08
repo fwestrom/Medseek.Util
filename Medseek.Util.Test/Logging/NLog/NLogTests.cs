@@ -39,7 +39,7 @@
             var args = new object[] { 0, 1, 2 };
             var message = string.Format(format, args);
             log.Setup(x =>
-                x.Debug(It.Is<string>(s => s == message), It.Is<Exception>(e => e == null)))
+                x.Debug(It.Is<string>(s => s == message)))
                 .Verifiable();
 
             obj.DebugFormat(format, args);
@@ -57,7 +57,7 @@
             var message = new object();
             var ex = new Exception("Test assertion exception");
             log.Setup(x =>
-                x.Debug(message.ToString(), ex))
+                x.DebugException(message.ToString(), ex))
                 .Verifiable();
 
             obj.Debug(message, ex);
@@ -75,7 +75,7 @@
             var message = new object();
             var ex = new Exception("Test assertion exception");
             log.Setup(x =>
-                x.Error(message.ToString(), ex))
+                x.ErrorException(message.ToString(), ex))
                 .Verifiable();
 
             obj.Error(message, ex);
@@ -94,7 +94,7 @@
             var args = new object[] { 0, 1, 2 };
             var message = string.Format(format, args);
             log.Setup(x =>
-                x.Fatal(It.Is<string>(s => s == message), It.Is<Exception>(e => e == null)))
+                x.Fatal(It.Is<string>(s => s == message)))
                 .Verifiable();
 
             obj.FatalFormat(format, args);
@@ -112,7 +112,7 @@
             var message = string.Empty;
             var ex = new Exception("Test assertion exception");
             log.Setup(x =>
-                x.Fatal(message, ex))
+                x.FatalException(message, ex))
                 .Verifiable();
 
             obj.Fatal(message, ex);
@@ -132,7 +132,7 @@
             var args = new object[] { 0, 1, 2 };
             var message = string.Format(format, args);
             log.Setup(x =>
-                x.Info(It.Is<string>(s => s == message), It.Is<Exception>(e => e == null)))
+                x.Info(It.Is<string>(s => s == message)))
                 .Verifiable();
 
             obj.InfoFormat(format, args);
@@ -150,7 +150,7 @@
             var message = string.Empty;
             var ex = new Exception("Test assertion exception");
             log.Setup(x =>
-                x.Info(message, ex))
+                x.InfoException(message, ex))
                 .Verifiable();
 
             obj.Info(message, ex);
@@ -169,7 +169,7 @@
             var args = new object[] { 0, 1, 2 };
             var message = string.Format(format, args);
             log.Setup(x =>
-                x.Warn(It.Is<string>(s => s == message), It.Is<Exception>(e => e == null)))
+                x.Warn(It.Is<string>(s => s == message)))
                 .Verifiable();
 
             obj.WarnFormat(format, args);
@@ -187,7 +187,7 @@
             var message = string.Empty;
             var ex = new Exception("Test assertion exception");
             log.Setup(x =>
-                x.Warn(message, ex))
+                x.WarnException(message, ex))
                 .Verifiable();
 
             obj.Warn(message, ex);
