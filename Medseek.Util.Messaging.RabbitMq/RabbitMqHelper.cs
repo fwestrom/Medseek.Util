@@ -31,7 +31,7 @@
 
             // Add AdditionalProperties to the BasicProperties headers.
             properties.AdditionalProperties
-                .ForEach(p => basicProperties.Headers.Add(p.Key, p.Value));
+                .ForEach(p => basicProperties.Headers[p.Key] = p.Value);
             return basicProperties; 
         }
 
