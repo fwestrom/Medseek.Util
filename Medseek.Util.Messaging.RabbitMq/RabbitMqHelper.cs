@@ -17,13 +17,12 @@
         /// Gets a basic properties object set with the values from a message
         /// properties object.
         /// </summary>
-        public IBasicProperties CreateBasicProperties(IModel model, IMessageProperties properties)
+        public IBasicProperties CreateBasicProperties(IBasicProperties basicProperties, IMessageProperties properties)
         {
-            var basicProperties = model.CreateBasicProperties();
             if (properties.ContentType != null)
                 basicProperties.ContentType = properties.ContentType;
             if (properties.CorrelationId != null)
-                basicProperties.CorrelationId = properties.CorrelationId;
+                basicProperties.CorrelationId = properties.CorrelationId; 
             if (properties.ReplyTo != null)
                 basicProperties.ReplyTo = ToPublicationAddress(properties.ReplyTo).ToString();
             if (basicProperties.Headers == null)

@@ -75,7 +75,6 @@
         {
             var testStr = "testString";
             var testObj = new List<int>() { 7 };
-
             var properties = new MessageProperties { AdditionalProperties = new Dictionary<string, object>() { { "str", testStr }, { "obj", testObj } } };
 
             var propertiesClone = (MessageProperties)properties.Clone();
