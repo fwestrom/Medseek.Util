@@ -1,11 +1,11 @@
 ﻿namespace Medseek.Util.Messaging.RabbitMq
 {
-    using System;
-    using Medseek.Util.Testing;
-    using NUnit.Framework;
     using Moq;
+    using NUnit.Framework;
     using RabbitMQ.Client;
+    using System;
     using System.Collections.Generic;
+    using Testing;
 
     /// <summary>
     /// Tests for the <see cref="RabbitMqHelper"/> class.
@@ -13,60 +13,20 @@
     [TestFixture]
     public sealed class RabbitMqHelperTests : TestFixture<RabbitMqHelper>
     {
-        private MqAddress address;
-        private string exchangeName;
-        private string exchangeType;
-        private string queueName;
-        private string routingKey;
-        private Mock<IBasicProperties> basicProperties;
-        private Mock<IBasicProperties> basicPropertiesWithHeaders;
-        private Mock<IMessageProperties> messageProperties;
-        private string correlationId;
-        private string exchange;
-        private string host;
-        private string cookie;
-
-        /// <summary>
-        /// Sets up before each test is executed.
-        /// </summary>
-        [SetUp]
-        public void Setup()
-        {
-            exchangeName = "medseek-api-" + Guid.NewGuid().ToString("n");
-            exchangeType = "type-" + Guid.NewGuid().ToString("n");
-            queueName = "Medseek.Platform.Services.Testing.RabbitMqHelperTests." + Guid.NewGuid().ToString("n");
-            routingKey = "Medseek.Platform.Services.Testing." + Guid.NewGuid().ToString("n");
-            address = new MqAddress(string.Format("{0}://{1}/{2}/{3}", exchangeType, exchangeName, routingKey, queueName));
-            correlationId = "correlationId-" + Guid.NewGuid();
-            exchange = "exchange-" + Guid.NewGuid();
-            host = "host-" + Guid.NewGuid();
-            cookie = "cookie-" + Guid.NewGuid();
-
-            basicProperties = new Mock<IBasicProperties>();
-            basicProperties.Setup(x => x.ContentType).Returns(exchangeType);
-            basicProperties.Setup(x => x.CorrelationId).Returns(correlationId);
-            basicProperties.Setup(x => x.ReplyTo).Returns(address.ToString());
-            basicProperties.Setup(x => x.Headers).
-                Returns(new Dictionary<string, object>());
-            basicPropertiesWithHeaders = new Mock<IBasicProperties>();
-            basicPropertiesWithHeaders.Setup(x => x.Headers).
-                Returns(new Dictionary<string, object>() { { "host", host }, { "cookie", cookie } });
-
-            messageProperties = new Mock<IMessageProperties>();
-            messageProperties.Setup(x => x.ContentType).Returns(exchangeType);
-            messageProperties.Setup(x => x.CorrelationId).Returns(correlationId);
-            messageProperties.Setup(x => x.ReplyTo).Returns(address);
-            messageProperties.Setup(x => x.AdditionalProperties)
-                .Returns(new Dictionary<string, object>() { { "host", host }, { "cookie", cookie } });
-        }
-
         /// <summary>
         /// Verifies that the queue is returned correctly.
         /// </summary>
         [Test]
         public void ToRabbitMqAddressReturnsCorrectQueue()
         {
+            var exchangeType = "type-" + Guid.NewGuid().ToString("n");
+            var exchangeName = "medseek-api-" + Guid.NewGuid().ToString("n");
+            var routingKey = "Medseek.Platform.Services.Testing." + Guid.NewGuid().ToString("n");
+            var queueName = "Medseek.Platform.Services.Testing.RabbitMqHelperTests." + Guid.NewGuid().ToString("n");
+            var address = new MqAddress(string.Format("{0}://{1}/{2}/{3}", exchangeType, exchangeName, routingKey, queueName));
+
             var result = Obj.ToRabbitMqAddress(address);
+
             Assert.That(result.QueueName, Is.EqualTo(queueName));
         }
 
@@ -76,7 +36,14 @@
         [Test]
         public void ToPublicationAddressSetsExchangeName()
         {
+            var exchangeType = "type-" + Guid.NewGuid().ToString("n");
+            var exchangeName = "medseek-api-" + Guid.NewGuid().ToString("n");
+            var routingKey = "Medseek.Platform.Services.Testing." + Guid.NewGuid().ToString("n");
+            var queueName = "Medseek.Platform.Services.Testing.RabbitMqHelperTests." + Guid.NewGuid().ToString("n");
+            var address = new MqAddress(string.Format("{0}://{1}/{2}/{3}", exchangeType, exchangeName, routingKey, queueName));
+
             var result = Obj.ToPublicationAddress(address);
+
             Assert.That(result.ExchangeName, Is.EqualTo(exchangeName));
         }
 
@@ -86,7 +53,14 @@
         [Test]
         public void ToPublicationAddressSetsExchangeType()
         {
+            var exchangeType = "type-" + Guid.NewGuid().ToString("n");
+            var exchangeName = "medseek-api-" + Guid.NewGuid().ToString("n");
+            var routingKey = "Medseek.Platform.Services.Testing." + Guid.NewGuid().ToString("n");
+            var queueName = "Medseek.Platform.Services.Testing.RabbitMqHelperTests." + Guid.NewGuid().ToString("n");
+            var address = new MqAddress(string.Format("{0}://{1}/{2}/{3}", exchangeType, exchangeName, routingKey, queueName));
+
             var result = Obj.ToPublicationAddress(address);
+
             Assert.That(result.ExchangeType, Is.EqualTo(exchangeType));
         }
 
@@ -107,7 +81,14 @@
         [Test]
         public void ToPropertiesSetsCorrelationId()
         {
+            var correlationId = "correlationId-" + Guid.NewGuid();
+            var basicProperties = new Mock<IBasicProperties>();
+            basicProperties.Setup(x => 
+                x.CorrelationId)
+                .Returns(correlationId);
+
             var result = Obj.ToProperties(basicProperties.Object);
+
             Assert.That(result.CorrelationId, Is.EqualTo(correlationId));
         }
 
@@ -117,8 +98,19 @@
         [Test]
         public void ToPropertiesSetsReplyTo()
         {
+            var exchangeType = "type-" + Guid.NewGuid().ToString("n");
+            var exchangeName = "medseek-api-" + Guid.NewGuid().ToString("n");
+            var routingKey = "Medseek.Platform.Services.Testing." + Guid.NewGuid().ToString("n");
+            var queueName = "Medseek.Platform.Services.Testing.RabbitMqHelperTests." + Guid.NewGuid().ToString("n");
+            var replyTo = new MqAddress(string.Format("{0}://{1}/{2}/{3}", exchangeType, exchangeName, routingKey, queueName));
+            var basicProperties = new Mock<IBasicProperties>();
+            basicProperties.Setup(x => 
+                x.ReplyTo)
+                .Returns(replyTo.ToString());
+
             var result = Obj.ToProperties(basicProperties.Object);
-            Assert.That(result.ReplyTo, Is.EqualTo(address));
+
+            Assert.That(result.ReplyTo, Is.EqualTo(replyTo));
         }
 
         /// <summary>
@@ -127,8 +119,15 @@
         [Test]
         public void ToPropertiesSetsContentType()
         {
+            var contentType = "type-" + Guid.NewGuid().ToString("n");
+            var basicProperties = new Mock<IBasicProperties>();
+            basicProperties.Setup(x => 
+                x.ContentType)
+                .Returns(contentType);
+
             var result = Obj.ToProperties(basicProperties.Object);
-            Assert.That(result.ContentType, Is.EqualTo(exchangeType));
+
+            Assert.That(result.ContentType, Is.EqualTo(contentType));
         }
 
         /// <summary>
@@ -137,27 +136,29 @@
         [Test]
         public void ToPropertiesReturnsNullOnNonProvidedProperty()
         {
+            var basicProperties = new Mock<IBasicProperties>();
+
             var result = Obj.ToProperties(basicProperties.Object);
-            Assert.That(result.Get("doesnotexist"), Is.EqualTo(null));
+
+            Assert.That(result.Get("DoesNotExist"), Is.EqualTo(null));
         }
 
         /// <summary>
-        /// Verifies that the host header is set correctly when provided.
+        /// Verifies that the additional properties are set correctly when provided.
         /// </summary>
         [Test]
-        public void ToPropertiesSetsProvidedHostHeader()
+        public void ToPropertiesSetsProvidedAdditionalProperties()
         {
+            var cookie = "cookie-" + Guid.NewGuid();
+            var host = "host-" + Guid.NewGuid();
+            var basicPropertiesWithHeaders = new Mock<IBasicProperties>();
+            basicPropertiesWithHeaders.Setup(x =>
+                x.Headers)
+                .Returns(new Dictionary<string, object> { { "host", host }, { "cookie", cookie } });
+
             var result = Obj.ToProperties(basicPropertiesWithHeaders.Object);
+
             Assert.That(result.Get("host"), Is.EqualTo(host));
-        }
-
-        /// <summary>
-        /// Verifies that the cookie header is set correctly when provided.
-        /// </summary>
-        [Test]
-        public void ToPropertiesSetsProvidedCookieHeader()
-        {
-            var result = Obj.ToProperties(basicPropertiesWithHeaders.Object);
             Assert.That(result.Get("cookie"), Is.EqualTo(cookie));
         }
 
@@ -167,11 +168,21 @@
         [Test]
         public void CreateBasicPropertiesSetsCorrelationId()
         {
-            basicPropertiesWithHeaders.SetupSet(x => x.CorrelationId = correlationId).Verifiable();
+            var correlationId = "correlationId-" + Guid.NewGuid();
+            var basicProperties = new Mock<IBasicProperties>();
+            basicProperties.SetupProperty(x => x.CorrelationId);
+            var model = new Mock<IModel>();
+            model.Setup(x =>
+                x.CreateBasicProperties())
+                .Returns(basicProperties.Object);
+            var messageProperties = new Mock<IMessageProperties>();
+            messageProperties.Setup(x =>
+                x.CorrelationId)
+                .Returns(correlationId);
 
-            Obj.CreateBasicProperties(basicPropertiesWithHeaders.Object, messageProperties.Object);
+            var result = Obj.CreateBasicProperties(model.Object, messageProperties.Object);
 
-            basicProperties.Verify();
+            Assert.That(result.CorrelationId, Is.EqualTo(correlationId));
         }
 
         /// <summary>
@@ -180,11 +191,25 @@
         [Test]
         public void CreateBasicPropertiesSetsReplyTo()
         {
-            basicPropertiesWithHeaders.SetupSet(x => x.ReplyTo = address.ToString()).Verifiable();
+            var exchangeType = "type-" + Guid.NewGuid().ToString("n");
+            var exchangeName = "medseek-api-" + Guid.NewGuid().ToString("n");
+            var routingKey = "Medseek.Platform.Services.Testing." + Guid.NewGuid().ToString("n");
+            var queueName = "Medseek.Platform.Services.Testing.RabbitMqHelperTests." + Guid.NewGuid().ToString("n");
+            var replyTo = new MqAddress(string.Format("{0}://{1}/{2}/{3}", exchangeType, exchangeName, routingKey, queueName));
+            var basicProperties = new Mock<IBasicProperties>();
+            basicProperties.SetupProperty(x => x.ReplyTo);
+            var model = new Mock<IModel>();
+            model.Setup(x =>
+                x.CreateBasicProperties())
+                .Returns(basicProperties.Object);
+            var messageProperties = new Mock<IMessageProperties>();
+            messageProperties.Setup(x =>
+                x.ReplyTo)
+                .Returns(replyTo);
 
-            Obj.CreateBasicProperties(basicPropertiesWithHeaders.Object, messageProperties.Object);
+            var result = Obj.CreateBasicProperties(model.Object, messageProperties.Object);
 
-            basicProperties.Verify();
+            Assert.That(result.ReplyTo, Is.EqualTo(Obj.ToPublicationAddress(replyTo).ToString()));
         }
 
         /// <summary>
@@ -193,30 +218,45 @@
         [Test]
         public void CreateBasicPropertiesSetsContentType()
         {
-            basicPropertiesWithHeaders.SetupSet(x => x.ContentType = exchangeType).Verifiable();
+            var contentType = "type-" + Guid.NewGuid().ToString("n");
+            var basicProperties = new Mock<IBasicProperties>();
+            basicProperties.SetupProperty(x => x.ContentType);
+            var model = new Mock<IModel>();
+            model.Setup(x =>
+                x.CreateBasicProperties())
+                .Returns(basicProperties.Object);
+            var messageProperties = new Mock<IMessageProperties>();
+            messageProperties.Setup(x =>
+                x.ContentType)
+                .Returns(contentType);
 
-            Obj.CreateBasicProperties(basicPropertiesWithHeaders.Object, messageProperties.Object);
+            var result = Obj.CreateBasicProperties(model.Object, messageProperties.Object);
 
-            basicProperties.Verify();
+            Assert.That(result.ContentType, Is.EqualTo(contentType));
         }
 
         /// <summary>
-        /// Verifies that the host property is set correctly when provided.
+        /// Verifies that the headers are set correctly when provided.
         /// </summary>
         [Test]
-        public void CreateBasicPropertiesSetsProvidedHostProperty()
+        public void CreateBasicPropertiesSetsProvidedHeaders()
         {
-            var result = Obj.CreateBasicProperties(basicProperties.Object, messageProperties.Object);
+            var cookie = "cookie-" + Guid.NewGuid();
+            var host = "host-" + Guid.NewGuid();
+            var basicProperties = new Mock<IBasicProperties>();
+            basicProperties.SetupProperty(x => x.Headers);
+            var model = new Mock<IModel>();
+            model.Setup(x =>
+                x.CreateBasicProperties())
+                .Returns(basicProperties.Object);
+            var messageProperties = new Mock<IMessageProperties>();
+            messageProperties.Setup(x =>
+                x.AdditionalProperties)
+                .Returns(new Dictionary<string, object> { { "host", host }, { "cookie", cookie } });
+
+            var result = Obj.CreateBasicProperties(model.Object, messageProperties.Object);
+            
             Assert.That(result.Headers["host"], Is.EqualTo(host));
-        }
-
-        /// <summary>
-        /// Verifies that the cookie property is set correctly when provided.
-        /// </summary>
-        [Test]
-        public void CreateBasicPropertiesSetsProvidedCookieProperty()
-        {
-            var result = Obj.CreateBasicProperties(basicProperties.Object, messageProperties.Object);
             Assert.That(result.Headers["cookie"], Is.EqualTo(cookie));
         }
     }

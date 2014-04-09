@@ -9,7 +9,7 @@ namespace Medseek.Util.Messaging
     [DataContract(Namespace = "")]
     public class MessageProperties : IMessageProperties
     {
-        private readonly Dictionary<string, object> additionalProperties = new Dictionary<string, object>();
+        private readonly Dictionary<string, object> _additionalProperties = new Dictionary<string, object>();
 
         /// <summary>
         /// Gets or sets the type of the content.
@@ -60,13 +60,13 @@ namespace Medseek.Util.Messaging
         {
             get
             {
-                return additionalProperties;
+                return _additionalProperties;
             }
             set
             {
-                additionalProperties.Clear();
+                _additionalProperties.Clear();
                 foreach (var item in value)
-                    additionalProperties[item.Key] = item.Value;
+                    _additionalProperties[item.Key] = item.Value;
             }
         }
 
