@@ -1,5 +1,6 @@
 ﻿namespace Medseek.Util.Messaging.RabbitMq
 {
+    using System.Diagnostics;
     using System.Text;
     using Medseek.Util.Interactive;
     using Medseek.Util.Ioc;
@@ -30,8 +31,7 @@
 
             // Add AdditionalProperties to the BasicProperties headers.
             properties.AdditionalProperties
-                .ForEach(p => basicProperties.Headers[p.Key] = p.Value);
-            
+                .ForEach(p => basicProperties.Headers.Add(p.Key, p.Value));
             return basicProperties; 
         }
 
