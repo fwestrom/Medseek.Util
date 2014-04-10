@@ -77,7 +77,30 @@
         /// Verifies that the remote micro-service is invoked.
         /// </summary>
         [Test]
-        public void SendByAddressPublishesOutgoingMessage()
+        public void SendByAddressBodyTypeBodyValuePublishesOutgoingMessage()
+        {
+            var bodyType = typeof(object);
+            var bodyValue = new object();
+            var bodyData = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
+            var properties = new Mock<IMessageProperties>();
+            serializer.Setup(x =>
+                x.Serialize(It.Is<IMessageContext>(a => ReferenceEquals(a.Properties, properties.Object)), bodyType, bodyValue, It.IsAny<Stream>()))
+                .Callback((IMessageContext a, Type b, object c, Stream d) => d.Write(bodyData, 0, bodyData.Length));
+
+            publisher.Setup(x =>
+                x.Publish(bodyData, properties.Object))
+                .Verifiable();
+
+            Obj.Send(bindingAddress, bodyType, bodyValue, properties.Object);
+
+            publisher.Verify();
+        }
+
+        /// <summary>
+        /// Verifies that the remote micro-service is invoked.
+        /// </summary>
+        [Test]
+        public void SendByAddressBodyPublishesOutgoingMessage()
         {
             var body = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
             var properties = new Mock<IMessageProperties>();

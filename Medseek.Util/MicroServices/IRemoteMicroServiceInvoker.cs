@@ -1,5 +1,6 @@
 namespace Medseek.Util.MicroServices
 {
+    using System;
     using Medseek.Util.Messaging;
 
     /// <summary>
@@ -22,6 +23,24 @@ namespace Medseek.Util.MicroServices
         /// The message properties.
         /// </param>
         void Send(MqAddress address, byte[] body, IMessageProperties properties);
+
+        /// <summary>
+        /// Sends a message to a remote micro-service.
+        /// </summary>
+        /// <param name="address">
+        /// The address of the micro-service to which the message should be 
+        /// sent.
+        /// </param>
+        /// <param name="bodyType">
+        /// The type of object to serialize in the message body.
+        /// </param>
+        /// <param name="bodyValue">
+        /// The object to use for the message body.
+        /// </param>
+        /// <param name="properties">
+        /// The message properties.
+        /// </param>
+        void Send(MqAddress address, Type bodyType, object bodyValue, IMessageProperties properties);
 
         /// <summary>
         /// Invokes the bound method that provides the micro-service operation.

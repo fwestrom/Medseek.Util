@@ -74,6 +74,32 @@ namespace Medseek.Util.MicroServices
         }
 
         /// <summary>
+        /// Sends a message to a remote micro-service.
+        /// </summary>
+        /// <param name="address">
+        /// The address of the micro-service to which the message should be 
+        /// sent.
+        /// </param>
+        /// <param name="bodyType">
+        /// The type of object to serialize in the message body.
+        /// </param>
+        /// <param name="bodyValue">
+        /// The object to use for the message body.
+        /// </param>
+        /// <param name="properties">
+        /// The message properties.
+        /// </param>
+        public void Send(MqAddress address, Type bodyType, object bodyValue, IMessageProperties properties)
+        {
+            var messageContext = new MessageContext(properties);
+            using (var ms = new MemoryStream())
+            {
+                serializer.Serialize(messageContext, bodyType, bodyValue, ms);
+                Send(address, ms.ToArray(), properties);
+            }
+        }
+
+        /// <summary>
         /// Invokes the bound method that provides the micro-service operation.
         /// </summary>
         /// <param name="binding">
