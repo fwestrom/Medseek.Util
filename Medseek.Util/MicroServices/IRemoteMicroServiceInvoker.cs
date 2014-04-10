@@ -1,11 +1,28 @@
 namespace Medseek.Util.MicroServices
 {
+    using Medseek.Util.Messaging;
+
     /// <summary>
     /// Interface for types that provide the ability to invoke a remote 
     /// micro-service.
     /// </summary>
     public interface IRemoteMicroServiceInvoker
     {
+        /// <summary>
+        /// Sends a message to a remote micro-service.
+        /// </summary>
+        /// <param name="address">
+        /// The address of the micro-service to which the message should be 
+        /// sent.
+        /// </param>
+        /// <param name="body">
+        /// The message body.
+        /// </param>
+        /// <param name="properties">
+        /// The message properties.
+        /// </param>
+        void Send(MqAddress address, byte[] body, IMessageProperties properties);
+
         /// <summary>
         /// Invokes the bound method that provides the micro-service operation.
         /// </summary>

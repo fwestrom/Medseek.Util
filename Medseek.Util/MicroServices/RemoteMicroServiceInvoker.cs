@@ -1,6 +1,7 @@
 namespace Medseek.Util.MicroServices
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
     using Medseek.Util.Ioc;
@@ -11,10 +12,12 @@ namespace Medseek.Util.MicroServices
     /// Provides the ability to invoke a remote micro-service.
     /// </summary>
     [Register(typeof(IRemoteMicroServiceInvoker), Lifestyle = Lifestyle.Transient)]
+    [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "MQ = Message Queuing System")]
     public class RemoteMicroServiceInvoker : Disposable, IRemoteMicroServiceInvoker
     {
         private readonly IMqChannel channel;
         private readonly IMessageContextAccess messageContextAccess;
+        private readonly IMqPlugin mqPlugin;
         private readonly IMicroServiceSerializer serializer;
 
         /// <summary>
@@ -24,17 +27,21 @@ namespace Medseek.Util.MicroServices
         public RemoteMicroServiceInvoker(
             IMqChannel channel, 
             IMessageContextAccess messageContextAccess, 
+            IMqPlugin mqPlugin,
             IMicroServiceSerializer serializer)
         {
             if (channel == null)
                 throw new ArgumentNullException("channel");
             if (messageContextAccess == null)
                 throw new ArgumentNullException("messageContextAccess");
+            if (mqPlugin == null)
+                throw new ArgumentNullException("mqPlugin");
             if (serializer == null)
                 throw new ArgumentNullException("serializer");
 
             this.channel = channel;
             this.messageContextAccess = messageContextAccess;
+            this.mqPlugin = mqPlugin;
             this.serializer = serializer;
         }
 
@@ -51,7 +58,7 @@ namespace Medseek.Util.MicroServices
         /// <param name="properties">
         /// The message properties.
         /// </param>
-        public void Send(MqPublisherAddress address, byte[] body, IMessageProperties properties)
+        public void Send(MqAddress address, byte[] body, IMessageProperties properties)
         {
             ThrowIfDisposed();
             if (address == null)
@@ -61,7 +68,8 @@ namespace Medseek.Util.MicroServices
             if (properties == null)
                 throw new ArgumentNullException("properties");
 
-            using (var publisher = channel.CreatePublisher(address))
+            var publishAddress = mqPlugin.ToPublisherAddress(address);
+            using (var publisher = channel.CreatePublisher(publishAddress))
                 publisher.Publish(body, properties);
         }
 
