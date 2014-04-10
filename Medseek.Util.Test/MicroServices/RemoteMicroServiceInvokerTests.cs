@@ -18,6 +18,7 @@
         private const string DoItExchangeName = "medseek-api";
         private const string DoItRoutingKey = "RemoteMicroServiceInvokerTests.Helper.DoIt";
         private MicroServiceBinding binding;
+        private MqPublisherAddress bindingAddress;
         private Mock<IMqChannel> channel;
         private Mock<IMessageContextAccess> messageContextAccess;
         private Mock<IMqPlugin> plugin;
@@ -35,7 +36,7 @@
             var helperDoItMethod = helperType.GetMethod("DoIt");
             var helperDoItAttribute = helperDoItMethod.GetCustomAttribute<MicroServiceBindingAttribute>();
             binding = helperDoItAttribute.ToBinding<MicroServiceBinding>(helperDoItMethod, helperType);
-            binding.Address = new MqPublisherAddress(binding.Address.Value, DoItRoutingKey);
+            binding.Address = bindingAddress = new MqPublisherAddress(binding.Address.Value, DoItRoutingKey);
             channel = Mock<IMqChannel>();
             messageContextAccess = Mock<IMessageContextAccess>();
             plugin = Mock<IMqPlugin>();
@@ -76,7 +77,24 @@
         /// Verifies that the remote micro-service is invoked.
         /// </summary>
         [Test]
-        public void SendOneWayPublishesOutgoingMessage()
+        public void SendByAddressPublishesOutgoingMessage()
+        {
+            var body = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
+            var properties = new Mock<IMessageProperties>();
+            publisher.Setup(x =>
+                x.Publish(body, properties.Object))
+                .Verifiable();
+
+            Obj.Send(bindingAddress, body, properties.Object);
+
+            publisher.Verify();
+        }
+
+        /// <summary>
+        /// Verifies that the remote micro-service is invoked.
+        /// </summary>
+        [Test]
+        public void SendByBindingOneWayPublishesOutgoingMessage()
         {
             var request = new object();
             var requestData = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
@@ -104,7 +122,8 @@
                         x.ReplyTo = null);
                     messageContextProperties.VerifySet(x =>
                         x.RoutingKey = DoItRoutingKey);
-                });
+                })
+                .Verifiable();
 
             Obj.Send(binding, request);
 
@@ -116,7 +135,20 @@
         /// disposed.
         /// </summary>
         [Test]
-        public void SendThrowsIfAlreadyDisposed()
+        public void SendByAddressThrowsIfAlreadyDisposed()
+        {
+            Obj.Dispose();
+
+            TestDelegate action = () => Obj.Send(bindingAddress, new byte[0], new Mock<IMessageProperties>().Object);
+            Assert.That(action, Throws.InstanceOf<ObjectDisposedException>());
+        }
+
+        /// <summary>
+        /// Verifies that an exception is thrown if the invoker was already
+        /// disposed.
+        /// </summary>
+        [Test]
+        public void SendByBindingThrowsIfAlreadyDisposed()
         {
             Obj.Dispose();
 

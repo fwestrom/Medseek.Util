@@ -39,6 +39,33 @@ namespace Medseek.Util.MicroServices
         }
 
         /// <summary>
+        /// Sends a message to a remote micro-service.
+        /// </summary>
+        /// <param name="address">
+        /// The address of the micro-service to which the message should be 
+        /// sent.
+        /// </param>
+        /// <param name="body">
+        /// The message body.
+        /// </param>
+        /// <param name="properties">
+        /// The message properties.
+        /// </param>
+        public void Send(MqPublisherAddress address, byte[] body, IMessageProperties properties)
+        {
+            ThrowIfDisposed();
+            if (address == null)
+                throw new ArgumentNullException("address");
+            if (body == null)
+                throw new ArgumentNullException("body");
+            if (properties == null)
+                throw new ArgumentNullException("properties");
+
+            using (var publisher = channel.CreatePublisher(address))
+                publisher.Publish(body, properties);
+        }
+
+        /// <summary>
         /// Invokes the bound method that provides the micro-service operation.
         /// </summary>
         /// <param name="binding">
@@ -62,7 +89,6 @@ namespace Medseek.Util.MicroServices
                 throw new NotImplementedException("Support for waiting for a reply is not yet available.");
 
             var address = channel.Plugin.ToPublisherAddress(binding.Address);
-            using (var publisher = channel.CreatePublisher(address))
             using (var ms = new MemoryStream())
             using (messageContextAccess.Enter())
             {
@@ -71,14 +97,15 @@ namespace Medseek.Util.MicroServices
                 properties.ReplyTo = null;
                 properties.RoutingKey = address.RoutingKey;
 
-                foreach (var parameterType in parameterTypes)
+                for (var i = 0; i < parameterTypes.Length; i++)
                 {
-                    var parameterValue = parameters.Single();
+                    var parameterType = parameterTypes[i];
+                    var parameterValue = parameters[i];
                     serializer.Serialize(messageContext, parameterType, parameterValue, ms);
                 }
 
                 var body = ms.ToArray();
-                publisher.Publish(body, properties);
+                Send(address, body, properties);
             }
         }
     }
