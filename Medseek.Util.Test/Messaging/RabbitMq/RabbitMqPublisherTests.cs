@@ -51,7 +51,7 @@
             var pa = new PublicationAddress("topic", exchange, routingKey);
             helper.Setup(x =>
                 x.CreateBasicProperties(
-                    model.Object.CreateBasicProperties(),
+                    model.Object,
                     It.Is<MessageProperties>(a => 
                         a.CorrelationId == correlationId && 
                         a.ReplyTo == replyTo)))

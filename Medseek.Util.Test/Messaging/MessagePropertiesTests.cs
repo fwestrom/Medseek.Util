@@ -9,7 +9,7 @@
     /// Tests for the <see cref="MessageProperties"/> class.
     /// </summary>
     [TestFixture]
-    public sealed class MessagePropertiesTests : TestFixture<MessageProperties>
+    public sealed class MessagePropertiesTests
     {
         /// <summary>
         /// Verifies that Clone sets the content type.
