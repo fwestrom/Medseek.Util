@@ -2,19 +2,51 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
 
     /// <summary>
     /// Describes a component registration.
     /// </summary>
-    public class Registration
+    public class Registration : IInstallable
     {
         /// <summary>
         /// Gets or sets a value indicating whether the component is to be
         /// registered as a factory.
         /// </summary>
+        /// <seealso cref="ComponentSelectorName" />
         public bool AsFactory
         {
             get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the name of the component selector used if the 
+        /// registration is for a factory to configure how the factory to 
+        /// identifies the components that it resolves.
+        /// </summary>
+        /// <seealso cref="AsFactory" />
+        public string ComponentSelectorName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the implementation type of the component.
+        /// </summary>
+        public Type Implementation
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the component instance to use for the registration.
+        /// </summary>
+        public object Instance
+        {
+            get; 
             set;
         }
 
@@ -28,13 +60,13 @@
             set;
         }
 
-
         /// <summary>
-        /// Gets or sets the implementation type of the component.
+        /// Gets or sets a value indicating whether the registration describes 
+        /// the default component for the services that it provides.
         /// </summary>
-        public Type Implementation
+        public bool IsDefault
         {
-            get;
+            get; 
             set;
         }
 
@@ -57,6 +89,15 @@
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether previously registered services will be registered for this component.
+        /// </summary>
+        public bool OnlyNewServices
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets the service types that the component exposes to 
         /// consumer types
         /// through the injection container.
@@ -65,6 +106,23 @@
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Gets or sets the method to use for starting the component.
+        /// </summary>
+        public MethodInfo StartMethod
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Installs the registration into an inversion of control container.
+        /// </summary>
+        void IInstallable.Installing(IIocContainer container)
+        {
+            container.Register(this);
         }
     }
 }

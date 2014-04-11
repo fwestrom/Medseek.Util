@@ -19,6 +19,16 @@
         }
 
         /// <summary>
+        /// Gets or sets the name of the component selector used by the 
+        /// factory to identify the components to resolve.
+        /// </summary>
+        public string ComponentSelectorName
+        {
+            get; 
+            set;
+        }
+
+        /// <summary>
         /// Converts the attribute to a registration description.
         /// </summary>
         /// <param name="attributedType">
@@ -31,6 +41,7 @@
         {
             var result = base.ToRegistration(attributedType);
             result.AsFactory = true;
+            result.ComponentSelectorName = ComponentSelectorName;
             result.Implementation = null;
             return result;
         }

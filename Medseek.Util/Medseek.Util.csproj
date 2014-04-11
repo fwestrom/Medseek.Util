@@ -34,13 +34,74 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Ioc\ComponentInfo.cs" />
+    <Compile Include="Ioc\ComponentsInstallable.cs" />
+    <Compile Include="Ioc\IInstallable.cs" />
+    <Compile Include="Ioc\IIocContainer.cs" />
+    <Compile Include="Ioc\IIocPlugin.cs" />
+    <Compile Include="Ioc\IocBootstrapper.cs" />
+    <Compile Include="Ioc\IocExtensions.cs" />
+    <Compile Include="Ioc\IStartable.cs" />
+    <Compile Include="Interactive\EnumerableExt.cs" />
+    <Compile Include="Ioc\RegisterComponentEventArgs.cs" />
+    <Compile Include="Ioc\RegisteringComponentEventArgs.cs" />
+    <Compile Include="Logging\ILoggingPlugin.cs" />
+    <Compile Include="Messaging\MqPublisherAddress.cs" />
+    <Compile Include="MicroServices\IMicroServiceDispatcher.cs" />
+    <Compile Include="MicroServices\IMicroServiceInvoker.cs" />
+    <Compile Include="MicroServices\IMicroServiceSerializer.cs" />
+    <Compile Include="MicroServices\IRemoteMicroServiceInvoker.cs" />
+    <Compile Include="MicroServices\MessageHandlers\IMessageHandler.cs" />
+    <Compile Include="MicroServices\MessageHandlers\IRpcMessageHandler.cs" />
+    <Compile Include="MicroServices\MessageHandlers\MessageBase.cs" />
+    <Compile Include="MicroServices\MessageHandlers\MessageHandlerBinding.cs" />
+    <Compile Include="MicroServices\MessageHandlers\MessageBindingKey.cs" />
+    <Compile Include="MicroServices\MessageHandlers\MessageHandlerBase.cs" />
+    <Compile Include="MicroServices\MessageHandlers\ReplyBase.cs" />
+    <Compile Include="MicroServices\MessageHandlers\BindingKeyNameAttribute.cs" />
+    <Compile Include="MicroServices\MessageHandlers\RpcMessageHandlerBase.cs" />
+    <Compile Include="Messaging\IMessageProperties.cs" />
+    <Compile Include="Messaging\IMqPlugin.cs" />
+    <Compile Include="Messaging\MqConsumerAddress.cs" />
+    <Compile Include="MicroServices\MessageHandlers\MessageHandlerBindingProvider.cs" />
+    <Compile Include="MicroServices\BindingProviders\MicroServiceBindingAttributeBindingProvider.cs" />
+    <Compile Include="MicroServices\IMessageContext.cs" />
+    <Compile Include="MicroServices\IMessageContextAccess.cs" />
+    <Compile Include="MicroServices\BindingProviders\IMicroServiceBindingProvider.cs" />
+    <Compile Include="MicroServices\IMicroServiceInstanceFactory.cs" />
+    <Compile Include="MicroServices\IMicroServiceLocator.cs" />
+    <Compile Include="MicroServices\IMicroServicesFactory.cs" />
+    <Compile Include="MicroServices\MessageContext.cs" />
+    <Compile Include="MicroServices\MicroServiceBinding.cs" />
+    <Compile Include="MicroServices\MicroServiceBindingDefaultsAttribute.cs" />
+    <Compile Include="MicroServices\RegisterMicroServiceProxyAttribute.cs" />
+    <Compile Include="MicroServices\RemoteMicroServiceInvoker.cs" />
+    <Compile Include="MicroServices\MicroServiceInvoker.cs" />
+    <Compile Include="MicroServices\MicroServiceDispatcher.cs" />
+    <Compile Include="MicroServices\MicroServiceLocator.cs" />
+    <Compile Include="MicroServices\MicroServiceSerializer.cs" />
+    <Compile Include="MicroServices\RegisterMicroServiceAttribute.cs" />
+    <Compile Include="MicroServices\ThreadLocalMessageContext.cs" />
+    <Compile Include="MicroServices\MicroServiceBindingAttribute.cs" />
+    <Compile Include="Serialization\ISerializer.cs" />
+    <Compile Include="Serialization\ISerializerFactory.cs" />
+    <Compile Include="Serialization\SystemRuntimeSerializationDataContractSerializer.cs" />
+    <Compile Include="Threading\DispatchedThread.cs" />
+    <Compile Include="Threading\IDispatchedThread.cs" />
+    <Compile Include="Threading\IThread.cs" />
+    <Compile Include="Threading\IThreadingFactory.cs" />
+    <Compile Include="Threading\Thread.cs" />
+    <Compile Include="UtilAssembly.cs" />
+    <Compile Include="Properties\AssemblyInfoShared.cs" />
     <Compile Include="Ioc\InjectAttribute.cs" />
     <Compile Include="Ioc\Lifestyle.cs" />
     <Compile Include="Ioc\OnCreateAttribute.cs" />
@@ -49,12 +110,42 @@
     <Compile Include="Ioc\RegisterFactoryAttribute.cs" />
     <Compile Include="Ioc\Registration.cs" />
     <Compile Include="Ioc\Registrations.cs" />
+    <Compile Include="Logging\ILog.cs" />
+    <Compile Include="Logging\ILogger.cs" />
+    <Compile Include="Logging\ILogManager.cs" />
+    <Compile Include="Logging\LogBase.cs" />
+    <Compile Include="Logging\LogManager.cs" />
+    <Compile Include="Logging\LogManagerBase.cs" />
+    <Compile Include="Logging\NoOp\NoOpLog.cs" />
+    <Compile Include="Logging\NoOp\NoOpLogManager.cs" />
+    <Compile Include="Messaging\IMqChannel.cs" />
+    <Compile Include="Messaging\IMqConnection.cs" />
+    <Compile Include="Messaging\IMqConsumer.cs" />
+    <Compile Include="Messaging\IMqDisposable.cs" />
+    <Compile Include="Messaging\IMqPublisher.cs" />
+    <Compile Include="Messaging\IMqRpcClient.cs" />
+    <Compile Include="Messaging\MessageProperties.cs" />
+    <Compile Include="Messaging\MqAddress.cs" />
+    <Compile Include="Messaging\MqChannelBase.cs" />
+    <Compile Include="Messaging\MqConnectionBase.cs" />
+    <Compile Include="Messaging\MqConsumerBase.cs" />
+    <Compile Include="Messaging\MqPublisherBase.cs" />
+    <Compile Include="Messaging\MqRpcClient.cs" />
+    <Compile Include="Messaging\MqSynchronizedDisposable.cs" />
+    <Compile Include="Messaging\ReceivedEventArgs.cs" />
+    <Compile Include="Objects\Disposable.cs" />
+    <Compile Include="Objects\INotifyDisposed.cs" />
+    <Compile Include="Objects\SynchronizedDisposable.cs" />
     <Compile Include="UtilComponents.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Medseek.Util.nuspec" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Ioc\ReferencePluginAttribute.cs" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

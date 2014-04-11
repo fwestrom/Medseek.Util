@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build;Test" InitialTargets="Prepare" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build;Test" InitialTargets="Prepare" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <!-- Configurable properties -->
   <PropertyGroup Label="Configurable Properties">
@@ -8,32 +8,48 @@
     <SourceDir Condition="'$(SourceDir)' == ''">$(RootDir)</SourceDir>
     <BuildDir Condition="'$(BuildDir)' == ''">$(RootDir)build\</BuildDir>
     <ToolsDir Condition="'$(ToolsDir)' == ''">$(RootDir)tools\</ToolsDir>
-    <NuGetPath Condition="'$(NuGetPath)' == ''">$(SourceDir).nuget\NuGet.exe</NuGetPath>
+    <NuGetDir Condition="'$(NuGetDir)' == ''">$(SourceDir).nuget\</NuGetDir>
     <Skip Condition="'$(Skip)' == ''" />
   </PropertyGroup>
-  <PropertyGroup>
+  <PropertyGroup Label="Other Properties">
     <BuildBinDir>$(BuildDir)bin\</BuildBinDir>
     <BuildObjDir>$(BuildDir)obj\</BuildObjDir>
     <BuildPackagesDir>$(BuildDir)packages\</BuildPackagesDir>
-    <SolutionDir>$(RootDir)</SolutionDir>
-    <MSBuildCommunityTasksPath>$(ToolsDir)MSBuild.Community.Tasks</MSBuildCommunityTasksPath>
     <DoClean Condition="'$(DoClean)' == ''">True</DoClean>
     <DoBuild Condition="'$(DoBuild)' == ''">True</DoBuild>
     <DoTest Condition="'$(DoTest)' == ''">True</DoTest>
     <DoPack Condition="'$(DoPack)' == ''">True</DoPack>
+    <MSBuildCommunityTasksPath Condition="'$(MSBuildCommunityTasksPath)' == ''">$(ToolsDir)MSBuild.Community.Tasks</MSBuildCommunityTasksPath>
+    <MSBuildNUnitDllPath Condition="'$(MSBuildNUnitDllPath)' == ''"></MSBuildNUnitDllPath>
+    <NuGetConfigPath Condition="'$(NuGetConfigPath)' == ''">$(NuGetDir)NuGet.config</NuGetConfigPath>
+    <NuGetExePath Condition="'$(NuGetExePath)' == ''">$(NuGetDir)NuGet.exe</NuGetExePath>
+    <NuGetTargetsPath Condition="'$(NuGetTargetsPath)' == ''">$(NuGetDir)NuGet.targets</NuGetTargetsPath>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">C:\Program Files (x86)\MSBuild\Microsoft\VisualStudio\v11.0\</VSToolsPath>
     <ProjectProperties>Configuration=$(Configuration)</ProjectProperties>
     <ProjectProperties>$(ProjectProperties);IntermediateOutputPath=$(BuildObjDir)</ProjectProperties>
     <ProjectProperties>$(ProjectProperties);OutputPath=$(BuildBinDir)</ProjectProperties>
     <ProjectProperties>$(ProjectProperties);SolutionDir=$(SolutionDir)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);VSToolsPath=$(VSToolsPath)</ProjectProperties>
+    <SolutionDir>$(SourceDir)</SolutionDir>
   </PropertyGroup>
 
   <!-- Build items -->
   <ItemGroup>
-    <ProjectReference Include="$(SourceDir)Medseek.Util*\*.csproj" />
+    <ExcludeProjectReferences Include="$(SourceDir)Medseek.Util*\ProjectTemplate.csproj" />
+    <ExcludeProjectReferences Include="$(SourceDir)Medseek.Util*\*.HelloWorld.csproj" />
+    <ExcludeProjectReferences Include="$(SourceDir)Medseek.Util*\*.ProjectTemplate.csproj" />
+    <ExcludeProjectReferences Include="$(SourceDir)Medseek.Util*\*.Extension.csproj" />
+    <ProjectReference Include="$(SourceDir)Medseek.Util*\*.csproj" Exclude="@(ExcludeProjectReferences)" />
   </ItemGroup>
   <ItemGroup>
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Ioc.Castle.csproj" />
+    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Logging.Log4Net.csproj" />
+    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Logging.NLog.csproj" />
+    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Messaging.RabbitMq.csproj" />
+    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.MicroServices.Host.csproj" />
+    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Plugin.WebApi.csproj" />
+    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Serialization.Newtonsoft.Json.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Testing.csproj" />
   </ItemGroup>
 
@@ -51,6 +67,7 @@
     <CreateProperty Value="False">
       <Output PropertyName="Do%(Skip.Identity)" TaskParameter="Value" />
     </CreateProperty>
+    <Exec Command='$(NuGetExePath) restore -Verbosity detailed -ConfigFile "$(NuGetConfigPath)" -NonInteractive' WorkingDirectory="$(SourceDir)" />
   </Target>
 
   <!-- Clean -->
@@ -74,12 +91,43 @@
 
   <!-- Test -->
   <Target Name="Test" Condition="$(DoTest)" DependsOnTargets="Build">
+    <PropertyGroup>
+      <NeedUpdatePath>True</NeedUpdatePath>
+      <NeedUpdatePath Condition="'$(MSBuildNUnitDllPath)' != ''">False</NeedUpdatePath>
+    </PropertyGroup>
+    <Message Text="MSBuildNUnitDllPath = $(MSBuildNUnitDllPath)" />
+    <ItemGroup Condition="$(NeedUpdatePath)">
+      <MSBuildNUnitDll Include="$(SourceDir)packages\MSBuild.NUnit.*\tools\MSBuild.NUnit.dll" />
+    </ItemGroup>
+    <CreateProperty Value="%(MSBuildNUnitDll.Identity)" Condition="$(NeedUpdatePath)">
+      <Output PropertyName="MSBuildNUnitDllPath" TaskParameter="Value" />
+    </CreateProperty>
+    <Message Text="MSBuildNUnitDllPath = $(MSBuildNUnitDllPath)" Condition="$(NeedUpdatePath)" />
+    <CallTarget Targets="Test-NUnit" Condition="!$(NeedUpdatePath)" />
+    <MSBuild
+      Projects="$(MSBuildProjectFullPath)"
+      Targets="Test"
+      Properties="MSBuildNUnitDllPath=$(MSBuildNUnitDllPath);DoBuild=false;DoBuild=false"
+      Condition="$(NeedUpdatePath)"
+      />
+  </Target>
+  <UsingTask TaskName="NUnit" AssemblyFile="$(MSBuildNUnitDllPath)" Condition="'$(MSBuildNUnitDllPath)' != ''" />
+  <Target Name="Test-NUnit" Condition="'$(RunIncompleteTestTarget)' == true">
+    <ItemGroup>
+      <TestAssembly Include="$(BuildBinDir)Medseek.Util.Test.dll" />
+      <TestAssembly Include="$(BuildBinDir)Medseek.Util.*.Test.dll" />
+    </ItemGroup>
+    <NUnit
+      Assemblies="@(TestAssembly)"
+      TestCaseTimeoutInMilliseconds="30000"
+      WorkingDirectory="$(BuildBinDir)"
+      />
   </Target>
 
   <!-- Pack -->
   <Target Name="Pack" DependsOnTargets="Build" Inputs="@(NuSpec)" Outputs="$(BuildPackagesDir)%(Filename).nupkg" Condition="$(DoPack)">
     <PropertyGroup>
-      <PackCommand>$(NuGetPath) pack "%(NuSpec.Identity)"</PackCommand>
+      <PackCommand>$(NuGetExePath) pack "%(NuSpec.Identity)"</PackCommand>
       <PackCommand>$(PackCommand) -BasePath $(BuildBinDir)</PackCommand>
       <PackCommand>$(PackCommand) -OutputDirectory $(BuildPackagesDir)</PackCommand>
       <PackCommand>$(PackCommand) -Prop Configuration=$(Configuration)</PackCommand>
@@ -87,5 +135,9 @@
       <PackCommand>$(PackCommand) -Verbosity detailed</PackCommand>
     </PropertyGroup>
     <Exec Command="$(PackCommand)" WorkingDirectory="$(BuildDir)" />
+    <ItemGroup>
+      <ToCopy Include="$(BuildBinDir)*.vsix" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ToCopy)" DestinationFolder="$(BuildPackagesDir)" />
   </Target>
 </Project>

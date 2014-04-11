@@ -1,13 +1,54 @@
 ﻿namespace Medseek.Util
 {
+    using Medseek.Util.Ioc;
+    using Medseek.Util.MicroServices;
+
     /// <summary>
     /// Contains constants describing and related to the Utility components.
     /// </summary>
-    public static class UtilComponents
+    public sealed class UtilComponents : ComponentsInstallable
     {
+        /// <summary>
+        /// The component name for the micro-service component selector used 
+        /// by factories that obtain instances of micro-service types that are 
+        /// marked by <seealso cref="RegisterMicroServiceAttribute" />.
+        /// </summary>
+        public const string MicroServiceComponentSelector = "Medseek.Util.MicroServices.MicroServiceComponentSelector";
+
+        /// <summary>
+        /// The component name for the micro-service proxy interceptor used 
+        /// to provide instances of components that can invoke remote 
+        /// micro-services.
+        /// </summary>
+        /// <seealso cref="RegisterMicroServiceProxyAttribute" />
+        public const string MicroServiceProxyInterceptor = "Medseek.Util.MicroServices.MicroServiceProxyInterceptor";
+
         /// <summary>
         /// The XML namespace used by the Utility components.
         /// </summary>
         public const string Xmlns = "http://schema.medseek.com/util";
+
+        private static readonly UtilComponents ComponentsInfo = new UtilComponents();
+
+        /// <summary>
+        /// Prevents initialization of instances of the <see 
+        /// cref="UtilComponents" /> class.
+        /// </summary>
+        private UtilComponents()
+        {
+        }
+
+        /// <summary>
+        /// Gets the base framework components information, which can be used 
+        /// to install the utility library to an inversion of control 
+        /// container.
+        /// </summary>
+        public static UtilComponents Framework
+        {
+            get
+            {
+                return ComponentsInfo;
+            }
+        }
     }
 }
