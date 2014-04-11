@@ -207,6 +207,7 @@
                                 ContentType = e.Properties.ContentType,
                                 CorrelationId = e.Properties.CorrelationId,
                                 RoutingKey = publishAddress.RoutingKey,
+                                AdditionalProperties = e.Properties.AdditionalProperties
                             };
                             Log.DebugFormat("Sending reply message; ReplyTo = {0}, ContentType = {1}, CorrelationId = {2}, Body.Length = {3}, Value = {4}.", e.Properties.ReplyTo, e.Properties.ContentType, e.Properties.CorrelationId, body.Length, returnValue);
                             using (var publisher = channel.CreatePublisher(publishAddress))
