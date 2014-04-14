@@ -19,18 +19,29 @@
     <DoBuild Condition="'$(DoBuild)' == ''">True</DoBuild>
     <DoTest Condition="'$(DoTest)' == ''">True</DoTest>
     <DoPack Condition="'$(DoPack)' == ''">True</DoPack>
-    <MSBuildCommunityTasksPath Condition="'$(MSBuildCommunityTasksPath)' == ''">$(ToolsDir)MSBuild.Community.Tasks</MSBuildCommunityTasksPath>
+    <MSBuildCommunityTasksPath Condition="'$(MSBuildCommunityTasksPath)' == ''">$(SourceDir)packages\MSBuildTasks.1.4.0.65\tools\</MSBuildCommunityTasksPath>
     <MSBuildNUnitDllPath Condition="'$(MSBuildNUnitDllPath)' == ''"></MSBuildNUnitDllPath>
     <NuGetConfigPath Condition="'$(NuGetConfigPath)' == ''">$(NuGetDir)NuGet.config</NuGetConfigPath>
     <NuGetExePath Condition="'$(NuGetExePath)' == ''">$(NuGetDir)NuGet.exe</NuGetExePath>
     <NuGetTargetsPath Condition="'$(NuGetTargetsPath)' == ''">$(NuGetDir)NuGet.targets</NuGetTargetsPath>
+    <SolutionDir>$(SourceDir)</SolutionDir>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">C:\Program Files (x86)\MSBuild\Microsoft\VisualStudio\v11.0\</VSToolsPath>
     <ProjectProperties>Configuration=$(Configuration)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);RootDir=$(RootDir)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);SourceDir=$(SourceDir)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);ToolsDir=$(ToolsDir)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);NuGetDir=$(NuGetDir)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);BuildDir=$(BuildDir)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);BuildBinDir=$(BuildBinDir)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);BuildObjDir=$(BuildObjDir)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);BuildPackagesDir=$(BuildPackagesDir)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);Skip=$(Skip)</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);DebugSymbols=true</ProjectProperties>
+    <ProjectProperties>$(ProjectProperties);GenerateDocumentation=true</ProjectProperties>
     <ProjectProperties>$(ProjectProperties);IntermediateOutputPath=$(BuildObjDir)</ProjectProperties>
     <ProjectProperties>$(ProjectProperties);OutputPath=$(BuildBinDir)</ProjectProperties>
     <ProjectProperties>$(ProjectProperties);SolutionDir=$(SolutionDir)</ProjectProperties>
     <ProjectProperties>$(ProjectProperties);VSToolsPath=$(VSToolsPath)</ProjectProperties>
-    <SolutionDir>$(SourceDir)</SolutionDir>
   </PropertyGroup>
 
   <!-- Build items -->
@@ -52,6 +63,9 @@
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Serialization.Newtonsoft.Json.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Testing.csproj" />
   </ItemGroup>
+
+  <!-- Import External Project Files -->
+  <Import Project="$(MSBuildCommunityTasksPath)MSBuild.Community.Tasks.Targets" />
 
   <!-- Prepare -->
   <Target Name="Prepare">
@@ -126,10 +140,17 @@
 
   <!-- Pack -->
   <Target Name="Pack" DependsOnTargets="Build" Inputs="@(NuSpec)" Outputs="$(BuildPackagesDir)%(Filename).nupkg" Condition="$(DoPack)">
+    <MSBuild.Community.Tasks.Git.GitBranch LocalPath="$(SourceDir)">
+      <Output TaskParameter="Branch" PropertyName="GitBranch" />
+    </MSBuild.Community.Tasks.Git.GitBranch>
+    <PropertyGroup>
+      <PreReleaseTag Condition="'$(GitBranch)' != 'develop'">$(GitBranch)</PreReleaseTag>
+    </PropertyGroup>
     <PropertyGroup>
       <PackCommand>$(NuGetExePath) pack "%(NuSpec.Identity)"</PackCommand>
       <PackCommand>$(PackCommand) -BasePath $(BuildBinDir)</PackCommand>
       <PackCommand>$(PackCommand) -OutputDirectory $(BuildPackagesDir)</PackCommand>
+      <PackCommand>$(PackCommand) -Symbols</PackCommand>
       <PackCommand>$(PackCommand) -Prop Configuration=$(Configuration)</PackCommand>
       <PackCommand>$(PackCommand) -Prop OutputPath=$(BuildBinDir)</PackCommand>
       <PackCommand>$(PackCommand) -Verbosity detailed</PackCommand>

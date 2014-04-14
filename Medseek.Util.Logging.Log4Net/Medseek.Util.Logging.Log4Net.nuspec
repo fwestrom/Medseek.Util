@@ -16,6 +16,7 @@
     </dependencies>
   </metadata>
   <files>
+    <file src="$id$.pdb" target="lib\net45" />
     <file src="log4net.config" target="lib" />
   </files>
 </package>
