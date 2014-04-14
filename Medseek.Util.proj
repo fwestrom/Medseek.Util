@@ -140,12 +140,14 @@
 
   <!-- Pack -->
   <Target Name="Pack" DependsOnTargets="Build" Inputs="@(NuSpec)" Outputs="$(BuildPackagesDir)%(Filename).nupkg" Condition="$(DoPack)">
+    <!--
     <MSBuild.Community.Tasks.Git.GitBranch LocalPath="$(SourceDir)">
       <Output TaskParameter="Branch" PropertyName="GitBranch" />
     </MSBuild.Community.Tasks.Git.GitBranch>
     <PropertyGroup>
       <PreReleaseTag Condition="'$(GitBranch)' != 'develop'">$(GitBranch)</PreReleaseTag>
     </PropertyGroup>
+    -->
     <PropertyGroup>
       <PackCommand>$(NuGetExePath) pack "%(NuSpec.Identity)"</PackCommand>
       <PackCommand>$(PackCommand) -BasePath $(BuildBinDir)</PackCommand>
