@@ -17,5 +17,30 @@
 
         [DataMember]
         public DateTime DateTime { get; set; }
+
+        [DataMember]
+        public TestEnum Enum { get; set; }
    }
+
+    [DataContract]
+    public enum TestEnum
+    {
+        /// <summary>
+        /// The one member.
+        /// </summary>
+        [EnumMember]
+        One,
+
+        /// <summary>
+        /// The two member.
+        /// </summary>
+        [EnumMember]
+        Two,
+
+        /// <summary>
+        /// The three member.
+        /// </summary>
+        [EnumMember]
+        Three
+    }
 }

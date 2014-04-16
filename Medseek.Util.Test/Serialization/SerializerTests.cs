@@ -86,5 +86,17 @@
                                  || serializer.CanDeserialize(typeof(List<TestObject>), ms, "application/xml");
             Assert.That(canDeserialize);
         }
+
+        [Test]
+        public void JsonSerializerShouldSerializeEnumAsString()
+        {
+            var ms = new MemoryStream();
+            var testObj = new TestObject();
+            var serializer = new NewtonsoftJsonSerializer();
+            serializer.Serialize(typeof(TestObject), testObj, ms);
+            ms.Position = 0;
+            var value = new StreamReader(ms).ReadToEnd();
+            Assert.That(value, Contains.Substring("One"));
+        }
     }
 }
