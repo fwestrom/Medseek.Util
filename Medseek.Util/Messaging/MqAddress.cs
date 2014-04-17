@@ -1,15 +1,15 @@
 namespace Medseek.Util.Messaging
 {
     using System;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Describes an address that corresponds to a messaging system entity to 
     /// which messages can be sent or from which messages can be received.
     /// </summary>
+    [DataContract(Namespace = "")]
     public class MqAddress : ICloneable
     {
-        private readonly string value;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="MqAddress"/> class.
         /// </summary>
@@ -18,18 +18,17 @@ namespace Medseek.Util.Messaging
             if (value == null)
                 throw new ArgumentNullException("value");
 
-            this.value = value;
+            Value = value;
         }
 
         /// <summary>
         /// Gets the string value describing to the address.
         /// </summary>
+        [DataMember]
         internal string Value
         {
-            get
-            {
-                return value;
-            }
+            get;
+            private set;
         }
 
         /// <summary>
