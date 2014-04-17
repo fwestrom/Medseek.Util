@@ -8,10 +8,21 @@
     using Medseek.Util.Ioc;
 
     using global::Newtonsoft.Json;
+    using global::Newtonsoft.Json.Converters;
 
     [Register(typeof(ISerializer), OnlyNewServices = false)]
     public class NewtonsoftJsonSerializer : ISerializer
     {
+        public NewtonsoftJsonSerializer()
+        {
+            JsonConvert.DefaultSettings = () =>
+            {
+                var settings = new JsonSerializerSettings();
+                settings.Converters.Add(new StringEnumConverter{ CamelCaseText = false });
+                return settings;
+            };
+        }
+
         /// <summary>
         /// Gets the content types.
         /// </summary>
@@ -47,7 +58,9 @@
         /// <param name="type">
         ///     The type of object to serialize.
         /// </param>
-        /// <param name="contentType"></param>
+        /// <param name="contentType">
+        ///     The content type.
+        /// </param>
         /// <returns>
         /// A value indicating whether objects of the specified type can be 
         /// serialized.
