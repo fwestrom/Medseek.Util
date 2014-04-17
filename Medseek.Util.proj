@@ -9,6 +9,8 @@
     <BuildDir Condition="'$(BuildDir)' == ''">$(RootDir)build\</BuildDir>
     <ToolsDir Condition="'$(ToolsDir)' == ''">$(RootDir)tools\</ToolsDir>
     <NuGetDir Condition="'$(NuGetDir)' == ''">$(SourceDir).nuget\</NuGetDir>
+    <Pack-If-Value Condition="'$(Pack-If-Value)' == ''"></Pack-If-Value>
+    <Pack-If-Whitelist Condition="'$(Pack-If-Whitelist)' == ''"></Pack-If-Whitelist>
     <Skip Condition="'$(Skip)' == ''" />
   </PropertyGroup>
   <PropertyGroup Label="Other Properties">
@@ -68,20 +70,36 @@
   <Import Project="$(MSBuildCommunityTasksPath)MSBuild.Community.Tasks.Targets" />
 
   <!-- Prepare -->
-  <Target Name="Prepare">
+  <Target Name="Prepare" DependsOnTargets="Prepare-Pack">
+    <ItemGroup>
+      <Skip Include="$(Skip)" />
+    </ItemGroup>
+    <Message Text="Skip: %(Skip.Identity)" />
+    <CreateProperty Value="False">
+      <Output PropertyName="Do%(Skip.Identity)" TaskParameter="Value" />
+    </CreateProperty>
+
     <ItemGroup>
       <PrepareDir Include="$(BuildDir)" />
       <PrepareDir Include="$(BuildBinDir)" />
       <PrepareDir Include="$(BuildObjDir)" />
       <PrepareDir Include="$(BuildPackagesDir)" />
-      <Skip Include="$(Skip)" />
     </ItemGroup>
-    <Message Text="Skip: %(Skip.Identity)" />
     <MakeDir Directories="@(PrepareDir)" />
-    <CreateProperty Value="False">
-      <Output PropertyName="Do%(Skip.Identity)" TaskParameter="Value" />
-    </CreateProperty>
+    
     <Exec Command='$(NuGetExePath) restore -Verbosity detailed -ConfigFile "$(NuGetConfigPath)" -NonInteractive' WorkingDirectory="$(SourceDir)" />
+  </Target>
+  <Target Name="Prepare-Pack" Condition="'$(Pack-If-Whitelist)' != '' AND '$(Pack-If-Value)' != ''">
+    <Message Text="Pack-If-Value = $(Pack-If-Value)" />
+    <Message Text="Pack-If-Whitelist = $(Pack-If-Whitelist)" />
+    <ItemGroup>
+      <Pack-If-Whitelist Include="$(Pack-If-Whitelist)" />
+    </ItemGroup>
+    <Message Text="Pack-If-Whitelist: %(Pack-If-Whitelist.Identity)" />
+    <PropertyGroup>
+      <Skip-Pack Condition="'$(Skip-Pack)' == '' AND '$(Pack-If-Value)' == '%(Pack-If-Whitelist.Identity)'">true</Skip-Pack>
+      <Skip Condition="'$(Skip-Pack)' != 'true'">$(Skip);Pack</Skip>
+    </PropertyGroup>
   </Target>
 
   <!-- Clean -->
