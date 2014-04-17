@@ -16,6 +16,7 @@
     </dependencies>
   </metadata>
   <files>
+    <file src="$id$.pdb" target="lib\net45" />
     <file src="NLog.config" target="lib" />
   </files>
 </package>
