@@ -25,7 +25,7 @@
                 throw new ArgumentNullException("connectionFactory");
             if (factory == null)
                 throw new ArgumentNullException("factory");
-
+            Console.WriteLine("Connecting to RabbitMQ endpoint:[{0}] vhost:[{1}] user:[{2}]", connectionFactory.Endpoint, connectionFactory.VirtualHost, connectionFactory.UserName);
             connection = connectionFactory.CreateConnection();
             this.factory = factory;
         }

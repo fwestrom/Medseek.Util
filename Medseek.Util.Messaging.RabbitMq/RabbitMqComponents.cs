@@ -1,4 +1,6 @@
-﻿namespace Medseek.Util.Messaging.RabbitMq
+﻿using System.Reflection;
+
+namespace Medseek.Util.Messaging.RabbitMq
 {
     using System;
     using System.Collections.Generic;
@@ -42,6 +44,18 @@
         {
             get
             {
+                var brokerSettings = Environment.GetCommandLineArgs().FirstOrDefault(c => c.Contains("/broker")).Split('=');
+                if (brokerSettings.Length <= 1) return ConnectionFactory;
+                if (brokerSettings[1].Contains('/'))
+                {
+                    var brokerSpec = brokerSettings[1].Split('/');
+                    ConnectionFactory.HostName = brokerSpec[0];
+                    ConnectionFactory.VirtualHost = brokerSpec[1];
+                }
+                else
+                {
+                    ConnectionFactory.HostName = brokerSettings[1];
+                }
                 return ConnectionFactory;
             }
         }
