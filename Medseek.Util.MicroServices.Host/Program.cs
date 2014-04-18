@@ -1,8 +1,7 @@
-﻿using System.IO;
-
-namespace Medseek.Util.MicroServices.Host
+﻿namespace Medseek.Util.MicroServices.Host
 {
     using System;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Threading;

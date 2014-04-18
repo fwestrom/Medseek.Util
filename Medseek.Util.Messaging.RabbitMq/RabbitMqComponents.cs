@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace Medseek.Util.Messaging.RabbitMq
+﻿namespace Medseek.Util.Messaging.RabbitMq
 {
     using System;
     using System.Collections.Generic;
