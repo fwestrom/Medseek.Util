@@ -15,6 +15,5 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="$id$.pdb" target="lib\net45" />
   </files>
 </package>
