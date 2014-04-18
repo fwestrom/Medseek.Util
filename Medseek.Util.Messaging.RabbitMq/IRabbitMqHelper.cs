@@ -13,7 +13,7 @@
         /// Gets a basic properties object set with the values from a message
         /// properties object.
         /// </summary>
-        IBasicProperties CreateBasicProperties(IModel model, IMessageProperties properties);
+        IBasicProperties CreateBasicProperties(IModel model, MessageProperties properties);
 
         /// <summary>
         /// Gets a message properties object set with the values from a

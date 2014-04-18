@@ -6,6 +6,7 @@ namespace Medseek.Util.Messaging
     /// <summary>
     /// Interface for types that provide access to the message properties.
     /// </summary>
+    [Obsolete("Use MessageProperties class directly instead; this interface will be removed in the near future.")]
     public interface IMessageProperties : ICloneable
     {
         /// <summary>

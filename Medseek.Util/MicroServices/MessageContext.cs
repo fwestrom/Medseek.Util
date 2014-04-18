@@ -9,12 +9,12 @@
     /// </summary>
     public class MessageContext : IMessageContext
     {
-        private readonly IMessageProperties properties;
+        private readonly MessageProperties properties;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MessageContext"/> class.
         /// </summary>
-        public MessageContext(IMessageProperties properties)
+        public MessageContext(MessageProperties properties)
         {
             if (properties == null)
                 throw new ArgumentNullException("properties");
@@ -25,7 +25,7 @@
         /// <summary>
         /// Gets the message properties.
         /// </summary>
-        public IMessageProperties Properties
+        public MessageProperties Properties
         {
             get
             {
@@ -41,7 +41,7 @@
         /// </returns>
         public object Clone()
         {
-            var cloneProperties = (IMessageProperties)properties.Clone();
+            var cloneProperties = (MessageProperties)properties.Clone();
             var result = new MessageContext(cloneProperties);
             return result;
         }

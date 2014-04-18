@@ -12,7 +12,7 @@
         /// <summary>
         /// Gets the message properties.
         /// </summary>
-        IMessageProperties Properties
+        MessageProperties Properties
         {
             get;
         }

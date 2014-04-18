@@ -1,10 +1,10 @@
 ﻿namespace Medseek.Util.Messaging.RabbitMq
 {
-    using Interactive;
-    using Ioc;
+    using System.Collections.Generic;
+    using Medseek.Util.Interactive;
+    using Medseek.Util.Ioc;
     using RabbitMQ.Client;
     using RabbitMQ.Client.Events;
-    using System.Collections.Generic;
 
     /// <summary>
     /// Provides helper functionality for working with messaging and RabbitMQ.
@@ -16,7 +16,7 @@
         /// Gets a basic properties object set with the values from a message
         /// properties object.
         /// </summary>
-        public IBasicProperties CreateBasicProperties(IModel model, IMessageProperties properties)
+        public IBasicProperties CreateBasicProperties(IModel model, MessageProperties properties)
         {
             var basicProperties = model.CreateBasicProperties();
 
@@ -26,12 +26,11 @@
                 basicProperties.CorrelationId = properties.CorrelationId; 
             if (properties.ReplyTo != null)
                 basicProperties.ReplyTo = ToPublicationAddress(properties.ReplyTo).ToString();
-            if (basicProperties.Headers == null)
-                basicProperties.Headers = new Dictionary<string, object>();
 
             if (properties.AdditionalProperties != null)
             {
-                // Add AdditionalProperties to the BasicProperties headers.
+                if (basicProperties.Headers == null)
+                    basicProperties.Headers = new Dictionary<string, object>();
                 properties.AdditionalProperties
                     .ForEach(p => basicProperties.Headers[p.Key] = p.Value);
             }

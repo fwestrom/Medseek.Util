@@ -22,7 +22,7 @@ namespace Medseek.Util.MicroServices
         /// <param name="properties">
         /// The message properties.
         /// </param>
-        void Send(MqAddress address, byte[] body, IMessageProperties properties);
+        void Send(MqAddress address, byte[] body, MessageProperties properties);
 
         /// <summary>
         /// Sends a message to a remote micro-service.
@@ -40,7 +40,7 @@ namespace Medseek.Util.MicroServices
         /// <param name="properties">
         /// The message properties.
         /// </param>
-        void Send(MqAddress address, Type bodyType, object bodyValue, IMessageProperties properties);
+        void Send(MqAddress address, Type bodyType, object bodyValue, MessageProperties properties);
 
         /// <summary>
         /// Invokes the bound method that provides the micro-service operation.

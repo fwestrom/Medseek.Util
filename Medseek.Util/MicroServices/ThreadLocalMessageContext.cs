@@ -30,7 +30,7 @@
         /// <summary>
         /// Gets the message properties.
         /// </summary>
-        public IMessageProperties Properties
+        public MessageProperties Properties
         {
             get
             {

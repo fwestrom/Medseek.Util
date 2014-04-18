@@ -19,9 +19,8 @@
         private const string ContentType0 = "application/x-contentType0";
         private const string ContentType1 = "application/x-contentType1";
         private const string ContentTypeX = "application/x-contentTypeX";
-        private string contentType;
         private Mock<IMessageContext> messageContext;
-        private Mock<IMessageProperties> messageProperties;
+        private MessageProperties messageProperties;
         private Mock<ISerializer> serializer0;
         private Mock<ISerializer> serializer1;
         private Mock<ISerializer>[] serializers;
@@ -34,9 +33,8 @@
         [SetUp]
         public void Setup()
         {
-            contentType = ContentTypeX;
             messageContext = new Mock<IMessageContext>();
-            messageProperties = new Mock<IMessageProperties>();
+            messageProperties = new MessageProperties { ContentType = ContentTypeX };
             serializer0 = new Mock<ISerializer>();
             serializer1 = new Mock<ISerializer>();
             serializers = new[] { serializer0, serializer1 };
@@ -45,10 +43,7 @@
 
             messageContext.Setup(x => 
                 x.Properties)
-                .Returns(messageProperties.Object);
-            messageProperties.Setup(x =>
-                x.ContentType)
-                .Returns(() => contentType);
+                .Returns(messageProperties);
 
             serializer0.Setup(x => 
                 x.CanDeserialize(It.IsAny<Type>(), It.IsAny<Stream>(), ContentType0))
@@ -93,7 +88,7 @@
         [TestCase(1, ContentType1)]
         public void DeserializeReturnsResultFromSerializer(int index, string contentType)
         {
-            this.contentType = contentType;
+            messageProperties.ContentType = contentType;
             var serializerResult = new object();
             var serializer = serializers[index];
             var type = typeof(object);
@@ -114,7 +109,7 @@
         [Test]
         public void DeserializeThrowsIfNoSerializer()
         {
-            contentType = ContentTypeX;
+            messageProperties.ContentType = ContentTypeX;
             serializers.ForEach(serializer => 
                 serializer.Setup(x => 
                     x.CanDeserialize(It.IsAny<Type>(), It.IsAny<Stream>(), ContentTypeX))
@@ -146,7 +141,7 @@
         [TestCase(1, ContentType1)]
         public void SerializeInvokesSerializerToWriteObject(int index, string contentType)
         {
-            this.contentType = contentType;
+            messageProperties.ContentType = contentType;
             var serializer = serializers[index];
             var type = typeof(object);
             var value = new object();

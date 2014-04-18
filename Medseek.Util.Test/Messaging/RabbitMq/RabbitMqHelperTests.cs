@@ -1,10 +1,10 @@
 ﻿namespace Medseek.Util.Messaging.RabbitMq
 {
+    using System;
+    using System.Collections.Generic;
     using Moq;
     using NUnit.Framework;
     using RabbitMQ.Client;
-    using System;
-    using System.Collections.Generic;
     using Testing;
 
     /// <summary>
@@ -28,6 +28,26 @@
             var result = Obj.ToRabbitMqAddress(address);
 
             Assert.That(result.QueueName, Is.EqualTo(queueName));
+        }
+
+        /// <summary>
+        /// Verifies that the header keys and values are copied over from the 
+        /// basic properties object.
+        /// </summary>
+        [Test]
+        public void ToPropertiesWithHeadersDictionarySetsValuesOnProperties()
+        {
+            var basicProperties = new Mock<IBasicProperties>();
+            var headers = new Dictionary<string, object> { { "key1", "value1" }, { "key2", "value2" } };
+            basicProperties.Setup(x => 
+                x.Headers)
+                .Returns(headers);
+
+            MessageProperties result = null;
+            TestDelegate action = () => result = Obj.ToProperties(basicProperties.Object);
+
+            Assert.That(action, Throws.Nothing);
+            Assert.That(result.AdditionalProperties, Is.EquivalentTo(headers));
         }
 
         /// <summary>
@@ -175,12 +195,9 @@
             model.Setup(x =>
                 x.CreateBasicProperties())
                 .Returns(basicProperties.Object);
-            var messageProperties = new Mock<IMessageProperties>();
-            messageProperties.Setup(x =>
-                x.CorrelationId)
-                .Returns(correlationId);
+            var messageProperties = new MessageProperties { CorrelationId = correlationId };
 
-            var result = Obj.CreateBasicProperties(model.Object, messageProperties.Object);
+            var result = Obj.CreateBasicProperties(model.Object, messageProperties);
 
             Assert.That(result.CorrelationId, Is.EqualTo(correlationId));
         }
@@ -202,12 +219,9 @@
             model.Setup(x =>
                 x.CreateBasicProperties())
                 .Returns(basicProperties.Object);
-            var messageProperties = new Mock<IMessageProperties>();
-            messageProperties.Setup(x =>
-                x.ReplyTo)
-                .Returns(replyTo);
+            var messageProperties = new MessageProperties { ReplyTo = replyTo };
 
-            var result = Obj.CreateBasicProperties(model.Object, messageProperties.Object);
+            var result = Obj.CreateBasicProperties(model.Object, messageProperties);
 
             Assert.That(result.ReplyTo, Is.EqualTo(Obj.ToPublicationAddress(replyTo).ToString()));
         }
@@ -225,12 +239,9 @@
             model.Setup(x =>
                 x.CreateBasicProperties())
                 .Returns(basicProperties.Object);
-            var messageProperties = new Mock<IMessageProperties>();
-            messageProperties.Setup(x =>
-                x.ContentType)
-                .Returns(contentType);
+            var messageProperties = new MessageProperties { ContentType = contentType };
 
-            var result = Obj.CreateBasicProperties(model.Object, messageProperties.Object);
+            var result = Obj.CreateBasicProperties(model.Object, messageProperties);
 
             Assert.That(result.ContentType, Is.EqualTo(contentType));
         }
@@ -249,12 +260,9 @@
             model.Setup(x =>
                 x.CreateBasicProperties())
                 .Returns(basicProperties.Object);
-            var messageProperties = new Mock<IMessageProperties>();
-            messageProperties.Setup(x =>
-                x.AdditionalProperties)
-                .Returns(new Dictionary<string, object> { { "host", host }, { "cookie", cookie } });
+            var messageProperties = new MessageProperties { AdditionalProperties = new Dictionary<string, object> { { "host", host }, { "cookie", cookie } } };
 
-            var result = Obj.CreateBasicProperties(model.Object, messageProperties.Object);
+            var result = Obj.CreateBasicProperties(model.Object, messageProperties);
             
             Assert.That(result.Headers["host"], Is.EqualTo(host));
             Assert.That(result.Headers["cookie"], Is.EqualTo(cookie));

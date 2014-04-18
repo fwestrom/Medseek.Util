@@ -58,7 +58,7 @@ namespace Medseek.Util.MicroServices
         /// <param name="properties">
         /// The message properties.
         /// </param>
-        public void Send(MqAddress address, byte[] body, IMessageProperties properties)
+        public void Send(MqAddress address, byte[] body, MessageProperties properties)
         {
             ThrowIfDisposed();
             if (address == null)
@@ -89,7 +89,7 @@ namespace Medseek.Util.MicroServices
         /// <param name="properties">
         /// The message properties.
         /// </param>
-        public void Send(MqAddress address, Type bodyType, object bodyValue, IMessageProperties properties)
+        public void Send(MqAddress address, Type bodyType, object bodyValue, MessageProperties properties)
         {
             var messageContext = new MessageContext(properties);
             using (var ms = new MemoryStream())
@@ -128,8 +128,7 @@ namespace Medseek.Util.MicroServices
             {
                 var messageContext = messageContextAccess.Current;
                 var properties = messageContext.Properties;
-                properties.ReplyTo = null;
-                properties.RoutingKey = address.RoutingKey;
+                properties.RoutingKey = null;
 
                 for (var i = 0; i < parameterTypes.Length; i++)
                 {

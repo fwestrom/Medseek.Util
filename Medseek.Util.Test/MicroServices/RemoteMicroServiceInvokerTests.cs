@@ -82,16 +82,16 @@
             var bodyType = typeof(object);
             var bodyValue = new object();
             var bodyData = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
-            var properties = new Mock<IMessageProperties>();
+            var properties = new MessageProperties();
             serializer.Setup(x =>
-                x.Serialize(It.Is<IMessageContext>(a => ReferenceEquals(a.Properties, properties.Object)), bodyType, bodyValue, It.IsAny<Stream>()))
+                x.Serialize(It.Is<IMessageContext>(a => ReferenceEquals(a.Properties, properties)), bodyType, bodyValue, It.IsAny<Stream>()))
                 .Callback((IMessageContext a, Type b, object c, Stream d) => d.Write(bodyData, 0, bodyData.Length));
 
             publisher.Setup(x =>
-                x.Publish(bodyData, properties.Object))
+                x.Publish(bodyData, properties))
                 .Verifiable();
 
-            Obj.Send(bindingAddress, bodyType, bodyValue, properties.Object);
+            Obj.Send(bindingAddress, bodyType, bodyValue, properties);
 
             publisher.Verify();
         }
@@ -103,12 +103,12 @@
         public void SendByAddressBodyPublishesOutgoingMessage()
         {
             var body = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
-            var properties = new Mock<IMessageProperties>();
+            var properties = new MessageProperties();
             publisher.Setup(x =>
-                x.Publish(body, properties.Object))
+                x.Publish(body, properties))
                 .Verifiable();
 
-            Obj.Send(bindingAddress, body, properties.Object);
+            Obj.Send(bindingAddress, body, properties);
 
             publisher.Verify();
         }
@@ -119,14 +119,15 @@
         [Test]
         public void SendByBindingOneWayPublishesOutgoingMessage()
         {
+            var replyTo = new MqAddress("topic://medseek-test/remotemicroserviceinvokertests");
             var request = new object();
             var requestData = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
             var messageContext = new Mock<IMessageContext>();
-            var messageContextProperties = new Mock<IMessageProperties>();
+            var messageContextProperties = new MessageProperties { ReplyTo = replyTo, RoutingKey = "routing-key" };
             var messageContextDisposable = new Mock<IDisposable>();
             messageContext.Setup(x => 
                 x.Properties)
-                .Returns(messageContextProperties.Object);
+                .Returns(messageContextProperties);
             messageContextAccess.Setup(x => 
                 x.Enter(null))
                 .Callback(() => messageContextAccess.Setup(x => x.Current).Returns(messageContext.Object))
@@ -138,13 +139,11 @@
                 x.Serialize(messageContext.Object, typeof(object), request, It.IsAny<Stream>()))
                 .Callback((IMessageContext a, Type b, object c, Stream d) => d.Write(requestData, 0, requestData.Length));
             publisher.Setup(x => 
-                x.Publish(requestData, messageContextProperties.Object))
-                .Callback((byte[] a, IMessageProperties b) =>
+                x.Publish(requestData, messageContextProperties))
+                .Callback((byte[] a, MessageProperties b) =>
                 {
-                    messageContextProperties.VerifySet(x => 
-                        x.ReplyTo = null);
-                    messageContextProperties.VerifySet(x =>
-                        x.RoutingKey = DoItRoutingKey);
+                    Assert.That(b.ReplyTo, Is.SameAs(replyTo));
+                    Assert.That(b.RoutingKey, Is.Null);
                 })
                 .Verifiable();
 
@@ -162,7 +161,7 @@
         {
             Obj.Dispose();
 
-            TestDelegate action = () => Obj.Send(bindingAddress, new byte[0], new Mock<IMessageProperties>().Object);
+            TestDelegate action = () => Obj.Send(bindingAddress, new byte[0], new MessageProperties());
             Assert.That(action, Throws.InstanceOf<ObjectDisposedException>());
         }
 
