@@ -1,7 +1,6 @@
 ﻿namespace Medseek.Util.Messaging
 {
     using System;
-    using System.IO;
     using System.Linq;
     using Medseek.Util.Logging;
 
@@ -73,8 +72,9 @@
                     var handlers = received.GetInvocationList().Cast<EventHandler<ReceivedEventArgs>>();
                     foreach (var handler in handlers)
                     {
-                        var ms = new MemoryStream(body, offset, count, false);
-                        handler(this, new ReceivedEventArgs(ms, properties));
+                        var bodySegment = new ArraySegment<byte>(body, offset, count);
+                        var e = new ReceivedEventArgs(bodySegment, properties);
+                        handler(this, e);
                     }
                 }
             }

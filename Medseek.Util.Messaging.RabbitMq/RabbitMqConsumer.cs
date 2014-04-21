@@ -13,16 +13,17 @@
     [Register(typeof(IMqConsumer), Lifestyle = Lifestyle.Transient)]
     public class RabbitMqConsumer : MqConsumerBase
     {
+        private readonly List<RabbitMqAddress> addresses = new List<RabbitMqAddress>();
         private readonly EventingBasicConsumer consumer = new EventingBasicConsumer();
-        private readonly RabbitMqAddress[] addresses;
-        private readonly IRabbitMqHelper helper;
+        private readonly List<string> declaredExchanges = new List<string>(); 
+        private readonly IRabbitMqPlugin helper;
         private readonly IModel model;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RabbitMqConsumer" 
         /// /> class.
         /// </summary>
-        public RabbitMqConsumer(RabbitMqAddress[] addresses, bool autoDelete, IRabbitMqHelper helper, IModel model)
+        public RabbitMqConsumer(RabbitMqAddress[] addresses, bool autoDelete, IRabbitMqPlugin helper, IModel model)
             : base(addresses.Cast<MqAddress>().ToArray())
         {
             if (addresses.Select(x => x.QueueName).Distinct().Count() > 1)
@@ -32,7 +33,6 @@
             if (model == null)
                 throw new ArgumentNullException("model");
 
-            this.addresses = addresses;
             this.helper = helper;
             this.model = model;
             consumer.Received += OnConsumerReceived;
@@ -40,7 +40,6 @@
             var queue = addresses.Select(x => x.QueueName).Distinct().Single();
             model.QueueDeclare(queue, false, false, autoDelete, null);
 
-            var declaredExchanges = new List<string>();
             foreach (var address in addresses.Where(DoBindQueue))
             {
                 if (!declaredExchanges.Contains(address.ExchangeName))
@@ -49,6 +48,31 @@
             }
 
             model.BasicConsume(queue, true, consumer);
+        }
+
+        /// <summary>
+        /// Binds the consumer using a messaging system address.
+        /// </summary>
+        public void Bind(MqAddress address, bool autoDelete)
+        {
+            var ra = helper.ToRabbitMqAddress(address);
+            if (addresses.Count > 0 && ra.QueueName != addresses.Select(x => x.QueueName).Single())
+                throw new ArgumentException("All addresses must share the same source queue.", "address");
+
+            if (addresses.Count == 0)
+                model.QueueDeclare(ra.QueueName, false, false, autoDelete, null);
+
+            addresses.Add(ra);
+            if (DoBindQueue(ra))
+            {
+                if (!declaredExchanges.Contains(ra.ExchangeName))
+                {
+                    model.ExchangeDeclare(ra.ExchangeName, ra.ExchangeType);
+                    declaredExchanges.Add(ra.ExchangeName);
+                }
+
+                model.QueueBind(ra.QueueName, ra.ExchangeName, ra.RoutingKey);
+            }
         }
 
         /// <summary>

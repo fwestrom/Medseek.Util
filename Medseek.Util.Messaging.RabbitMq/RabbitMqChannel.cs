@@ -5,6 +5,7 @@
     using System.Linq;
     using Medseek.Util.Ioc;
     using RabbitMQ.Client;
+    using RabbitMQ.Client.Events;
 
     /// <summary>
     /// Provides a messaging system channel for interacting with RabbitMQ.
@@ -12,24 +13,30 @@
     [Register(typeof(IMqChannel), Lifestyle = Lifestyle.Transient)]
     public class RabbitMqChannel : MqChannelBase
     {
+        private readonly Dictionary<string, string> exchangeTypes = new Dictionary<string, string>();
         private readonly IRabbitMqFactory factory;
         private readonly IModel model;
+        private readonly IRabbitMqPlugin plugin;
         private bool isPaused;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RabbitMqChannel" 
         /// /> class.
         /// </summary>
-        public RabbitMqChannel(IConnection connection, IRabbitMqFactory factory, IMqPlugin plugin)
+        public RabbitMqChannel(IConnection connection, IRabbitMqFactory factory, IRabbitMqPlugin plugin)
             : base(plugin)
         {
             if (connection == null)
                 throw new ArgumentNullException("connection");
             if (factory == null)
                 throw new ArgumentNullException("factory");
+            if (plugin == null)
+                throw new ArgumentNullException("plugin");
 
             this.factory = factory;
+            this.plugin = plugin;
             model = connection.CreateModel();
+            model.BasicReturn += OnModelBasicReturn;
         }
 
         /// <summary>
@@ -80,7 +87,7 @@
         /// </returns>
         protected override IMqConsumer OnCreateConsumer(MqAddress address, bool autoDelete)
         {
-            var consumerAddress = Plugin.ToConsumerAddress(address);
+            var consumerAddress = TranslateAddress(address);
             var consumer = CreateConsumer(new[] { consumerAddress }, autoDelete);
             return consumer;
         }
@@ -103,7 +110,8 @@
         /// </returns>
         protected override IMqConsumer[] OnCreateConsumers(MqConsumerAddress[] addresses, bool autoDelete)
         {
-            return addresses.GroupBy(x => x.SourceKey)
+            return addresses
+                .GroupBy(x => x.SourceKey)
                 .Select(x => CreateConsumer(x.ToArray(), autoDelete))
                 .ToArray();
         }
@@ -121,7 +129,8 @@
         /// </returns>
         protected override IMqPublisher OnCreatePublisher(MqAddress address)
         {
-            var publisher = factory.GetRabbitMqPublisher(model, address);
+            var rabbitAddress = TranslateAddress(address);
+            var publisher = factory.GetRabbitMqPublisher(model, rabbitAddress);
             publisher.Disposed += (sender, e) => factory.Release(publisher);
             return publisher;
         }
@@ -137,11 +146,28 @@
         private IMqConsumer CreateConsumer(IEnumerable<MqConsumerAddress> addresses, bool autoDelete)
         {
             var rabbitAddresses = addresses
-                .Select(x => x as RabbitMqAddress ?? (RabbitMqAddress)Plugin.ToConsumerAddress(x))
+                .Select(TranslateAddress)
                 .ToArray();
             var consumer = factory.GetRabbitMqConsumer(model, rabbitAddresses, autoDelete);
             consumer.Disposed += (sender, e) => factory.Release(consumer);
             return consumer;
+        }
+
+        private void OnModelBasicReturn(IModel sender, BasicReturnEventArgs e)
+        {
+            string exchangeType;
+            if (!exchangeTypes.TryGetValue(e.Exchange, out exchangeType))
+                exchangeType = "unknown";
+
+            var returnedEventArgs = plugin.ToReturnedEventArgs(exchangeType, e);
+            RaiseReturned(returnedEventArgs);
+        }
+
+        private RabbitMqAddress TranslateAddress(MqAddress address)
+        {
+            var ra = address as RabbitMqAddress ?? plugin.ToRabbitMqAddress(address);
+            exchangeTypes[ra.ExchangeName] = ra.ExchangeType;
+            return ra;
         }
     }
 }

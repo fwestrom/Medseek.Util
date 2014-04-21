@@ -167,7 +167,7 @@
 
         private void OnReceived(object sender, ReceivedEventArgs e)
         {
-            Log.DebugFormat("Read {0} bytes from queue; CorrelationId = {1}.", e.Body.Length, e.Properties.CorrelationId);
+            Log.DebugFormat("Read {0} bytes from queue; CorrelationId = {1}.", e.GetBodyArray().Length, e.Properties.CorrelationId);
 
             Interlocked.Increment(ref dispatcherDepth);
             thread.InvokeAsync(() =>
@@ -187,7 +187,7 @@
                     {
                         object serializerState = null;
                         var parameterTypes = binding.Method.GetParameters().Select(x => x.ParameterType).ToArray();
-                        var parameterValues = microServiceSerializer.Deserialize(messageContext, parameterTypes, e.Body, ref serializerState);
+                        var parameterValues = microServiceSerializer.Deserialize(messageContext, parameterTypes, e.GetBodyStream(), ref serializerState);
 
                         Log.DebugFormat("Invoking micro-service; Address = {0}, IsOneWay = {1}, Method = {2}, Parameters = {3}.", binding.Address, binding.IsOneWay, binding.Method, string.Join(", ", parameterValues));
                         var returnValue = instance.Invoke(parameterValues);

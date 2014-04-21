@@ -119,9 +119,9 @@
     <Compile Include="Messaging\RabbitMq\RabbitMqChannelTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqConnectionTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqConsumerTests.cs" />
-    <Compile Include="Messaging\RabbitMq\RabbitMqHelperTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqPluginTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqPublisherTests.cs" />
+    <!--<Compile Include="MicroServices\Lookup\MicroServiceLookupTests.cs" />-->
     <Compile Include="MicroServices\MessageHandlers\MessageBindingKeyTests.cs" />
     <Compile Include="MicroServices\MessageHandlers\MessageHandlerBindingProviderTests.cs" />
     <Compile Include="MicroServices\Host\ExampleMicroService.cs" />

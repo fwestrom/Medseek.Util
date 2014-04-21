@@ -63,7 +63,7 @@ namespace Medseek.Util.Messaging
                 if (response == null)
                     throw new OperationCanceledException();
 
-                return response.Body;
+                return response.GetBodyStream();
             }
         }
 

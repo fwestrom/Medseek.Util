@@ -58,6 +58,7 @@
     <Compile Include="Ioc\RegisteringComponentEventArgs.cs" />
     <Compile Include="Logging\ILoggingPlugin.cs" />
     <Compile Include="Messaging\MqPublisherAddress.cs" />
+    <Compile Include="Messaging\ReturnedEventArgs.cs" />
     <Compile Include="MicroServices\IMicroServiceDispatcher.cs" />
     <Compile Include="MicroServices\IMicroServiceInvoker.cs" />
     <Compile Include="MicroServices\IMicroServiceSerializer.cs" />
@@ -94,6 +95,7 @@
     <Compile Include="MicroServices\RegisterMicroServiceAttribute.cs" />
     <Compile Include="MicroServices\ThreadLocalMessageContext.cs" />
     <Compile Include="MicroServices\MicroServiceBindingAttribute.cs" />
+    <!--<Compile Include="MicroServices\Lookup\MicroServiceLookup.cs" />-->
     <Compile Include="Serialization\ISerializer.cs" />
     <Compile Include="Serialization\ISerializerFactory.cs" />
     <Compile Include="Serialization\SystemRuntimeSerializationDataContractSerializer.cs" />

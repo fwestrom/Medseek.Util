@@ -6,9 +6,11 @@
     using System.Threading;
     using System.Windows.Threading;
     using Medseek.Util.Interactive;
+    using Medseek.Util.Ioc;
     using Medseek.Util.Ioc.Castle;
     using Medseek.Util.Logging;
     using Medseek.Util.Logging.NLog;
+    using Medseek.Util.Messaging;
     using Medseek.Util.Messaging.RabbitMq;
 
     /// <summary>
@@ -21,6 +23,8 @@
     {
         private static readonly ILoggingPlugin Logging = NLogComponents.Plugin;
         private static readonly ILog Log = Logging.GetLogManager().GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly IIocPlugin Ioc = new CastlePlugin();
+        private static readonly IMqPlugin Messaging = new RabbitMqPlugin();
 
         /// <summary>
         /// The entry point for the micro-service host application.
@@ -52,7 +56,7 @@
                 .Do(x => Console.WriteLine("Assembly = " + x.GetName().Name))
                 .ToArray();
 
-            using (var microServiceHost = new MicroServiceHost(CastleComponents.Plugin, Logging, RabbitMqComponents.Plugin, assembliesToInstall))
+            using (var microServiceHost = new MicroServiceHost(Ioc, Logging, Messaging, assembliesToInstall))
             {
                 microServiceHost.Start();
                 Console.WriteLine("Started micro-service host.");

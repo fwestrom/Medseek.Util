@@ -12,7 +12,7 @@
     public sealed class RabbitMqConsumerTests : TestFixture<RabbitMqConsumer>
     {
         private MqAddress address;
-        private Mock<IRabbitMqHelper> helper;
+        private Mock<IRabbitMqPlugin> helper;
         private Mock<IModel> model;
 
         /// <summary>
@@ -22,7 +22,7 @@
         public void Setup()
         {
             Use(address = new MqAddress());
-            helper = Mock<IRabbitMqHelper>();
+            helper = Mock<IRabbitMqPlugin>();
             model = Mock<IModel>();
         }
 

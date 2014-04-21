@@ -14,6 +14,8 @@
     [Register(typeof(ISerializer), OnlyNewServices = false)]
     public class SystemRuntimeSerializationDataContractSerializer : ISerializer
     {
+        private readonly XmlWriterSettings settings = new XmlWriterSettings { CloseOutput = false, ConformanceLevel = ConformanceLevel.Fragment, Indent = true };
+
         /// <summary>
         /// Gets the content types.
         /// </summary>
@@ -22,7 +24,10 @@
         /// </value>
         public string[] ContentTypes 
         {
-            get { return new[] { "application/xml" }; }
+            get 
+            {
+                return new[] { "application/xml" };
+            }
         }
 
         /// <summary>
@@ -102,7 +107,8 @@
         public void Serialize(Type type, object obj, Stream destination)
         {
             var serializer = new DataContractSerializer(type);
-            serializer.WriteObject(destination, obj);
+            using (var xw = XmlWriter.Create(destination, settings))
+                serializer.WriteObject(xw, obj);
         }
     }
 }

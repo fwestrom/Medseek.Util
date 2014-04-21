@@ -6,6 +6,7 @@
     using Moq;
     using NUnit.Framework;
     using RabbitMQ.Client;
+    using RabbitMQ.Client.Events;
 
     /// <summary>
     /// Tests for the <see cref="RabbitMqChannel"/> class.
@@ -17,7 +18,9 @@
         private Mock<IMqConsumer> consumer;
         private Mock<IRabbitMqFactory> factory;
         private Mock<IModel> model;
+        private Mock<IRabbitMqPlugin> plugin;
         private Mock<IMqPublisher> publisher;
+        private Mock<IEventSubscriber> subscriber;
 
         /// <summary>
         /// Sets up before each test is executed.
@@ -29,7 +32,9 @@
             consumer = new Mock<IMqConsumer>();
             factory = Mock<IRabbitMqFactory>();
             model = new Mock<IModel>();
+            plugin = Mock<IRabbitMqPlugin>();
             publisher = new Mock<IMqPublisher>();
+            subscriber = new Mock<IEventSubscriber>();
 
             connection.Setup(x => 
                 x.CreateModel())
@@ -42,10 +47,11 @@
                 x.GetRabbitMqPublisher(model.Object, It.IsAny<MqAddress>()))
                 .Returns(publisher.Object);
 
-            var plugin = Mock<IMqPlugin>();
             plugin.Setup(x => 
                 x.ToConsumerAddress(It.IsAny<MqAddress>()))
                 .Returns((MqAddress a) => a as RabbitMqAddress ?? RabbitMqAddress.Parse(a.Value));
+
+            Obj.Returned += subscriber.Object.OnReturned;
         }
 
         /// <summary>
@@ -78,7 +84,7 @@
         [Test]
         public void CreatePublisherReturnsInstanceFromFactory()
         {
-            var address = new MqAddress("address");
+            var address = new RabbitMqAddress("topic", "exchange", "routing-key");
             var result = Obj.CreatePublisher(address);
 
             factory.Verify(x =>
@@ -168,6 +174,40 @@
             Obj.IsPaused = isPaused;
 
             model.Verify();
+        }
+
+        /// <summary>
+        /// Verifies that the message return notification is raised.
+        /// </summary>
+        [TestCase("direct")]
+        [TestCase("topic")]
+        public void ReturnedIsRaisedWhenModelBasicReturnIsRaised(string exchangeType)
+        {
+            var address = new RabbitMqAddress(exchangeType, "test-exchange", "routing-key");
+            Obj.CreatePublisher(address);
+
+            var basicReturnEventArgs = new BasicReturnEventArgs { Exchange = address.ExchangeName };
+            var returnedEventArgs = new ReturnedEventArgs(address, new ArraySegment<byte>(new byte[0]), new MessageProperties(), 0, string.Empty);
+            plugin.Setup(x =>
+                x.ToReturnedEventArgs(address.ExchangeType, basicReturnEventArgs))
+                .Returns(returnedEventArgs);
+
+            subscriber.Setup(x => 
+                x.OnReturned(Obj, returnedEventArgs))
+                .Verifiable();
+
+            model.Raise(x => 
+                x.BasicReturn += null, basicReturnEventArgs);
+
+            subscriber.Verify();
+        }
+
+        /// <summary>
+        /// Helper interface used for verifying event notification behavior.
+        /// </summary>
+        public interface IEventSubscriber
+        {
+            void OnReturned(object sender, ReturnedEventArgs e);
         }
     }
 }

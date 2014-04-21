@@ -8,14 +8,14 @@ namespace Medseek.Util.Messaging
     /// </summary>
     public class ReceivedEventArgs : EventArgs
     {
-        private readonly Stream body;
+        private readonly ArraySegment<byte> body;
         private readonly MessageProperties properties;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReceivedEventArgs" /> 
         /// class.
         /// </summary>
-        public ReceivedEventArgs(Stream body, MessageProperties properties)
+        public ReceivedEventArgs(ArraySegment<byte> body, MessageProperties properties)
         {
             if (body == null)
                 throw new ArgumentNullException("body");
@@ -29,11 +29,12 @@ namespace Medseek.Util.Messaging
         /// <summary>
         /// Gets a stream that can be used to read the message body.
         /// </summary>
+        [Obsolete("Use the GetBodyStream method instead.")]
         public Stream Body
         {
             get
             {
-                return body;
+                return GetBodyStream();
             }
         }
 
@@ -46,6 +47,26 @@ namespace Medseek.Util.Messaging
             {
                 return properties;
             }
+        }
+
+        /// <summary>
+        /// Gets an array containing the message body data.
+        /// </summary>
+        public byte[] GetBodyArray()
+        {
+            if (body.Offset == 0 && body.Count == body.Array.Length)
+                return body.Array;
+
+            using (var ms = new MemoryStream(body.Array, body.Offset, body.Count, false))
+                return ms.ToArray();
+        }
+
+        /// <summary>
+        /// Gets a stream that can be used to read the message body data.
+        /// </summary>
+        public Stream GetBodyStream()
+        {
+            return new MemoryStream(body.Array, body.Offset, body.Count, false);
         }
     }
 }
