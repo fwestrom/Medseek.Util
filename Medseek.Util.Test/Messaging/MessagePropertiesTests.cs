@@ -40,20 +40,6 @@
         }
 
         /// <summary>
-        /// Verifies that Clone sets the routing key.
-        /// </summary>
-        [Test]
-        public void MessagePropertiesCloneSetsRoutingKey()
-        {
-            var routingKey = "routingKey-" + Guid.NewGuid();
-            Obj.RoutingKey = routingKey;
-
-            var propertiesClone = Obj.Clone();
-
-            Assert.That(propertiesClone.RoutingKey, Is.EqualTo(routingKey));
-        }
-
-        /// <summary>
         /// Verifies that Clone sets the reply to.
         /// </summary>
         [Test]

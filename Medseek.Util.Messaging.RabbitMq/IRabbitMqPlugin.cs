@@ -1,5 +1,6 @@
 ﻿namespace Medseek.Util.Messaging.RabbitMq
 {
+    using Medseek.Util.MicroServices;
     using RabbitMQ.Client;
     using RabbitMQ.Client.Events;
 
@@ -16,16 +17,16 @@
         IBasicProperties CreateBasicProperties(IModel model, MessageProperties properties);
 
         /// <summary>
+        /// Gets a message context object set with the values from a
+        /// RabbitMQ basic deliver event notification data object.
+        /// </summary>
+        IMessageContext ToMessageContext(BasicDeliverEventArgs e);
+
+        /// <summary>
         /// Gets a message properties object set with the values from a
         /// RabbitMQ basic properties object.
         /// </summary>
         MessageProperties ToProperties(IBasicProperties basicProperties);
-
-        /// <summary>
-        /// Gets a message properties object set with the values from a
-        /// RabbitMQ basic deliver event notification data object.
-        /// </summary>
-        MessageProperties ToProperties(BasicDeliverEventArgs e);
 
         /// <summary>
         /// Gets a publication address from the messaging system address.

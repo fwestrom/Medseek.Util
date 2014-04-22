@@ -3,6 +3,7 @@
     using System;
     using System.Linq;
     using Medseek.Util.Logging;
+    using Medseek.Util.MicroServices;
 
     /// <summary>
     /// Provides common functionality to derived message consumer types.
@@ -61,21 +62,17 @@
         /// Raises the message received notification.
         /// </summary>
         /// <seealso cref="Received" />
-        protected void RaiseReceived(byte[] body, int offset, int count, MessageProperties properties)
+        protected void RaiseReceived(IMessageContext messageContext)
         {
             using (EnterDisposeLock(false))
             {
-                log.DebugFormat("Received a message with {0} bytes; RoutingKey = {1}, CorrelationId = {2}, ReplyTo = {3}.", count, properties.RoutingKey, properties.CorrelationId, properties.ReplyTo);
+                log.DebugFormat("Received a message with {0} bytes; RoutingKey = {1}, CorrelationId = {2}, ReplyTo = {3}.", messageContext.BodyLength, messageContext.RoutingKey, messageContext.Properties.CorrelationId, messageContext.Properties.ReplyTo);
                 var received = Received;
                 if (received != null)
                 {
                     var handlers = received.GetInvocationList().Cast<EventHandler<ReceivedEventArgs>>();
                     foreach (var handler in handlers)
-                    {
-                        var bodySegment = new ArraySegment<byte>(body, offset, count);
-                        var e = new ReceivedEventArgs(bodySegment, properties);
-                        handler(this, e);
-                    }
+                        handler(this, new ReceivedEventArgs(messageContext));
                 }
             }
         }

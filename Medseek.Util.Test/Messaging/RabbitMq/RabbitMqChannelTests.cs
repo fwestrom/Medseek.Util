@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using Medseek.Util.MicroServices;
     using Medseek.Util.Testing;
     using Moq;
     using NUnit.Framework;
@@ -187,7 +188,7 @@
             Obj.CreatePublisher(address);
 
             var basicReturnEventArgs = new BasicReturnEventArgs { Exchange = address.ExchangeName };
-            var returnedEventArgs = new ReturnedEventArgs(address, new ArraySegment<byte>(new byte[0]), new MessageProperties(), 0, string.Empty);
+            var returnedEventArgs = new ReturnedEventArgs(new Mock<IMessageContext>().Object, address, 0, string.Empty);
             plugin.Setup(x =>
                 x.ToReturnedEventArgs(address.ExchangeType, basicReturnEventArgs))
                 .Returns(returnedEventArgs);

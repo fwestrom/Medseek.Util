@@ -7,6 +7,7 @@
     using System.Text.RegularExpressions;
     using Medseek.Util.Interactive;
     using Medseek.Util.Ioc;
+    using Medseek.Util.MicroServices;
     using RabbitMQ.Client;
     using RabbitMQ.Client.Events;
 
@@ -68,8 +69,8 @@
         /// Determines whether the properties of a message imply that the 
         /// message is a match for the patterns bound to a consumer address.
         /// </summary>
-        /// <param name="properties">
-        /// The properties of the message.
+        /// <param name="messageContext">
+        /// The message context.
         /// </param>
         /// <param name="address">
         /// The consumer address.
@@ -77,13 +78,13 @@
         /// <returns>
         /// A value indicating whether the message is a match for the address.
         /// </returns>
-        public bool IsMatch(MessageProperties properties, MqAddress address)
+        public bool IsMatch(IMessageContext messageContext, MqAddress address)
         {
             var ra = address as RabbitMqAddress ?? ToRabbitMqAddress(address);
             switch (ra.ExchangeType)
             {
                 case "direct":
-                    return properties.RoutingKey == ra.RoutingKey;
+                    return messageContext.RoutingKey == ra.RoutingKey;
 
                 case "topic":
                     var regex = new StringBuilder(ra.RoutingKey.Length + 16)
@@ -95,12 +96,23 @@
                         .Append("$")
                         .ToString();
 
-                    var result = Regex.IsMatch(properties.RoutingKey, regex);
+                    var result = Regex.IsMatch(messageContext.RoutingKey, regex);
                     return result;
 
                 default:
                     throw new ArgumentException("Unsupported exchange type " + ra.ExchangeType + ".");
             }
+        }
+
+        /// <summary>
+        /// Gets a message context object set with the values from a
+        /// RabbitMQ basic deliver event notification data object.
+        /// </summary>
+        public IMessageContext ToMessageContext(BasicDeliverEventArgs e)
+        {
+            var properties = ToProperties(e.BasicProperties);
+            var messageContext = new MessageContext(e.Body, e.RoutingKey, properties);
+            return messageContext;
         }
 
         /// <summary>
@@ -139,17 +151,6 @@
                     .ForEach(h => properties[h.Key] = h.Value);
             }
 
-            return properties;
-        }
-
-        /// <summary>
-        /// Gets a message properties object set with the values from a
-        /// RabbitMQ basic deliver event notification data object.
-        /// </summary>
-        public MessageProperties ToProperties(BasicDeliverEventArgs e)
-        {
-            var properties = ToProperties(e.BasicProperties);
-            properties.RoutingKey = e.RoutingKey;
             return properties;
         }
 
@@ -197,9 +198,9 @@
         public ReturnedEventArgs ToReturnedEventArgs(string exchangeType, BasicReturnEventArgs e)
         {
             var address = new RabbitMqAddress(exchangeType, e.Exchange, e.RoutingKey);
-            var body = new ArraySegment<byte>(e.Body);
             var properties = ToProperties(e.BasicProperties);
-            var result = new ReturnedEventArgs(address, body, properties, e.ReplyCode, e.ReplyText);
+            var messageContext = new MessageContext(e.Body, e.RoutingKey, properties);
+            var result = new ReturnedEventArgs(messageContext, address, e.ReplyCode, e.ReplyText);
             return result;
         }
 

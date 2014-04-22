@@ -38,11 +38,6 @@ namespace Medseek.Util.Messaging
         MqAddress ReplyTo { get; set; }
 
         /// <summary>
-        /// Gets or sets the routing key associated with the message.
-        /// </summary>
-        string RoutingKey { get; set; }
-
-        /// <summary>
         /// Gets the value of a property by its identifier, name, or key.
         /// </summary>
         /// <param name="id">

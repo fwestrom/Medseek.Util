@@ -82,10 +82,10 @@
             var bodyType = typeof(object);
             var bodyValue = new object();
             var bodyData = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
-            var properties = new MessageProperties();
+            var properties = new MessageProperties { ContentType = "ContentType-" + Guid.NewGuid() };
             serializer.Setup(x =>
-                x.Serialize(It.Is<IMessageContext>(a => ReferenceEquals(a.Properties, properties)), bodyType, bodyValue, It.IsAny<Stream>()))
-                .Callback((IMessageContext a, Type b, object c, Stream d) => d.Write(bodyData, 0, bodyData.Length));
+                x.Serialize(properties.ContentType, bodyType, bodyValue, It.IsAny<Stream>()))
+                .Callback((string a, Type b, object c, Stream d) => d.Write(bodyData, 0, bodyData.Length));
 
             publisher.Setup(x =>
                 x.Publish(bodyData, properties))
@@ -123,11 +123,14 @@
             var request = new object();
             var requestData = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
             var messageContext = new Mock<IMessageContext>();
-            var messageContextProperties = new MessageProperties { ReplyTo = replyTo, RoutingKey = "routing-key" };
+            var messageContextProperties = new MessageProperties { ContentType = "ContentType-" + Guid.NewGuid(), ReplyTo = replyTo };
             var messageContextDisposable = new Mock<IDisposable>();
             messageContext.Setup(x => 
                 x.Properties)
                 .Returns(messageContextProperties);
+            messageContext.Setup(x =>
+                x.RoutingKey)
+                .Returns("routing-key");
             messageContextAccess.Setup(x => 
                 x.Enter(null))
                 .Callback(() => messageContextAccess.Setup(x => x.Current).Returns(messageContext.Object))
@@ -136,15 +139,12 @@
                 x.Dispose())
                 .Callback(() => messageContextAccess.Setup(x => x.Current).Returns((IMessageContext)null));
             serializer.Setup(x => 
-                x.Serialize(messageContext.Object, typeof(object), request, It.IsAny<Stream>()))
-                .Callback((IMessageContext a, Type b, object c, Stream d) => d.Write(requestData, 0, requestData.Length));
+                x.Serialize(messageContextProperties.ContentType, typeof(object), request, It.IsAny<Stream>()))
+                .Callback((string a, Type b, object c, Stream d) => d.Write(requestData, 0, requestData.Length));
             publisher.Setup(x => 
                 x.Publish(requestData, messageContextProperties))
-                .Callback((byte[] a, MessageProperties b) =>
-                {
-                    Assert.That(b.ReplyTo, Is.SameAs(replyTo));
-                    Assert.That(b.RoutingKey, Is.Null);
-                })
+                .Callback((byte[] a, MessageProperties b) => 
+                    Assert.That(b.ReplyTo, Is.SameAs(replyTo)))
                 .Verifiable();
 
             Obj.Send(binding, request);

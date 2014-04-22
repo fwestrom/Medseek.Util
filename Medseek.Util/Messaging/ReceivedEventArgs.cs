@@ -1,72 +1,36 @@
 namespace Medseek.Util.Messaging
 {
     using System;
-    using System.IO;
+    using Medseek.Util.MicroServices;
 
     /// <summary>
     /// Event data describing a message received notification.
     /// </summary>
     public class ReceivedEventArgs : EventArgs
     {
-        private readonly ArraySegment<byte> body;
-        private readonly MessageProperties properties;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ReceivedEventArgs" /> 
         /// class.
         /// </summary>
-        public ReceivedEventArgs(ArraySegment<byte> body, MessageProperties properties)
+        public ReceivedEventArgs(IMessageContext messageContext)
         {
-            if (body == null)
-                throw new ArgumentNullException("body");
-            if (properties == null)
-                throw new ArgumentNullException("properties");
+            if (messageContext == null)
+                throw new ArgumentNullException("messageContext");
 
-            this.body = body;
-            this.properties = properties;
+            MessageContext = messageContext;
+        }
+
+        internal ReceivedEventArgs()
+        {
         }
 
         /// <summary>
-        /// Gets a stream that can be used to read the message body.
+        /// Gets the message context associated with the notification.
         /// </summary>
-        [Obsolete("Use the GetBodyStream method instead.")]
-        public Stream Body
+        public IMessageContext MessageContext
         {
-            get
-            {
-                return GetBodyStream();
-            }
-        }
-
-        /// <summary>
-        /// Gets the additional properties associated with the message.
-        /// </summary>
-        public MessageProperties Properties
-        {
-            get
-            {
-                return properties;
-            }
-        }
-
-        /// <summary>
-        /// Gets an array containing the message body data.
-        /// </summary>
-        public byte[] GetBodyArray()
-        {
-            if (body.Offset == 0 && body.Count == body.Array.Length)
-                return body.Array;
-
-            using (var ms = new MemoryStream(body.Array, body.Offset, body.Count, false))
-                return ms.ToArray();
-        }
-
-        /// <summary>
-        /// Gets a stream that can be used to read the message body data.
-        /// </summary>
-        public Stream GetBodyStream()
-        {
-            return new MemoryStream(body.Array, body.Offset, body.Count, false);
+            get;
+            internal set;
         }
     }
 }

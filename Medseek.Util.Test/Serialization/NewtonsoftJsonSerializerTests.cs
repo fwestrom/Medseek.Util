@@ -27,7 +27,6 @@
                 ContentType = "application/xml",
                 CorrelationId = "11",
                 ReplyTo = new MqAddress("topic://medseek-api/test.of.json.serializer.with.messageproperties.replyto"),
-                RoutingKey = "test.of.json.serializer.with.messageproperties.routingkey",
                 AdditionalProperties = new Dictionary<string, object>
                 {
                     { "key1", "value1" },
@@ -52,7 +51,6 @@
             Assert.That(result.ContentType, Is.EqualTo(original.ContentType));
             Assert.That(result.CorrelationId, Is.EqualTo(original.CorrelationId));
             Assert.That(result.ReplyTo.Value, Is.EqualTo(original.ReplyTo.Value));
-            Assert.That(result.RoutingKey, Is.EqualTo(original.RoutingKey));
             foreach (var item in original.AdditionalProperties)
                 Assert.That(result.AdditionalProperties[item.Key], Is.EqualTo(item.Value));
         }

@@ -16,25 +16,25 @@
         private readonly List<RabbitMqAddress> addresses = new List<RabbitMqAddress>();
         private readonly EventingBasicConsumer consumer = new EventingBasicConsumer();
         private readonly List<string> declaredExchanges = new List<string>(); 
-        private readonly IRabbitMqPlugin helper;
+        private readonly IRabbitMqPlugin plugin;
         private readonly IModel model;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RabbitMqConsumer" 
         /// /> class.
         /// </summary>
-        public RabbitMqConsumer(RabbitMqAddress[] addresses, bool autoDelete, IRabbitMqPlugin helper, IModel model)
+        public RabbitMqConsumer(RabbitMqAddress[] addresses, bool autoDelete, IModel model, IRabbitMqPlugin plugin)
             : base(addresses.Cast<MqAddress>().ToArray())
         {
             if (addresses.Select(x => x.QueueName).Distinct().Count() > 1)
                 throw new ArgumentException("All addresses must share the same source key.", "addresses");
-            if (helper == null)
-                throw new ArgumentNullException("helper");
             if (model == null)
                 throw new ArgumentNullException("model");
+            if (plugin == null)
+                throw new ArgumentNullException("plugin");
 
-            this.helper = helper;
             this.model = model;
+            this.plugin = plugin;
             consumer.Received += OnConsumerReceived;
 
             var queue = addresses.Select(x => x.QueueName).Distinct().Single();
@@ -55,7 +55,7 @@
         /// </summary>
         public void Bind(MqAddress address, bool autoDelete)
         {
-            var ra = helper.ToRabbitMqAddress(address);
+            var ra = plugin.ToRabbitMqAddress(address);
             if (addresses.Count > 0 && ra.QueueName != addresses.Select(x => x.QueueName).Single())
                 throw new ArgumentException("All addresses must share the same source queue.", "address");
 
@@ -93,8 +93,8 @@
 
         private void OnConsumerReceived(IBasicConsumer sender, BasicDeliverEventArgs e)
         {
-            var properties = helper.ToProperties(e);
-            RaiseReceived(e.Body, 0, e.Body.Length, properties);
+            var messageContext = plugin.ToMessageContext(e);
+            RaiseReceived(messageContext);
         }
     }
 }

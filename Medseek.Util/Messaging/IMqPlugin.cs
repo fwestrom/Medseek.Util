@@ -1,6 +1,7 @@
 namespace Medseek.Util.Messaging
 {
     using Medseek.Util.Ioc;
+    using Medseek.Util.MicroServices;
 
     /// <summary>
     /// Interface for types that provide the pluggable functionality for 
@@ -12,8 +13,8 @@ namespace Medseek.Util.Messaging
         /// Determines whether the properties of a message imply that the 
         /// message is a match for the patterns bound to a consumer address.
         /// </summary>
-        /// <param name="properties">
-        /// The properties of the message.
+        /// <param name="messageContext">
+        /// The message context.
         /// </param>
         /// <param name="address">
         /// The consumer address.
@@ -21,7 +22,7 @@ namespace Medseek.Util.Messaging
         /// <returns>
         /// A value indicating whether the message is a match for the address.
         /// </returns>
-        bool IsMatch(MessageProperties properties, MqAddress address);
+        bool IsMatch(IMessageContext messageContext, MqAddress address);
 
         /// <summary>
         /// Converts an address into a detailed consumer oriented address 

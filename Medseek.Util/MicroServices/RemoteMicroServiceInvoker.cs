@@ -91,10 +91,10 @@ namespace Medseek.Util.MicroServices
         /// </param>
         public void Send(MqAddress address, Type bodyType, object bodyValue, MessageProperties properties)
         {
-            var messageContext = new MessageContext(properties);
             using (var ms = new MemoryStream())
             {
-                serializer.Serialize(messageContext, bodyType, bodyValue, ms);
+                var contentType = properties.ContentType;
+                serializer.Serialize(contentType, bodyType, bodyValue, ms);
                 Send(address, ms.ToArray(), properties);
             }
         }
@@ -128,13 +128,13 @@ namespace Medseek.Util.MicroServices
             {
                 var messageContext = messageContextAccess.Current;
                 var properties = messageContext.Properties;
-                properties.RoutingKey = null;
 
+                var contentType = messageContext.Properties.ContentType;
                 for (var i = 0; i < parameterTypes.Length; i++)
                 {
                     var parameterType = parameterTypes[i];
                     var parameterValue = parameters[i];
-                    serializer.Serialize(messageContext, parameterType, parameterValue, ms);
+                    serializer.Serialize(contentType, parameterType, parameterValue, ms);
                 }
 
                 var body = ms.ToArray();

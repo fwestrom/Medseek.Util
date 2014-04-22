@@ -167,42 +167,41 @@
 
         private void OnReceived(object sender, ReceivedEventArgs e)
         {
-            Log.DebugFormat("Read {0} bytes from queue; CorrelationId = {1}.", e.GetBodyArray().Length, e.Properties.CorrelationId);
+            Log.DebugFormat("Read {0} bytes from queue; CorrelationId = {1}.", e.MessageContext.BodyLength, e.MessageContext.Properties.CorrelationId);
 
             Interlocked.Increment(ref dispatcherDepth);
             thread.InvokeAsync(() =>
             {
-                Log.DebugFormat("Identifying micro-service invocation details; CorrelationId = {0}.", e.Properties.CorrelationId);
+                Log.DebugFormat("Identifying micro-service invocation details; CorrelationId = {0}.", e.MessageContext.Properties.CorrelationId);
                 if (channel.CanPause)
                     channel.IsPaused = Interlocked.Read(ref dispatcherDepth) > 10;
                 try
                 {
                     var consumer = (IMqConsumer)sender;
                     var bindingsFromMap = bindingMap[consumer];
-                    var binding = bindingsFromMap.First(x => mqPlugin.IsMatch(e.Properties, x.Address));
-                    var messageContext = new MessageContext(e.Properties);
+                    var binding = bindingsFromMap.First(x => mqPlugin.IsMatch(e.MessageContext, x.Address));
 
-                    using (messageContextAccess.Enter(messageContext))
+                    using (messageContextAccess.Enter(e.MessageContext))
                     using (var instance = microServiceLocator.Get(binding))
                     {
-                        object serializerState = null;
                         var parameterTypes = binding.Method.GetParameters().Select(x => x.ParameterType).ToArray();
-                        var parameterValues = microServiceSerializer.Deserialize(messageContext, parameterTypes, e.GetBodyStream(), ref serializerState);
+                        object[] parameterValues;
+                        using (var bodyStream = e.MessageContext.GetBodyStream())
+                            parameterValues = microServiceSerializer.Deserialize(e.MessageContext.Properties.ContentType, parameterTypes, bodyStream);
 
                         Log.DebugFormat("Invoking micro-service; Address = {0}, IsOneWay = {1}, Method = {2}, Parameters = {3}.", binding.Address, binding.IsOneWay, binding.Method, string.Join(", ", parameterValues));
                         var returnValue = instance.Invoke(parameterValues);
-                        if (e.Properties.ReplyTo != null && !binding.IsOneWay)
+                        if (e.MessageContext.Properties.ReplyTo != null && !binding.IsOneWay)
                         {
                             byte[] body;
                             using (var ms = new MemoryStream())
                             {
-                                var returnType = binding.Method.ReturnType;
-                                microServiceSerializer.Serialize(messageContext, returnType, returnValue, ms, ref serializerState);
+                                microServiceSerializer.Serialize(e.MessageContext.Properties.ContentType, binding.Method.ReturnType, returnValue, ms);
                                 body = ms.ToArray();
                             }
 
-                            var publishAddress = channel.Plugin.ToPublisherAddress(e.Properties.ReplyTo);
-                            Log.DebugFormat("Sending reply message; ReplyTo = {0}, ContentType = {1}, CorrelationId = {2}, Body.Length = {3}, Value = {4}.", e.Properties.ReplyTo, e.Properties.ContentType, e.Properties.CorrelationId, body.Length, returnValue);
+                            var publishAddress = channel.Plugin.ToPublisherAddress(e.MessageContext.Properties.ReplyTo);
+                            Log.DebugFormat("Sending reply message; ReplyTo = {0}, ContentType = {1}, CorrelationId = {2}, Body.Length = {3}, Value = {4}.", e.MessageContext.Properties.ReplyTo, e.MessageContext.Properties.ContentType, e.MessageContext.Properties.CorrelationId, body.Length, returnValue);
                             using (messageContextAccess.Enter())
                             using (var publisher = channel.CreatePublisher(publishAddress))
                             {

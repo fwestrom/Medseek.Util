@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Threading;
     using Medseek.Util.Ioc;
     using Medseek.Util.Messaging;
@@ -12,9 +13,20 @@
     /// context information.
     /// </summary>
     [Register(typeof(IMessageContextAccess), typeof(IMessageContext), Lifestyle = Lifestyle.Singleton)]
-    public class ThreadLocalMessageContext : IMessageContextAccess, IMessageContext
+    public class ThreadLocalMessageContext : IMessageContextAccess, IMessageContext, ICloneable
     {
         private readonly ThreadLocal<Stack<IMessageContext>> contextStack = new ThreadLocal<Stack<IMessageContext>>(() => new Stack<IMessageContext>());
+
+        /// <summary>
+        /// Gets the size in bytes of the message body.
+        /// </summary>
+        public int BodyLength
+        {
+            get
+            {
+                return GetCurrent().BodyLength;
+            }
+        }
 
         /// <summary>
         /// Gets the current message context.
@@ -36,6 +48,75 @@
             {
                 return GetCurrent().Properties;
             }
+        }
+
+        /// <summary>
+        /// Gets the routing key associated with the message context.
+        /// </summary>
+        public string RoutingKey
+        {
+            get
+            {
+                return GetCurrent().RoutingKey;
+            }
+        }
+
+        /// <summary>
+        /// Returns a new cloned copy of the message context (see remarks 
+        /// about the body data).
+        /// </summary>
+        /// <remarks>
+        /// The data structures that represent the body data are not 
+        /// necessarily cloned by this operation.
+        /// </remarks>
+        public IMessageContext Clone(bool includeAllProperties)
+        {
+            return GetCurrent().Clone(includeAllProperties);
+        }
+
+        /// <summary>
+        /// Pushes a new current message context onto the stack, which will 
+        /// be popped from the stack upon disposing the object returned by the 
+        /// method.
+        /// </summary>
+        /// <remarks>
+        /// The routing key and body oriented data is not necessarily cloned 
+        /// by this operation or even present on the resulting message context.
+        /// </remarks>
+        /// <param name="messageContext">
+        /// The new current message context, or null to use a copy of the 
+        /// current message context.
+        /// </param>
+        /// <returns>
+        /// An object that will cause the message context to be popped when it 
+        /// is disposed.
+        /// </returns>
+        public IDisposable Enter(IMessageContext messageContext)
+        {
+            var disposable = new Disposable();
+            var stack = contextStack.Value;
+            disposable.Disposing += (sender, e) => stack.Pop();
+
+            var value = messageContext ?? Clone(false);
+            stack.Push(value);
+
+            return disposable;
+        }
+
+        /// <summary>
+        /// Gets an array containing the message body data.
+        /// </summary>
+        public byte[] GetBodyArray()
+        {
+            return GetCurrent().GetBodyArray();
+        }
+
+        /// <summary>
+        /// Gets a stream that can be used to read the message body data.
+        /// </summary>
+        public Stream GetBodyStream()
+        {
+            return GetCurrent().GetBodyStream();
         }
 
         /// <summary>
@@ -61,39 +142,11 @@
         }
 
         /// <summary>
-        /// Pushes a new current message context onto the stack, which will 
-        /// be popped from the stack upon disposing the object returned by the 
-        /// method.
+        /// Creates a new object that is a copy of the current instance.
         /// </summary>
-        /// <param name="messageContext">
-        /// The new current message context, or null to use a copy of the 
-        /// current message context.
-        /// </param>
-        /// <returns>
-        /// An object that will cause the message context to be popped when it 
-        /// is disposed.
-        /// </returns>
-        public IDisposable Enter(IMessageContext messageContext)
+        object ICloneable.Clone()
         {
-            var disposable = new Disposable();
-            var stack = contextStack.Value;
-            disposable.Disposing += (sender, e) => stack.Pop();
-
-            var value = messageContext ?? (IMessageContext)Clone();
-            stack.Push(value);
-
-            return disposable;
-        }
-
-        /// <summary>
-        /// Creates an independent copy of the message context.
-        /// </summary>
-        /// <returns>
-        /// The new message context that was created from the original.
-        /// </returns>
-        public object Clone()
-        {
-            return GetCurrent().Clone();
+            return Clone(false);
         }
 
         // ReSharper disable once UnusedParameter.Local

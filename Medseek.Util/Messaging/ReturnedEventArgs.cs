@@ -1,6 +1,6 @@
 namespace Medseek.Util.Messaging
 {
-    using System;
+    using Medseek.Util.MicroServices;
 
     /// <summary>
     /// Event data describing a message that was returned as undeliverable.
@@ -11,12 +11,16 @@ namespace Medseek.Util.Messaging
         /// Initializes a new instance of the <see cref="ReturnedEventArgs" /> 
         /// class.
         /// </summary>
-        public ReturnedEventArgs(MqAddress address, ArraySegment<byte> body, MessageProperties properties, ushort replyCode, string replyText)
-            : base(body, properties)
+        public ReturnedEventArgs(IMessageContext messageContext, MqAddress address, ushort replyCode, string replyText)
+            : base(messageContext)
         {
             Address = address;
             ReplyCode = replyCode;
             ReplyText = replyText;
+        }
+
+        internal ReturnedEventArgs()
+        {
         }
 
         /// <summary>
@@ -25,7 +29,7 @@ namespace Medseek.Util.Messaging
         public MqAddress Address
         {
             get;
-            private set;
+            internal set;
         }
 
         /// <summary>
@@ -34,7 +38,7 @@ namespace Medseek.Util.Messaging
         public ushort ReplyCode
         {
             get;
-            private set;
+            internal set;
         }
 
         /// <summary>
@@ -43,7 +47,7 @@ namespace Medseek.Util.Messaging
         public string ReplyText
         {
             get;
-            private set;
+            internal set;
         }
     }
 }

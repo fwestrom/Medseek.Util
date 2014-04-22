@@ -9,10 +9,7 @@ namespace Medseek.Util.Messaging
     /// Describes additional properties associated with a message.
     /// </summary>
     [DataContract(Namespace = "")]
-    public class MessageProperties
-        : ICloneable
-        // ReSharper disable once CSharpWarnings::CS0618
-        , IMessageProperties
+    public class MessageProperties : ICloneable
     {
         private Dictionary<string, object> additionalProperties;
 
@@ -67,16 +64,6 @@ namespace Medseek.Util.Messaging
                     ? new MqAddress(value) 
                     : null;
             }
-        }
-
-        /// <summary>
-        /// Gets or sets the routing key associated with the message.
-        /// </summary>
-        [DataMember(Name = "routing-key", Order = 0, IsRequired = false, EmitDefaultValue = false)]
-        public string RoutingKey
-        {
-            get;
-            set;
         }
 
         /// <summary>
@@ -141,7 +128,6 @@ namespace Medseek.Util.Messaging
                 ContentType = ContentType,
                 CorrelationId = CorrelationId,
                 ReplyTo = ReplyTo,
-                RoutingKey = RoutingKey,
             };
 
             result.additionalProperties = additionalProperties != null

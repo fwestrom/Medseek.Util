@@ -92,6 +92,7 @@
     <Compile Include="MicroServices\MessageContext.cs" />
     <Compile Include="MicroServices\MicroServiceBinding.cs" />
     <Compile Include="MicroServices\MicroServiceBindingDefaultsAttribute.cs" />
+    <Compile Include="MicroServices\MicroServiceSerializerExtensions.cs" />
     <Compile Include="MicroServices\RegisterMicroServiceProxyAttribute.cs" />
     <Compile Include="MicroServices\RemoteMicroServiceInvoker.cs" />
     <Compile Include="MicroServices\MicroServiceInvoker.cs" />

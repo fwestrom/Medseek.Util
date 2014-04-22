@@ -94,8 +94,10 @@
                 x.Send(It.IsAny<MqAddress>(), It.IsAny<Type>(), It.IsAny<object>(), It.IsAny<MessageProperties>()))
                 .Callback((MqAddress a, Type b, object c, MessageProperties d) =>
                 {
+                    var mc = new Mock<IMessageContext>();
                     var properties = new MessageProperties { CorrelationId = d.CorrelationId };
-                    channel.Raise(x => x.Returned += null, new ReturnedEventArgs(a, new ArraySegment<byte>(), properties, 999, "reply-text"));
+                    mc.Setup(x => x.Properties).Returns(properties);
+                    channel.Raise(x => x.Returned += null, new ReturnedEventArgs(mc.Object, a, 999, "reply-text"));
                 });
 
             var result = Obj.Resolve(originalAddress, Timeout.InfiniteTimeSpan);

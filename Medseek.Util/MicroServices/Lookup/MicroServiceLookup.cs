@@ -154,8 +154,8 @@
         {
             lock (sync)
             {
-                Log.WarnFormat("Undeliverable lookup query returned; Address = {0}, CorrelationId = {1}, ReplyCode = {2}, ReplyText = {3}.", e.Address, e.Properties.CorrelationId, e.ReplyCode, e.ReplyText);
-                foreach (var lookupOperation in lookupOperations.Where(x => x.CorrelationId == e.Properties.CorrelationId))
+                Log.WarnFormat("Undeliverable lookup query returned; Address = {0}, CorrelationId = {1}, ReplyCode = {2}, ReplyText = {3}.", e.Address, e.MessageContext.Properties.CorrelationId, e.ReplyCode, e.ReplyText);
+                foreach (var lookupOperation in lookupOperations.Where(x => x.CorrelationId == e.MessageContext.Properties.CorrelationId))
                     lookupOperation.Complete(new LookupEntry(null, lookupOperation.Id, LookupResultType.Returned));
             }
         }

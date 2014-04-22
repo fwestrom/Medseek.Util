@@ -2,6 +2,9 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using Medseek.Util.MicroServices;
     using Moq;
     using NUnit.Framework;
     using RabbitMQ.Client;
@@ -15,6 +18,22 @@
     public sealed class RabbitMqPluginTests : TestFixture<RabbitMqPlugin>
     {
         private static readonly Random Rand = new Random();
+        private Mock<IMessageContext> messageContext;
+        private MessageProperties messageContextProperties;
+
+        /// <summary>
+        /// Sets up before each test is executed.
+        /// </summary>
+        [SetUp]
+        public void Setup()
+        {
+            messageContext = new Mock<IMessageContext>();
+            messageContextProperties = new MessageProperties();
+
+            messageContext.Setup(x => 
+                x.Properties)
+                .Returns(messageContextProperties);
+        }
 
         /// <summary>
         /// Verifies that routing key matching works correctly.
@@ -32,8 +51,12 @@
         public void IsMatchReturnsFalseCorrectly(string addressText, string routingKey)
         {
             var address = new MqAddress(addressText);
-            var properties = new MessageProperties { RoutingKey = routingKey };
-            var result = Obj.IsMatch(properties, address);
+            messageContext.Setup(x => 
+                x.RoutingKey)
+                .Returns(routingKey);
+
+            var result = Obj.IsMatch(messageContext.Object, address);
+
             Assert.That(result, Is.False);
         }
 
@@ -49,9 +72,50 @@
         public void IsMatchReturnsTrueCorrectly(string addressText, string routingKey)
         {
             var address = new MqAddress(addressText);
-            var properties = new MessageProperties { RoutingKey = routingKey };
-            var result = Obj.IsMatch(properties, address);
+            messageContext.Setup(x =>
+                x.RoutingKey)
+                .Returns(routingKey);
+
+            var result = Obj.IsMatch(messageContext.Object, address);
+
             Assert.That(result, Is.True);
+        }
+
+        /// <summary>
+        /// Verifies that the message context is set up correctly.
+        /// </summary>
+        [Test]
+        public void ToMessageContextSetsBody()
+        {
+            var body = Enumerable.Range(1, 512).Select(n => (byte)Rand.Next()).ToArray();
+            var e = new BasicDeliverEventArgs
+            {
+                BasicProperties = new Mock<IBasicProperties>().Object,
+                Body = body,
+            };
+
+            var result = Obj.ToMessageContext(e);
+
+            Assert.That(result.BodyLength, Is.EqualTo(body.Length));
+            Assert.That(result.GetBodyArray(), Is.EqualTo(body));
+            Assert.That(new BinaryReader(result.GetBodyStream()).ReadBytes(result.BodyLength), Is.EqualTo(body));
+        }
+
+        /// <summary>
+        /// Verifies that the message context is set up correctly.
+        /// </summary>
+        [Test]
+        public void ToMessageContextSetsRoutingKey()
+        {
+            var e = new BasicDeliverEventArgs
+            {
+                BasicProperties = new Mock<IBasicProperties>().Object,
+                RoutingKey = "RoutingKey-" + Guid.NewGuid(),
+            };
+
+            var result = Obj.ToMessageContext(e);
+
+            Assert.That(result.RoutingKey, Is.EqualTo(e.RoutingKey));
         }
 
         /// <summary>
@@ -343,7 +407,7 @@
                 Body = body,
             });
 
-            Assert.That(result.GetBodyArray(), Is.SameAs(body));
+            Assert.That(result.MessageContext.GetBodyArray(), Is.SameAs(body));
         }
 
         /// <summary>
@@ -362,10 +426,10 @@
                 Body = new byte[0],
             });
 
-            Assert.That(result.Properties.ContentType, Is.EqualTo(properties.ContentType));
-            Assert.That(result.Properties.CorrelationId, Is.EqualTo(properties.CorrelationId));
-            Assert.That(result.Properties.ReplyToString, Is.EqualTo(properties.ReplyToString));
-            Assert.That(result.Properties.AdditionalProperties, Is.EquivalentTo(properties.AdditionalProperties));
+            Assert.That(result.MessageContext.Properties.ContentType, Is.EqualTo(properties.ContentType));
+            Assert.That(result.MessageContext.Properties.CorrelationId, Is.EqualTo(properties.CorrelationId));
+            Assert.That(result.MessageContext.Properties.ReplyToString, Is.EqualTo(properties.ReplyToString));
+            Assert.That(result.MessageContext.Properties.AdditionalProperties, Is.EquivalentTo(properties.AdditionalProperties));
         }
 
         /// <summary>
