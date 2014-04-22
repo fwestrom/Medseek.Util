@@ -1,6 +1,7 @@
 ﻿namespace Medseek.Util.MicroServices.Host
 {
     using System;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
@@ -51,7 +52,8 @@
             };
 
             var assembliesToInstall = args
-                .Do(x => Console.WriteLine("Arg = " + x))
+                .Do(x => Console.WriteLine("Args = " + x))
+                .Where(x => !x.StartsWith("/") && !x.StartsWith("-") && File.Exists(x))
                 .Select(Assembly.LoadFrom)
                 .Do(x => Console.WriteLine("Assembly = " + x.GetName().Name))
                 .ToArray();

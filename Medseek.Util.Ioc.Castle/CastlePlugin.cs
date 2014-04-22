@@ -7,6 +7,8 @@
     using global::Castle.Facilities.Startable;
     using global::Castle.Facilities.TypedFactory;
     using global::Castle.MicroKernel.Registration;
+    using Medseek.Util.Ioc.ComponentRegistration;
+    using CastleDependency = global::Castle.MicroKernel.Registration.Dependency;
 
     /// <summary>
     /// Provides a pluggable integration with the Castle project, including 
@@ -138,7 +140,7 @@
                     .SelectMany(c => c.GetParameters()
                         .SelectMany(p => p.GetCustomAttributes(typeof(InjectAttribute), false)
                             .Cast<InjectAttribute>()
-                            .Select(a => Dependency.OnComponent(p.Name, a.ComponentName ?? p.Name))))
+                            .Select(a => global::Castle.MicroKernel.Registration.Dependency.OnComponent(p.Name, a.ComponentName ?? p.Name))))
                     .Aggregate(result, (r, d) => r.DependsOn(d));
                 result = registration.Implementation
                     .GetMethods()
@@ -168,6 +170,16 @@
             // StartMethod
             if (registration.StartMethod != null)
                 result = result.StartUsingMethod(registration.StartMethod.Name);
+
+            // Dependencies
+            foreach (var dependency in registration.Dependencies ?? Enumerable.Empty<Ioc.ComponentRegistration.Dependency>())
+            {
+                var valueDependency = dependency as ValueDependency;
+                if (valueDependency != null)
+                    result = result.DependsOn(CastleDependency.OnValue(valueDependency.Key, valueDependency.Value));
+                else
+                    throw new NotSupportedException("Unsupported dependency " + dependency + " could not be translated for use with Castle.");
+            }
 
             return result;
         }

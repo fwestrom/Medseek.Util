@@ -7,6 +7,7 @@
     using System.Text.RegularExpressions;
     using Medseek.Util.Interactive;
     using Medseek.Util.Ioc;
+    using Medseek.Util.Ioc.ComponentRegistration;
     using Medseek.Util.MicroServices;
     using RabbitMQ.Client;
     using RabbitMQ.Client.Events;
@@ -25,19 +26,6 @@
         /// The name of a default RabbitMQ connection factory component.
         /// </summary>
         public const string DefaultConnectionFactoryName = "Medseek.Util.Messaging.RabbitMq.RabbitMqConnectionFactory.Default";
-
-        private static readonly ConnectionFactory ConnectionFactory = new ConnectionFactory();
-
-        /// <summary>
-        /// Gets the default connection factory used to create connections.
-        /// </summary>
-        public static ConnectionFactory DefaultConnectionFactory
-        {
-            get
-            {
-                return ConnectionFactory;
-            }
-        }
 
         /// <summary>
         /// Gets a basic properties object set with the values from a message
@@ -218,11 +206,12 @@
             });
             installables.Add(new Registration
             {
-                Services = new[] { typeof(ConnectionFactory) },
+                Services = new[] { typeof(IRabbitMqConnectionFactory) },
                 Name = DefaultConnectionFactoryName,
-                Instance = DefaultConnectionFactory,
+                Implementation = typeof(RabbitMqConnectionFactory),
                 Lifestyle = Lifestyle.Singleton,
                 IsDefault = true,
+                Dependencies = new[] { Dependency.OnValue("configureFromEnvironment", true) },
             });
             installables.Add(new Registration
             {

@@ -45,8 +45,8 @@
     <Compile Include="..\Medseek.Util\Properties\AssemblyInfoShared.cs">
       <Link>Properties\AssemblyInfoShared.cs</Link>
     </Compile>
-    <Compile Include="ConnectionFactoryWrapper.cs" />
-    <Compile Include="IConnectionFactoryWrapper.cs" />
+    <Compile Include="RabbitMqConnectionFactory.cs" />
+    <Compile Include="IRabbitMqConnectionFactory.cs" />
     <Compile Include="IRabbitMqFactory.cs" />
     <Compile Include="IRabbitMqPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
