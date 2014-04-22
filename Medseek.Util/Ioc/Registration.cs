@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Reflection;
+    using Medseek.Util.Ioc.ComponentRegistration;
 
     /// <summary>
     /// Describes a component registration.
@@ -27,6 +28,16 @@
         /// </summary>
         /// <seealso cref="AsFactory" />
         public string ComponentSelectorName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the collection of dependency specification objects 
+        /// associated with the component registration.
+        /// </summary>
+        public IEnumerable<Dependency> Dependencies
         {
             get;
             set;

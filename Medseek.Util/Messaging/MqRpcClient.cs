@@ -63,7 +63,7 @@ namespace Medseek.Util.Messaging
                 if (response == null)
                     throw new OperationCanceledException();
 
-                return response.Body;
+                return response.MessageContext.GetBodyStream();
             }
         }
 
@@ -124,7 +124,7 @@ namespace Medseek.Util.Messaging
 
             private void OnReceived(object sender, ReceivedEventArgs e)
             {
-                if (e.Properties.CorrelationId == CorrelationId)
+                if (e.MessageContext.Properties.CorrelationId == CorrelationId)
                 {
                     var complete = Interlocked.Exchange(ref completeAction, null);
                     if (complete != null)

@@ -1,51 +1,36 @@
 namespace Medseek.Util.Messaging
 {
     using System;
-    using System.IO;
+    using Medseek.Util.MicroServices;
 
     /// <summary>
     /// Event data describing a message received notification.
     /// </summary>
     public class ReceivedEventArgs : EventArgs
     {
-        private readonly Stream body;
-        private readonly MessageProperties properties;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ReceivedEventArgs" /> 
         /// class.
         /// </summary>
-        public ReceivedEventArgs(Stream body, MessageProperties properties)
+        public ReceivedEventArgs(IMessageContext messageContext)
         {
-            if (body == null)
-                throw new ArgumentNullException("body");
-            if (properties == null)
-                throw new ArgumentNullException("properties");
+            if (messageContext == null)
+                throw new ArgumentNullException("messageContext");
 
-            this.body = body;
-            this.properties = properties;
+            MessageContext = messageContext;
+        }
+
+        internal ReceivedEventArgs()
+        {
         }
 
         /// <summary>
-        /// Gets a stream that can be used to read the message body.
+        /// Gets the message context associated with the notification.
         /// </summary>
-        public Stream Body
+        public IMessageContext MessageContext
         {
-            get
-            {
-                return body;
-            }
-        }
-
-        /// <summary>
-        /// Gets the additional properties associated with the message.
-        /// </summary>
-        public MessageProperties Properties
-        {
-            get
-            {
-                return properties;
-            }
+            get;
+            internal set;
         }
     }
 }

@@ -7,7 +7,7 @@
     /// <summary>
     /// Describes a micro-service method binding to a topic exchange.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public class MicroServiceBindingAttribute : Attribute
     {
         /// <summary>
@@ -23,30 +23,30 @@
         /// <param name="queue">
         /// The name of the queue.
         /// </param>
-        public MicroServiceBindingAttribute(string exchange, string bindingKey, string queue)
+        public MicroServiceBindingAttribute(string exchange, string bindingKey, string queue = null)
+            : this(string.Format("topic://{0}/{1}", exchange, bindingKey) + (!string.IsNullOrWhiteSpace(queue) ? "/" + queue : string.Empty))
         {
-            BindingKey = bindingKey;
-            Exchange = exchange;
-            Queue = queue;
         }
 
         /// <summary>
-        /// Gets or sets the binding key to use when binding the queue to the
-        /// exchange.
+        /// Initializes a new instance of the <see 
+        /// cref="MicroServiceBindingAttribute" /> class.
         /// </summary>
-        public string BindingKey
+        /// <param name="addressValue">
+        /// The string value to use for the binding address.
+        /// </param>
+        public MicroServiceBindingAttribute(string addressValue)
         {
-            get;
-            set;
+            Address = new MqAddress(addressValue);
         }
 
         /// <summary>
-        /// Gets or sets the name of the exchange.
+        /// Gets the messaging system address associated with the binding.
         /// </summary>
-        public string Exchange
+        public MqAddress Address
         {
             get;
-            set;
+            private set;
         }
 
         /// <summary>
@@ -55,15 +55,6 @@
         public bool IsOneWay
         {
             get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the name of the queue.
-        /// </summary>
-        public string Queue
-        {
-            get; 
             set;
         }
 
@@ -79,7 +70,7 @@
         {
             return new T
             {
-                Address = new MqAddress(string.Format("{0}://{1}/{2}/{3}", "topic", Exchange, BindingKey, Queue)),
+                Address = Address,
                 Method = method, 
                 Service = service,
                 IsOneWay = IsOneWay,

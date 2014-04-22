@@ -11,13 +11,12 @@
         /// Initializes a new instance of the <see cref="RabbitMqAddress" /> 
         /// class.
         /// </summary>
-        public RabbitMqAddress(string exchangeType, string exchangeName, string routingKey, string queueName)
+        public RabbitMqAddress(string exchangeType, string exchangeName, string routingKey, string queueName = null)
             : base(ToString(exchangeType, exchangeName, routingKey, queueName), queueName)
         {
             ExchangeType = exchangeType;
             ExchangeName = exchangeName;
             RoutingKey = routingKey;
-            QueueName = queueName;
         }
 
         public string ExchangeType
@@ -40,8 +39,10 @@
 
         public string QueueName
         {
-            get;
-            set;
+            get
+            {
+                return (string)SourceKey;
+            }
         }
 
         /// <summary>
@@ -67,7 +68,7 @@
         private static string ToString(string exchangeType, string exchangeName, string routingKey, string queueName)
         {
             var result = string.Format("{0}://{1}/{2}", exchangeType, exchangeName, routingKey);
-            if (queueName != null)
+            if (!string.IsNullOrWhiteSpace(queueName))
                 result += "/" + queueName;
             return result;
         }

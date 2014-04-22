@@ -35,6 +35,10 @@
         /// be popped from the stack upon disposing the object returned by the 
         /// method.
         /// </summary>
+        /// <remarks>
+        /// The routing key and body oriented data is not necessarily cloned 
+        /// by this operation or even present on the resulting message context.
+        /// </remarks>
         /// <param name="messageContext">
         /// The new current message context, or null to use a copy of the 
         /// current message context.

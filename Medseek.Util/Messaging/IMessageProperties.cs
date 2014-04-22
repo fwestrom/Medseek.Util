@@ -6,6 +6,7 @@ namespace Medseek.Util.Messaging
     /// <summary>
     /// Interface for types that provide access to the message properties.
     /// </summary>
+    [Obsolete("Use MessageProperties class directly instead; this interface will be removed in the near future.")]
     public interface IMessageProperties : ICloneable
     {
         /// <summary>
@@ -35,11 +36,6 @@ namespace Medseek.Util.Messaging
         /// published.
         /// </summary>
         MqAddress ReplyTo { get; set; }
-
-        /// <summary>
-        /// Gets or sets the routing key associated with the message.
-        /// </summary>
-        string RoutingKey { get; set; }
 
         /// <summary>
         /// Gets the value of a property by its identifier, name, or key.

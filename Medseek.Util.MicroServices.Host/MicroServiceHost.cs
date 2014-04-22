@@ -30,7 +30,8 @@
                 throw new ArgumentNullException("ioc");
             if (logging == null)
                 throw new ArgumentNullException("logging");
-            if (mqPlugin == null) throw new ArgumentNullException("mqPlugin");
+            if (mqPlugin == null)
+                throw new ArgumentNullException("mqPlugin");
 
             log = logging.GetLogManager().GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
             log.InfoFormat("Creating micro-service host; Plugins = {0}, {1}, {2}, AssembliesToInstall = {3}.", ioc, logging, mqPlugin, string.Join(", ", assembliesToInstall.Select(x => x.GetName().Name)));
@@ -38,14 +39,14 @@
             installables.Add(ioc);
             installables.Add(logging);
             installables.Add(mqPlugin);
-            var plugins =
-                AppDomain.CurrentDomain.GetAssemblies()
-                         .SelectMany(a => a.GetTypes())
-                         .Where(t => t.IsSubclassOf(typeof(ReferencePluginAttribute)))
-                         .Select(a => a.Assembly);
             installables.AddRange(
-                assembliesToInstall.AsEnumerable().Concat(plugins)
-                    .SelectMany(Registrations.FromAssembly));
+                AppDomain.CurrentDomain.GetAssemblies()
+                    .SelectMany(x => x.GetCustomAttributes<ReferencePluginAttribute>())
+                    .Select(x => x.GetType())
+                    .Select(x => x.Assembly)
+                    .Concat(assembliesToInstall)
+                    .Distinct()
+                    .SelectMany(x => Installables.FromAssembly(x)));
         }
 
         /// <summary>

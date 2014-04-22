@@ -27,6 +27,11 @@
         }
 
         /// <summary>
+        /// Raised to indicate that a message was returned as undeliverable.
+        /// </summary>
+        public event EventHandler<ReturnedEventArgs> Returned;
+
+        /// <summary>
         /// Gets a value indicating whether the channel can be paused.
         /// </summary>
         public virtual bool CanPause
@@ -225,6 +230,17 @@
         {
             log.DebugFormat("Disposing the channel.");
             OnDisposingChannel();
+        }
+
+        /// <summary>
+        /// Raises the undeliverable message return notification.
+        /// </summary>
+        protected void RaiseReturned(ReturnedEventArgs e)
+        {
+            log.DebugFormat("Raising returned message notification; Address = {0}, ReplyCode = {1}, ReplyText = {2}.", e.Address, e.ReplyCode, e.ReplyText);
+            var returned = Returned;
+            if (returned != null)
+                returned(this, e);
         }
     }
 }

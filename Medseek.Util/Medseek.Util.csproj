@@ -43,23 +43,35 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IEnvironment.cs" />
     <Compile Include="Ioc\ComponentInfo.cs" />
     <Compile Include="Ioc\ComponentsInstallable.cs" />
+    <Compile Include="Ioc\ComponentRegistration\Dependency.cs" />
     <Compile Include="Ioc\IInstallable.cs" />
     <Compile Include="Ioc\IIocContainer.cs" />
     <Compile Include="Ioc\IIocPlugin.cs" />
+    <Compile Include="Ioc\Installables.cs" />
+    <Compile Include="Ioc\InstallAttribute.cs" />
     <Compile Include="Ioc\IocBootstrapper.cs" />
     <Compile Include="Ioc\IocExtensions.cs" />
     <Compile Include="Ioc\IStartable.cs" />
     <Compile Include="Interactive\EnumerableExt.cs" />
+    <Compile Include="Ioc\ComponentRegistration\ValueDependency.cs" />
     <Compile Include="Ioc\RegisterComponentEventArgs.cs" />
     <Compile Include="Ioc\RegisteringComponentEventArgs.cs" />
     <Compile Include="Logging\ILoggingPlugin.cs" />
     <Compile Include="Messaging\MqPublisherAddress.cs" />
+    <Compile Include="Messaging\ReturnedEventArgs.cs" />
     <Compile Include="MicroServices\IMicroServiceDispatcher.cs" />
     <Compile Include="MicroServices\IMicroServiceInvoker.cs" />
     <Compile Include="MicroServices\IMicroServiceSerializer.cs" />
     <Compile Include="MicroServices\IRemoteMicroServiceInvoker.cs" />
+    <Compile Include="MicroServices\Lookup\IMicroServiceLookup.cs" />
+    <Compile Include="MicroServices\Lookup\LookupMessage.cs" />
+    <Compile Include="MicroServices\Lookup\LookupQuery.cs" />
+    <Compile Include="MicroServices\Lookup\LookupEntry.cs" />
+    <Compile Include="MicroServices\Lookup\LookupRecord.cs" />
+    <Compile Include="MicroServices\Lookup\LookupResultType.cs" />
     <Compile Include="MicroServices\MessageHandlers\IMessageHandler.cs" />
     <Compile Include="MicroServices\MessageHandlers\IRpcMessageHandler.cs" />
     <Compile Include="MicroServices\MessageHandlers\MessageBase.cs" />
@@ -83,6 +95,7 @@
     <Compile Include="MicroServices\MessageContext.cs" />
     <Compile Include="MicroServices\MicroServiceBinding.cs" />
     <Compile Include="MicroServices\MicroServiceBindingDefaultsAttribute.cs" />
+    <Compile Include="MicroServices\MicroServiceSerializerExtensions.cs" />
     <Compile Include="MicroServices\RegisterMicroServiceProxyAttribute.cs" />
     <Compile Include="MicroServices\RemoteMicroServiceInvoker.cs" />
     <Compile Include="MicroServices\MicroServiceInvoker.cs" />
@@ -92,9 +105,11 @@
     <Compile Include="MicroServices\RegisterMicroServiceAttribute.cs" />
     <Compile Include="MicroServices\ThreadLocalMessageContext.cs" />
     <Compile Include="MicroServices\MicroServiceBindingAttribute.cs" />
+    <Compile Include="MicroServices\Lookup\MicroServiceLookup.cs" />
     <Compile Include="Serialization\ISerializer.cs" />
     <Compile Include="Serialization\ISerializerFactory.cs" />
     <Compile Include="Serialization\SystemRuntimeSerializationDataContractSerializer.cs" />
+    <Compile Include="SystemEnvironment.cs" />
     <Compile Include="Threading\DispatchedThread.cs" />
     <Compile Include="Threading\IDispatchedThread.cs" />
     <Compile Include="Threading\IThread.cs" />

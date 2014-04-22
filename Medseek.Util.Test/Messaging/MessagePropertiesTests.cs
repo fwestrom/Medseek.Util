@@ -1,15 +1,15 @@
 ﻿namespace Medseek.Util.Messaging
 {
     using System;
-    using NUnit.Framework;
-    using Medseek.Util.Testing;
     using System.Collections.Generic;
+    using Medseek.Util.Testing;
+    using NUnit.Framework;
 
     /// <summary>
     /// Tests for the <see cref="MessageProperties"/> class.
     /// </summary>
     [TestFixture]
-    public sealed class MessagePropertiesTests
+    public sealed class MessagePropertiesTests : TestFixture<MessageProperties>
     {
         /// <summary>
         /// Verifies that Clone sets the content type.
@@ -18,11 +18,11 @@
         public void MessagePropertiesCloneSetsContentType()
         {
             var contentType = "contentType-" + Guid.NewGuid();
-            var properties = new MessageProperties { ContentType = contentType };
+            Obj.ContentType = contentType;
 
-            var propertiesClone = (MessageProperties)properties.Clone();
+            var propertiesClone = Obj.Clone();
 
-            Assert.That(propertiesClone.ContentType, Is.EqualTo(properties.ContentType));
+            Assert.That(propertiesClone.ContentType, Is.EqualTo(contentType));
         }
 
         /// <summary>
@@ -32,25 +32,11 @@
         public void MessagePropertiesCloneSetsCorrelationId()
         {
             var correlationId = "correlationId-" + Guid.NewGuid();
-            var properties = new MessageProperties { CorrelationId = correlationId };
+            Obj.CorrelationId = correlationId;
 
-            var propertiesClone = (MessageProperties)properties.Clone();
+            var propertiesClone = Obj.Clone();
 
-            Assert.That(propertiesClone.CorrelationId, Is.EqualTo(properties.CorrelationId));
-        }
-
-        /// <summary>
-        /// Verifies that Clone sets the routing key.
-        /// </summary>
-        [Test]
-        public void MessagePropertiesCloneSetsRoutingKey()
-        {
-            var routingKey = "routingKey-" + Guid.NewGuid();
-            var properties = new MessageProperties { RoutingKey = routingKey };
-
-            var propertiesClone = (MessageProperties)properties.Clone();
-
-            Assert.That(propertiesClone.RoutingKey, Is.EqualTo(properties.RoutingKey));
+            Assert.That(propertiesClone.CorrelationId, Is.EqualTo(correlationId));
         }
 
         /// <summary>
@@ -59,12 +45,12 @@
         [Test]
         public void MessagePropertiesCloneSetsReplyTo()
         {
-            var replyTo = "replyTo-" + Guid.NewGuid();
-            var properties = new MessageProperties { ReplyTo = new MqAddress(replyTo) };
+            var replyTo = new MqAddress("replyTo-" + Guid.NewGuid());
+            Obj.ReplyTo = replyTo;
 
-            var propertiesClone = (MessageProperties)properties.Clone();
+            var propertiesClone = Obj.Clone();
 
-            Assert.That(propertiesClone.ReplyTo, Is.EqualTo(properties.ReplyTo));
+            Assert.That(propertiesClone.ReplyTo, Is.EqualTo(replyTo));
         }
 
         /// <summary>
@@ -73,13 +59,16 @@
         [Test]
         public void MessagePropertiesCloneSetsAdditionalProperties()
         {
-            var testStr = "testString";
-            var testObj = new List<int>() { 7 };
-            var properties = new MessageProperties { AdditionalProperties = new Dictionary<string, object>() { { "str", testStr }, { "obj", testObj } } };
+            var additionalProperties = new Dictionary<string, object>
+            {
+                { "str", "testString" }, 
+                { "obj", new List<int> { 7 } },
+            };
+            Obj.AdditionalProperties = additionalProperties;
 
-            var propertiesClone = (MessageProperties)properties.Clone();
+            var propertiesClone = Obj.Clone();
 
-            Assert.That(propertiesClone.AdditionalProperties, Is.EqualTo(properties.AdditionalProperties));
+            Assert.That(propertiesClone.AdditionalProperties, Is.EquivalentTo(additionalProperties));
         }
     }
 }

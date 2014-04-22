@@ -68,7 +68,7 @@
         /// <param name="properties">
         /// The message properties to use when publishing the message.
         /// </param>
-        public void Publish(byte[] body, IMessageProperties properties)
+        public void Publish(byte[] body, MessageProperties properties)
         {
             using (EnterDisposeLock())
             {
@@ -100,6 +100,6 @@
         /// <param name="properties">
         /// The properties associated with the message.
         /// </param>
-        protected abstract void OnPublish(byte[] body, IMessageProperties properties);
+        protected abstract void OnPublish(byte[] body, MessageProperties properties);
     }
 }

@@ -4,7 +4,6 @@
     using System.IO;
     using System.Linq;
     using Castle.Core.Internal;
-    using Medseek.Util.Messaging;
     using Medseek.Util.Serialization;
     using Medseek.Util.Testing;
     using Moq;
@@ -19,13 +18,9 @@
         private const string ContentType0 = "application/x-contentType0";
         private const string ContentType1 = "application/x-contentType1";
         private const string ContentTypeX = "application/x-contentTypeX";
-        private string contentType;
-        private Mock<IMessageContext> messageContext;
-        private Mock<IMessageProperties> messageProperties;
         private Mock<ISerializer> serializer0;
         private Mock<ISerializer> serializer1;
         private Mock<ISerializer>[] serializers;
-        private object serializerState;
         private Mock<Stream> stream;
 
         /// <summary>
@@ -34,21 +29,10 @@
         [SetUp]
         public void Setup()
         {
-            contentType = ContentTypeX;
-            messageContext = new Mock<IMessageContext>();
-            messageProperties = new Mock<IMessageProperties>();
             serializer0 = new Mock<ISerializer>();
             serializer1 = new Mock<ISerializer>();
             serializers = new[] { serializer0, serializer1 };
-            serializerState = null;
             stream = new Mock<Stream>();
-
-            messageContext.Setup(x => 
-                x.Properties)
-                .Returns(messageProperties.Object);
-            messageProperties.Setup(x =>
-                x.ContentType)
-                .Returns(() => contentType);
 
             serializer0.Setup(x => 
                 x.CanDeserialize(It.IsAny<Type>(), It.IsAny<Stream>(), ContentType0))
@@ -80,7 +64,7 @@
         public void DeserializeReturnsSourceIfTypeIsStream()
         {
             var types = new[] { typeof(Stream) };
-            var results = Obj.Deserialize(messageContext.Object, types, stream.Object, ref serializerState);
+            var results = Obj.Deserialize(ContentTypeX, types, stream.Object);
 
             Assert.That(results.Single(), Is.SameAs(stream.Object));
         }
@@ -93,7 +77,6 @@
         [TestCase(1, ContentType1)]
         public void DeserializeReturnsResultFromSerializer(int index, string contentType)
         {
-            this.contentType = contentType;
             var serializerResult = new object();
             var serializer = serializers[index];
             var type = typeof(object);
@@ -102,7 +85,7 @@
                 .Returns(serializerResult);
 
             var types = new[] { type };
-            var results = Obj.Deserialize(messageContext.Object, types, stream.Object, ref serializerState);
+            var results = Obj.Deserialize(contentType, types, stream.Object);
 
             Assert.That(results.Single(), Is.SameAs(serializerResult));
         }
@@ -114,14 +97,13 @@
         [Test]
         public void DeserializeThrowsIfNoSerializer()
         {
-            contentType = ContentTypeX;
             serializers.ForEach(serializer => 
                 serializer.Setup(x => 
                     x.CanDeserialize(It.IsAny<Type>(), It.IsAny<Stream>(), ContentTypeX))
                     .Returns(false));
 
             var types = new[] { typeof(object) };
-            TestDelegate action = () => Obj.Deserialize(messageContext.Object, types, stream.Object, ref serializerState);
+            TestDelegate action = () => Obj.Deserialize(ContentTypeX, types, stream.Object);
 
             Assert.That(action, Throws.InstanceOf<NotSupportedException>());
         }
@@ -134,7 +116,7 @@
         public void SerializeDoesNotThrowIfVoidType()
         {
             var type = typeof(void);
-            TestDelegate action = () => Obj.Serialize(messageContext.Object, type, null, stream.Object, ref serializerState);
+            TestDelegate action = () => Obj.Serialize(ContentTypeX, type, null, stream.Object);
             Assert.That(action, Throws.Nothing);
         }
 
@@ -146,7 +128,6 @@
         [TestCase(1, ContentType1)]
         public void SerializeInvokesSerializerToWriteObject(int index, string contentType)
         {
-            this.contentType = contentType;
             var serializer = serializers[index];
             var type = typeof(object);
             var value = new object();
@@ -154,7 +135,7 @@
                 x.Serialize(type, value, stream.Object))
                 .Verifiable();
 
-            Obj.Serialize(messageContext.Object, type, value, stream.Object, ref serializerState);
+            Obj.Serialize(contentType, type, value, stream.Object);
 
             serializer.Verify();
         }
@@ -173,7 +154,7 @@
 
             var type = typeof(object);
             var value = new object();
-            TestDelegate action = () => Obj.Serialize(messageContext.Object, type, value, stream.Object, ref serializerState);
+            TestDelegate action = () => Obj.Serialize(ContentTypeX, type, value, stream.Object);
 
             Assert.That(action, Throws.InstanceOf<NotSupportedException>());
         }

@@ -21,7 +21,7 @@ namespace Medseek.Util.Messaging
         /// An optional description of the location to which reply messages 
         /// should be published.
         /// </param>
-        [Obsolete("Use Publish(byte[], IMessageProperties) instead.")]
+        [Obsolete("Use Publish(byte[], MessageProperties) instead.")]
         void Publish(byte[] body, string correlationId = null, MqAddress replyTo = null);
 
         /// <summary>
@@ -33,6 +33,6 @@ namespace Medseek.Util.Messaging
         /// <param name="properties">
         /// The message properties to use when publishing the message.
         /// </param>
-        void Publish(byte[] body, IMessageProperties properties);
+        void Publish(byte[] body, MessageProperties properties);
     }
 }

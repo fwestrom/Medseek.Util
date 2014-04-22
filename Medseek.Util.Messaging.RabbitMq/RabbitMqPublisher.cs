@@ -10,13 +10,13 @@
     [Register(typeof(IMqPublisher), Lifestyle = Lifestyle.Transient)]
     public class RabbitMqPublisher : MqPublisherBase
     {
-        private readonly IRabbitMqHelper helper;
+        private readonly IRabbitMqPlugin helper;
         private readonly IModel model;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RabbitMqPublisher"/> class.
         /// </summary>
-        public RabbitMqPublisher(MqAddress address, IRabbitMqHelper helper, IModel model)
+        public RabbitMqPublisher(MqAddress address, IRabbitMqPlugin helper, IModel model)
             : base(address)
         {
             if (address == null)
@@ -46,7 +46,7 @@
         /// <param name="properties">
         /// The properties associated with the message.
         /// </param>
-        protected override void OnPublish(byte[] body, IMessageProperties properties)
+        protected override void OnPublish(byte[] body, MessageProperties properties)
         {
             var basicProperties = helper.CreateBasicProperties(model, properties);
             var pa = helper.ToPublicationAddress(Address);

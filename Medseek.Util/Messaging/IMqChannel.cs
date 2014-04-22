@@ -1,5 +1,6 @@
 namespace Medseek.Util.Messaging
 {
+    using System;
     using System.IO;
 
     /// <summary>
@@ -9,6 +10,11 @@ namespace Medseek.Util.Messaging
     /// </summary>
     public interface IMqChannel : IMqDisposable
     {
+        /// <summary>
+        /// Raised to indicate that a message was returned as undeliverable.
+        /// </summary>
+        event EventHandler<ReturnedEventArgs> Returned;
+
         /// <summary>
         /// Gets a value indicating whether the channel can be paused.
         /// </summary>

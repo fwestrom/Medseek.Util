@@ -1,20 +1,22 @@
 namespace Medseek.Util.Messaging
 {
+    using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Runtime.Serialization;
 
     /// <summary>
     /// Describes additional properties associated with a message.
     /// </summary>
     [DataContract(Namespace = "")]
-    public class MessageProperties : IMessageProperties
+    public class MessageProperties : ICloneable
     {
         private Dictionary<string, object> additionalProperties;
 
         /// <summary>
         /// Gets or sets the type of the content.
         /// </summary>
-        [DataMember]
+        [DataMember(Name = "content-type", Order = 1, IsRequired = false, EmitDefaultValue = false)]
         public string ContentType
         {
             get;
@@ -24,7 +26,7 @@ namespace Medseek.Util.Messaging
         /// <summary>
         /// Gets or sets the correlation identifier associated with the message.
         /// </summary>
-        [DataMember]
+        [DataMember(Name = "correlation-id", Order = 1, IsRequired = false, EmitDefaultValue = false)]
         public string CorrelationId
         {
             get; 
@@ -35,36 +37,64 @@ namespace Medseek.Util.Messaging
         /// Gets or sets the location to which reply messages should be
         /// published.
         /// </summary>
-        [DataMember]
+        /// <seealso cref="ReplyToString" />
         public MqAddress ReplyTo
-        {
-            get; 
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the routing key associated with the message.
-        /// </summary>
-        [DataMember]
-        public string RoutingKey
         {
             get;
             set;
         }
 
         /// <summary>
+        /// Gets or sets the string value of the reply-to address.
+        /// </summary>
+        /// <seealso cref="ReplyTo" />
+        [DataMember(Name = "reply-to", Order = 1, IsRequired = false, EmitDefaultValue = false)]
+        public string ReplyToString
+        {
+            get
+            {
+                var replyTo = ReplyTo;
+                return replyTo != null 
+                    ? replyTo.Value 
+                    : null;
+            }
+            set
+            {
+                ReplyTo = value != null
+                    ? new MqAddress(value) 
+                    : null;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the additional properties dictionary.
         /// </summary>
-        [DataMember]
+        [DataMember(Name = "extended", Order = 2, IsRequired = false, EmitDefaultValue = false)]
         public Dictionary<string, object> AdditionalProperties 
         {
             get
             {
-                return additionalProperties ?? (additionalProperties = new Dictionary<string, object>());
+                return additionalProperties != null && additionalProperties.Count > 0
+                    ? additionalProperties
+                    : null;
             }
             set
             {
                 additionalProperties = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the collection of the extended property keys for which a value
+        /// is set in the extended properties.
+        /// </summary>
+        public IEnumerable<string> ExtendedKeys
+        {
+            get
+            {
+                return additionalProperties != null
+                    ? additionalProperties.Where(x => x.Value != null).Select(x => x.Key)
+                    : Enumerable.Empty<string>();
             }
         }
 
@@ -86,6 +116,28 @@ namespace Medseek.Util.Messaging
         }
 
         /// <summary>
+        /// Creates a new copy of message properties instance.
+        /// </summary>
+        /// <returns>
+        /// A new message properties object copied from the original.
+        /// </returns>
+        public MessageProperties Clone()
+        {
+            var result = new MessageProperties
+            {
+                ContentType = ContentType,
+                CorrelationId = CorrelationId,
+                ReplyTo = ReplyTo,
+            };
+
+            result.additionalProperties = additionalProperties != null
+                ? new Dictionary<string, object>(additionalProperties)
+                : null;
+
+            return result;
+        }
+
+        /// <summary>
         /// Gets the value of a property by its identifier, name, or key.
         /// </summary>
         /// <param name="id">
@@ -97,7 +149,9 @@ namespace Medseek.Util.Messaging
         public object Get(string id)
         {
             object value;
-            return AdditionalProperties.TryGetValue(id, out value) ? value : null;
+            return additionalProperties != null && additionalProperties.TryGetValue(id, out value) 
+                ? value 
+                : null;
         }
 
         /// <summary>
@@ -111,7 +165,16 @@ namespace Medseek.Util.Messaging
         /// </param>
         public void Set(string id, object value)
         {
-            AdditionalProperties[id] = value;
+            if (value != null)
+            {
+                if (additionalProperties == null)
+                    additionalProperties = new Dictionary<string, object>();
+                additionalProperties[id] = value;
+            }
+            else if (additionalProperties != null)
+            {
+                additionalProperties.Remove(id);
+            }
         }
 
         /// <summary>
@@ -120,16 +183,9 @@ namespace Medseek.Util.Messaging
         /// <returns>
         /// A new object that is a copy of this instance.
         /// </returns>
-        public object Clone()
+        object ICloneable.Clone()
         {
-            var result = new MessageProperties();
-            foreach (var entry in AdditionalProperties)
-                result[entry.Key] = entry.Value;
-			result.ContentType = ContentType;
-			result.CorrelationId = CorrelationId;
-			result.ReplyTo = ReplyTo;
-			result.RoutingKey = RoutingKey;
-            return result;
+            return Clone();
         }
     }
 }
