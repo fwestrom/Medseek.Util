@@ -63,6 +63,12 @@
     <Compile Include="MicroServices\IMicroServiceInvoker.cs" />
     <Compile Include="MicroServices\IMicroServiceSerializer.cs" />
     <Compile Include="MicroServices\IRemoteMicroServiceInvoker.cs" />
+    <Compile Include="MicroServices\Lookup\IMicroServiceLookup.cs" />
+    <Compile Include="MicroServices\Lookup\LookupMessage.cs" />
+    <Compile Include="MicroServices\Lookup\LookupQuery.cs" />
+    <Compile Include="MicroServices\Lookup\LookupEntry.cs" />
+    <Compile Include="MicroServices\Lookup\LookupRecord.cs" />
+    <Compile Include="MicroServices\Lookup\LookupResultType.cs" />
     <Compile Include="MicroServices\MessageHandlers\IMessageHandler.cs" />
     <Compile Include="MicroServices\MessageHandlers\IRpcMessageHandler.cs" />
     <Compile Include="MicroServices\MessageHandlers\MessageBase.cs" />
@@ -95,7 +101,7 @@
     <Compile Include="MicroServices\RegisterMicroServiceAttribute.cs" />
     <Compile Include="MicroServices\ThreadLocalMessageContext.cs" />
     <Compile Include="MicroServices\MicroServiceBindingAttribute.cs" />
-    <!--<Compile Include="MicroServices\Lookup\MicroServiceLookup.cs" />-->
+    <Compile Include="MicroServices\Lookup\MicroServiceLookup.cs" />
     <Compile Include="Serialization\ISerializer.cs" />
     <Compile Include="Serialization\ISerializerFactory.cs" />
     <Compile Include="Serialization\SystemRuntimeSerializationDataContractSerializer.cs" />

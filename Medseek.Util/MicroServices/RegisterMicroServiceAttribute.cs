@@ -1,7 +1,7 @@
 ﻿namespace Medseek.Util.MicroServices
 {
     using System;
-    using System.Collections.Generic;
+    using System.Linq;
     using Medseek.Util.Ioc;
 
     /// <summary>
@@ -18,41 +18,21 @@
     [AttributeUsage(AttributeTargets.Class)]
     public class RegisterMicroServiceAttribute : RegisterAttribute
     {
-        private readonly Type[] contracts;
-
         /// <summary>
         /// Initializes a new instance of the <see 
         /// cref="RegisterMicroServiceAttribute" /> class.
         /// </summary>
-        /// <param name="contracts">
-        /// The service contracts for which the type is a micro-service 
-        /// implementation.
-        /// </param>
-        public RegisterMicroServiceAttribute(params Type[] contracts)
-            : base(Type.EmptyTypes)
+        public RegisterMicroServiceAttribute(params Type[] services)
+            : base(services)
         {
-            if (contracts == null)
-                throw new ArgumentNullException("contracts");
-
-            this.contracts = contracts;
             Lifestyle = Lifestyle.Transient;
-        }
-
-        /// <summary>
-        /// Gets the set of contracts for which the type is a micro-service 
-        /// implementation.
-        /// </summary>
-        public IEnumerable<Type> MicroServiceContracts
-        {
-            get
-            {
-                return contracts;
-            }
         }
 
         public override Registration ToRegistration(Type attributedType)
         {
             var registration = base.ToRegistration(attributedType);
+            if (!registration.Services.Contains(attributedType))
+                registration.Services = new[] { attributedType }.Concat(registration.Services);
             return registration;
         }
     }

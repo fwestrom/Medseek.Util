@@ -32,10 +32,9 @@ namespace Medseek.Util.MicroServices.BindingProviders
         {
             var registerAttribute = type.GetCustomAttribute<RegisterMicroServiceAttribute>();
             return registerAttribute != null
-                ? registerAttribute.MicroServiceContracts.Union(new[] { type })
-                    .SelectMany(contract => type.GetMethods()
-                        .SelectMany(method => method.GetCustomAttributes<MicroServiceBindingAttribute>()
-                            .Select(attribute => attribute.ToBinding<T>(method, contract))))
+                ? type.GetMethods()
+                    .SelectMany(method => method.GetCustomAttributes<MicroServiceBindingAttribute>()
+                        .Select(attribute => attribute.ToBinding<T>(method, type)))
                 : Enumerable.Empty<T>();
         }
     }
