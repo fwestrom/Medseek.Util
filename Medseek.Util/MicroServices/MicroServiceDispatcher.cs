@@ -180,7 +180,6 @@
                     var consumer = (IMqConsumer)sender;
                     var bindingsFromMap = bindingMap[consumer];
                     var binding = bindingsFromMap.First(x => mqPlugin.IsMatch(e.MessageContext, x.Address));
-                    var replyToAddress = channel.Plugin.ToPublisherAddress(e.MessageContext.Properties.ReplyTo);
 
                     using (messageContextAccess.Enter(e.MessageContext))
                     using (var instance = microServiceLocator.Get(binding))
@@ -197,6 +196,7 @@
                             if (e.MessageContext.Properties.ReplyTo != null && !binding.IsOneWay)
                             {
                                 var body = microServiceSerializer.Serialize(e.MessageContext.Properties.ContentType, binding.Method.ReturnType, returnValue);
+                                var replyToAddress = channel.Plugin.ToPublisherAddress(e.MessageContext.Properties.ReplyTo);
 
                                 Log.DebugFormat("Sending reply message; ReplyTo = {0}, ContentType = {1}, CorrelationId = {2}, Body.Length = {3}, Value = {4}.", e.MessageContext.Properties.ReplyTo, e.MessageContext.Properties.ContentType, e.MessageContext.Properties.CorrelationId, body.Length, returnValue);
                                 using (messageContextAccess.Enter())
@@ -214,6 +214,8 @@
                             if (e.MessageContext.Properties.ReplyTo != null && !binding.IsOneWay)
                             {
                                 Log.Warn(logBuilder, ex);
+                                
+                                var replyToAddress = channel.Plugin.ToPublisherAddress(e.MessageContext.Properties.ReplyTo);
                                 using (messageContextAccess.Enter())
                                 using (var publisher = channel.CreatePublisher(replyToAddress))
                                 {
