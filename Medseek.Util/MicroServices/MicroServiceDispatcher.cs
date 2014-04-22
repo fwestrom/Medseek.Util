@@ -168,6 +168,7 @@
         private void OnReceived(object sender, ReceivedEventArgs e)
         {
             Log.DebugFormat("Read {0} bytes from queue; CorrelationId = {1}.", e.GetBodyArray().Length, e.Properties.CorrelationId);
+            var publishAddress = channel.Plugin.ToPublisherAddress(e.Properties.ReplyTo);
 
             Interlocked.Increment(ref dispatcherDepth);
             thread.InvokeAsync(() =>
@@ -190,20 +191,45 @@
                         var parameterValues = microServiceSerializer.Deserialize(messageContext, parameterTypes, e.GetBodyStream(), ref serializerState);
 
                         Log.DebugFormat("Invoking micro-service; Address = {0}, IsOneWay = {1}, Method = {2}, Parameters = {3}.", binding.Address, binding.IsOneWay, binding.Method, string.Join(", ", parameterValues));
-                        var returnValue = instance.Invoke(parameterValues);
-                        if (e.Properties.ReplyTo != null && !binding.IsOneWay)
+                        try
+                        {
+                            var returnValue = instance.Invoke(parameterValues);
+                            if (e.Properties.ReplyTo != null && !binding.IsOneWay)
+                            {
+                                byte[] body;
+                                using (var ms = new MemoryStream())
+                                {
+                                    var returnType = binding.Method.ReturnType;
+                                    microServiceSerializer.Serialize(
+                                        messageContext, returnType, returnValue, ms, ref serializerState);
+                                    body = ms.ToArray();
+                                }
+
+                                Log.DebugFormat(
+                                    "Sending reply message; ReplyTo = {0}, ContentType = {1}, CorrelationId = {2}, Body.Length = {3}, Value = {4}.",
+                                    e.Properties.ReplyTo,
+                                    e.Properties.ContentType,
+                                    e.Properties.CorrelationId,
+                                    body.Length,
+                                    returnValue);
+                                using (messageContextAccess.Enter())
+                                using (var publisher = channel.CreatePublisher(publishAddress))
+                                {
+                                    var properties = messageContextAccess.Current.Properties;
+                                    properties.ReplyTo = null;
+                                    publisher.Publish(body, properties);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
                         {
                             byte[] body;
                             using (var ms = new MemoryStream())
                             {
-                                var returnType = binding.Method.ReturnType;
-                                microServiceSerializer.Serialize(messageContext, returnType, returnValue, ms, ref serializerState);
+                                object serializerState2 = null;
+                                microServiceSerializer.Serialize(messageContextAccess.Current, ex.GetType(), ex, ms, ref serializerState2);
                                 body = ms.ToArray();
                             }
-
-                            var publishAddress = channel.Plugin.ToPublisherAddress(e.Properties.ReplyTo);
-                            Log.DebugFormat("Sending reply message; ReplyTo = {0}, ContentType = {1}, CorrelationId = {2}, Body.Length = {3}, Value = {4}.", e.Properties.ReplyTo, e.Properties.ContentType, e.Properties.CorrelationId, body.Length, returnValue);
-                            using (messageContextAccess.Enter())
                             using (var publisher = channel.CreatePublisher(publishAddress))
                             {
                                 var properties = messageContextAccess.Current.Properties;
@@ -211,12 +237,12 @@
                                 publisher.Publish(body, properties);
                             }
                         }
-
                         //channel.BasicAck(e.DeliveryTag, false);
                     }
                 }
                 catch (Exception ex)
                 {
+                   
                     var message = string.Format("Unexpected failure while dispatching message; Cause = {0}: {1}.", ex.GetType().Name, ex.Message.TrimEnd('.'));
                     Log.Warn(message, ex);
                 }
