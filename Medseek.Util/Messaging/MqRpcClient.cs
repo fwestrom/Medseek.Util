@@ -22,7 +22,7 @@ namespace Medseek.Util.Messaging
             if (channel == null)
                 throw new ArgumentNullException("channel");
 
-            consumer = channel.CreateConsumer(replyTo, true);
+            consumer = channel.CreateConsumer(replyTo, false, true);
             publisher = channel.CreatePublisher(address);
         }
 

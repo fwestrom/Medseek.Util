@@ -13,12 +13,12 @@
         /// <summary>
         /// Returns an instance of the messaging system channel component.
         /// </summary>
-        IMqChannel GetRabbitMqChannel(IConnection connection);
+        IMqChannel GetRabbitMqChannel(IRabbitMqConnection connection);
 
         /// <summary>
         /// Returns an instance of the message consumer component.
         /// </summary>
-        IMqConsumer GetRabbitMqConsumer(IModel model, RabbitMqAddress[] addresses, bool autoDelete);
+        IMqConsumer GetRabbitMqConsumer(IModel model, RabbitMqAddress[] addresses, bool autoAckDisabled, bool autoDelete);
 
         /// <summary>
         /// Returns an instance of the message publisher component.

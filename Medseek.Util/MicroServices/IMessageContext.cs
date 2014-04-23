@@ -1,5 +1,6 @@
 ﻿namespace Medseek.Util.MicroServices
 {
+    using System;
     using System.IO;
     using Medseek.Util.Messaging;
 
@@ -9,6 +10,11 @@
     /// </summary>
     public interface IMessageContext
     {
+        /// <summary>
+        /// Raised to indicate that the message acknowledgement is desired.
+        /// </summary>
+        event EventHandler Acknowledged;
+
         /// <summary>
         /// Gets the size in bytes of the message body.
         /// </summary>
@@ -32,6 +38,11 @@
         {
             get;
         }
+
+        /// <summary>
+        /// Causes the message acknowledgement to be send for the context.
+        /// </summary>
+        void Ack();
 
         /// <summary>
         /// Returns a new cloned copy of the message context (see remarks 

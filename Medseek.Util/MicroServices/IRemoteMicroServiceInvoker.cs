@@ -7,6 +7,7 @@ namespace Medseek.Util.MicroServices
     /// Interface for types that provide the ability to invoke a remote 
     /// micro-service.
     /// </summary>
+    [Obsolete("Use IMicroServiceDispatcher.Send instead of using IRemoteMicroServiceInvoker and its methods.")]
     public interface IRemoteMicroServiceInvoker
     {
         /// <summary>

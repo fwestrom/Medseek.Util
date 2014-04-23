@@ -35,8 +35,9 @@
                 x.CreateConnection())
                 .Returns(connection.Object);
 
+            var obj = Obj;
             factory.Setup(x => 
-                x.GetRabbitMqChannel(connection.Object))
+                x.GetRabbitMqChannel(obj))
                 .Returns(channel.Object);
         }
 
@@ -71,6 +72,23 @@
         {
             var result = Obj.CreateChannnel();
             Assert.That(result, Is.SameAs(channel.Object));
+        }
+
+        /// <summary>
+        /// Verifies that creating a model returns an instance obtained from 
+        /// the corresponding RabbitMQ client library method.
+        /// </summary>
+        [Test]
+        public void CreateModelReturnsInstanceFromRabbitMqLibConnection()
+        {
+            var model = new Mock<IModel>();
+            connection.Setup(x => 
+                x.CreateModel())
+                .Returns(model.Object);
+
+            var result = Obj.CreateModel();
+
+            Assert.That(result, Is.SameAs(model.Object));
         }
 
         /// <summary>

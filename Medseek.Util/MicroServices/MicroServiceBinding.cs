@@ -21,6 +21,16 @@
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether automatic message 
+        /// acknowledgement is disabled.
+        /// </summary>
+        public bool AutoAckDisabled
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets the service type provided by the micro-service 
         /// component implementation.
         /// </summary>

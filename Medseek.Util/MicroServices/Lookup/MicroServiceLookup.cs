@@ -15,8 +15,8 @@
     /// information at runtime to the actual values that should be used to 
     /// communicate with the active services.
     /// </summary>
-    [RegisterMicroService(typeof(IMicroServiceLookup), Lifestyle = Lifestyle.Singleton)]
-    public class MicroServiceLookup : Disposable, IMicroServiceLookup
+    [RegisterMicroService(typeof(IMicroServiceLookup), Lifestyle = Lifestyle.Singleton, Start = true)]
+    public class MicroServiceLookup : Disposable, IMicroServiceLookup, IStartable
     {
         internal const string LookupAddressPrefix = "topic://medseek-util/medseek-lookup.1.";
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -24,25 +24,25 @@
         private readonly List<LookupOperation> lookupOperations = new List<LookupOperation>();
         private readonly object sync = new object();
         private readonly IMqChannel channel;
-        private readonly IMicroServiceDispatcher dispatcher;
         private readonly IMessageContext messageContext;
+        private readonly IMicroServiceSerializer serializer;
         private bool started;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MicroServiceLookup"/> class.
         /// </summary>
-        public MicroServiceLookup(IMqChannel channel, IMicroServiceDispatcher dispatcher, IMessageContext messageContext)
+        public MicroServiceLookup(IMqChannel channel, IMessageContext messageContext, IMicroServiceSerializer serializer)
         {
             if (channel == null)
                 throw new ArgumentNullException("channel");
-            if (dispatcher == null)
-                throw new ArgumentNullException("dispatcher");
             if (messageContext == null)
                 throw new ArgumentNullException("messageContext");
+            if (serializer == null)
+                throw new ArgumentNullException("serializer");
 
             this.channel = channel;
-            this.dispatcher = dispatcher;
             this.messageContext = messageContext;
+            this.serializer = serializer;
         }
 
         /// <summary>
@@ -92,14 +92,20 @@
             }
             try
             {
-                var invoker = dispatcher.RemoteMicroServiceInvoker;
-                var queryAddress = new MqAddress(LookupAddressPrefix + "query." + op.Id + "/");
                 var query = new LookupQuery { Id = op.Id };
-                invoker.Send(queryAddress, query.GetType(), query, new MessageProperties
+                var publishAddress = new MqAddress(LookupAddressPrefix + "query." + op.Id + "/");
+                using (var publisher = channel.CreatePublisher(publishAddress))
                 {
-                    CorrelationId = op.CorrelationId,
-                    ReplyToString = LookupAddressPrefix + "reply." + op.Id,
-                });
+                    var contentType = messageContext.Properties.ContentType;
+                    var body = serializer.Serialize(contentType, query);
+                    publisher.Mandatory = true;
+                    publisher.Publish(body, new MessageProperties
+                    {
+                        ContentType = contentType,
+                        CorrelationId = op.CorrelationId,
+                        ReplyToString = LookupAddressPrefix + "reply." + op.Id,
+                    });
+                }
 
                 op.Wait(timeout);
                 if (op.Exception != null)

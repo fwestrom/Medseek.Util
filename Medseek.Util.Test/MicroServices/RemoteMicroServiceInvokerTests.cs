@@ -19,10 +19,9 @@
         private const string DoItRoutingKey = "RemoteMicroServiceInvokerTests.Helper.DoIt";
         private MicroServiceBinding binding;
         private MqPublisherAddress bindingAddress;
-        private Mock<IMqChannel> channel;
+        private Mock<IMicroServiceDispatcher> dispatcher;
         private Mock<IMessageContextAccess> messageContextAccess;
         private Mock<IMqPlugin> plugin;
-        private Mock<IMqPublisher> publisher;
         private Mock<IMicroServiceSerializer> serializer;
         private Mock<IEventSubscriber> subscriber;
 
@@ -37,20 +36,15 @@
             var helperDoItAttribute = helperDoItMethod.GetCustomAttribute<MicroServiceBindingAttribute>();
             binding = helperDoItAttribute.ToBinding<MicroServiceBinding>(helperDoItMethod, helperType);
             binding.Address = bindingAddress = new MqPublisherAddress(binding.Address.Value, DoItRoutingKey);
-            channel = Mock<IMqChannel>();
+            dispatcher = Mock<IMicroServiceDispatcher>();
             messageContextAccess = Mock<IMessageContextAccess>();
             plugin = Mock<IMqPlugin>();
-            publisher = new Mock<IMqPublisher>();
             serializer = Mock<IMicroServiceSerializer>();
             subscriber = new Mock<IEventSubscriber>();
 
-            channel.Setup(x => 
-                x.Plugin)
-                .Returns(plugin.Object);
-            channel.Setup(x => 
-                x.CreatePublisher(binding.Address))
-                .Returns(publisher.Object);
-
+            plugin.Setup(x =>
+                x.ToPublisherAddress(It.IsAny<MqPublisherAddress>()))
+                .Returns((MqAddress a) => (MqPublisherAddress)a);
             plugin.Setup(x => 
                 x.ToPublisherAddress(binding.Address))
                 .Returns((MqPublisherAddress)binding.Address);
@@ -74,82 +68,50 @@
         }
 
         /// <summary>
-        /// Verifies that the remote micro-service is invoked.
+        /// Verifies that the micro-service lookup is invoked and the message 
+        /// is published.
         /// </summary>
         [Test]
-        public void SendByAddressBodyTypeBodyValuePublishesOutgoingMessage()
+        public void SendByAddressBodyInvokesDispatcher()
         {
-            var bodyType = typeof(object);
-            var bodyValue = new object();
-            var bodyData = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
-            var properties = new MessageProperties { ContentType = "ContentType-" + Guid.NewGuid() };
-            serializer.Setup(x =>
-                x.Serialize(properties.ContentType, bodyType, bodyValue, It.IsAny<Stream>()))
-                .Callback((string a, Type b, object c, Stream d) => d.Write(bodyData, 0, bodyData.Length));
-
-            publisher.Setup(x =>
-                x.Publish(bodyData, properties))
-                .Verifiable();
-
-            Obj.Send(bindingAddress, bodyType, bodyValue, properties);
-
-            publisher.Verify();
+            SendInvokesDispatcher((x, address, body, properties) =>
+                x.Send(address, body, properties));
         }
 
         /// <summary>
-        /// Verifies that the remote micro-service is invoked.
+        /// Verifies that the micro-service lookup is invoked and the message 
+        /// is published.
         /// </summary>
         [Test]
-        public void SendByAddressBodyPublishesOutgoingMessage()
+        public void SendByAddressTypeValueInvokesDispatcher()
         {
-            var body = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
-            var properties = new MessageProperties();
-            publisher.Setup(x =>
-                x.Publish(body, properties))
-                .Verifiable();
-
-            Obj.Send(bindingAddress, body, properties);
-
-            publisher.Verify();
+            SendInvokesDispatcher((x, address, body, properties) =>
+            {
+                var bodyType = typeof(object);
+                var bodyValue = new object();
+                serializer.Setup(s => 
+                    s.Serialize(properties.ContentType, bodyType, bodyValue, It.IsAny<Stream>()))
+                    .Callback((string a, Type b, object c, Stream d) => d.Write(body, 0, body.Length));
+                x.Send(address, bodyType, bodyValue, properties);
+            });
         }
 
         /// <summary>
-        /// Verifies that the remote micro-service is invoked.
+        /// Verifies that the micro-service lookup is invoked and the message 
+        /// is published.
         /// </summary>
         [Test]
-        public void SendByBindingOneWayPublishesOutgoingMessage()
+        public void SendByBindingParametersPublishesWithResolvedOrOriginalIfNull()
         {
-            var replyTo = new MqAddress("topic://medseek-test/remotemicroserviceinvokertests");
-            var request = new object();
-            var requestData = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
-            var messageContext = new Mock<IMessageContext>();
-            var messageContextProperties = new MessageProperties { ContentType = "ContentType-" + Guid.NewGuid(), ReplyTo = replyTo };
-            var messageContextDisposable = new Mock<IDisposable>();
-            messageContext.Setup(x => 
-                x.Properties)
-                .Returns(messageContextProperties);
-            messageContext.Setup(x =>
-                x.RoutingKey)
-                .Returns("routing-key");
-            messageContextAccess.Setup(x => 
-                x.Enter(null))
-                .Callback(() => messageContextAccess.Setup(x => x.Current).Returns(messageContext.Object))
-                .Returns(messageContextDisposable.Object);
-            messageContextDisposable.Setup(x => 
-                x.Dispose())
-                .Callback(() => messageContextAccess.Setup(x => x.Current).Returns((IMessageContext)null));
-            serializer.Setup(x => 
-                x.Serialize(messageContextProperties.ContentType, typeof(object), request, It.IsAny<Stream>()))
-                .Callback((string a, Type b, object c, Stream d) => d.Write(requestData, 0, requestData.Length));
-            publisher.Setup(x => 
-                x.Publish(requestData, messageContextProperties))
-                .Callback((byte[] a, MessageProperties b) => 
-                    Assert.That(b.ReplyTo, Is.SameAs(replyTo)))
-                .Verifiable();
-
-            Obj.Send(binding, request);
-
-            publisher.Verify();
+            SendInvokesDispatcher((x, address, body, properties) =>
+            {
+                var bodyType = typeof(object);
+                var bodyValue = new object();
+                serializer.Setup(s =>
+                    s.Serialize(properties.ContentType, bodyType, bodyValue, It.IsAny<Stream>()))
+                    .Callback((string a, Type b, object c, Stream d) => d.Write(body, 0, body.Length));
+                x.Send(address, bodyType, bodyValue, properties);
+            });
         }
 
         /// <summary>
@@ -157,11 +119,24 @@
         /// disposed.
         /// </summary>
         [Test]
-        public void SendByAddressThrowsIfAlreadyDisposed()
+        public void SendByAddressBodyThrowsIfAlreadyDisposed()
         {
             Obj.Dispose();
 
             TestDelegate action = () => Obj.Send(bindingAddress, new byte[0], new MessageProperties());
+            Assert.That(action, Throws.InstanceOf<ObjectDisposedException>());
+        }
+
+        /// <summary>
+        /// Verifies that an exception is thrown if the invoker was already
+        /// disposed.
+        /// </summary>
+        [Test]
+        public void SendByAddressTypeValueThrowsIfAlreadyDisposed()
+        {
+            Obj.Dispose();
+
+            TestDelegate action = () => Obj.Send(bindingAddress, typeof(object), new object(), new MessageProperties());
             Assert.That(action, Throws.InstanceOf<ObjectDisposedException>());
         }
 
@@ -176,6 +151,44 @@
 
             TestDelegate action = () => Obj.Send(binding, new object());
             Assert.That(action, Throws.InstanceOf<ObjectDisposedException>());
+        }
+
+        private void SendInvokesDispatcher(
+            Action<RemoteMicroServiceInvoker, MqAddress, byte[], MessageProperties> sendAction)
+        {
+            var address = new MqPublisherAddress("exchange-type://exchange-name/routing-key", "routing-key");
+            var body = Enumerable.Range(1, 100).Select(n => (byte)n).ToArray();
+            var properties = new MessageProperties { ContentType = "ContentType-" + Guid.NewGuid(), ReplyToString = "topic://medseek-test/remotemicroserviceinvokertests" };
+            var messageContextDisposable = new Mock<IDisposable>();
+            messageContextAccess.Setup(x =>
+                x.Enter(null))
+                .Callback(() =>
+                {
+                    var messageContext = new Mock<IMessageContext>();
+                    messageContext.Setup(x =>
+                        x.Properties)
+                        .Returns(properties);
+                    messageContextAccess.Setup(x =>
+                        x.Current)
+                        .Returns(messageContext.Object);
+                    messageContextDisposable.Setup(x =>
+                        x.Dispose())
+                        .Callback(() =>
+                            messageContextAccess.Setup(x =>
+                                x.Current)
+                                .Returns((IMessageContext)null))
+                        .Verifiable();
+                })
+                .Returns(messageContextDisposable.Object);
+
+            dispatcher.Setup(x =>
+                x.Send(address, body, properties, true))
+                .Verifiable();
+
+            sendAction(Obj, address, body, properties);
+
+            dispatcher.Verify();
+            messageContextDisposable.Verify();
         }
 
         /// <summary>

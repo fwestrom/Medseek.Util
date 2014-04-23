@@ -4,7 +4,9 @@ namespace Medseek.Util.MicroServices
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
+    using System.Reflection;
     using Medseek.Util.Ioc;
+    using Medseek.Util.Logging;
     using Medseek.Util.Messaging;
     using Medseek.Util.Objects;
 
@@ -15,34 +17,46 @@ namespace Medseek.Util.MicroServices
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "MQ = Message Queuing System")]
     public class RemoteMicroServiceInvoker : Disposable, IRemoteMicroServiceInvoker
     {
-        private readonly IMqChannel channel;
+        private readonly IMicroServiceDispatcher dispatcher;
         private readonly IMessageContextAccess messageContextAccess;
-        private readonly IMqPlugin mqPlugin;
         private readonly IMicroServiceSerializer serializer;
+        private TimeSpan timeout = TimeSpan.FromSeconds(15);
 
         /// <summary>
         /// Initializes a new instance of the <see 
         /// cref="RemoteMicroServiceInvoker"/> class.
         /// </summary>
         public RemoteMicroServiceInvoker(
-            IMqChannel channel, 
+            IMicroServiceDispatcher dispatcher, 
             IMessageContextAccess messageContextAccess, 
-            IMqPlugin mqPlugin,
             IMicroServiceSerializer serializer)
         {
-            if (channel == null)
-                throw new ArgumentNullException("channel");
+            if (dispatcher == null)
+                throw new ArgumentNullException("dispatcher");
             if (messageContextAccess == null)
                 throw new ArgumentNullException("messageContextAccess");
-            if (mqPlugin == null)
-                throw new ArgumentNullException("mqPlugin");
             if (serializer == null)
                 throw new ArgumentNullException("serializer");
 
-            this.channel = channel;
+            this.dispatcher = dispatcher;
             this.messageContextAccess = messageContextAccess;
-            this.mqPlugin = mqPlugin;
             this.serializer = serializer;
+        }
+
+        /// <summary>
+        /// Gets or sets the timeout used by remote micro-service invocation 
+        /// message transmission operations.
+        /// </summary>
+        public TimeSpan Timeout
+        {
+            get
+            {
+                return timeout > TimeSpan.Zero ? timeout : TimeSpan.Zero;
+            }
+            set
+            {
+                timeout = value;
+            }
         }
 
         /// <summary>
@@ -68,9 +82,7 @@ namespace Medseek.Util.MicroServices
             if (properties == null)
                 throw new ArgumentNullException("properties");
 
-            var publishAddress = mqPlugin.ToPublisherAddress(address);
-            using (var publisher = channel.CreatePublisher(publishAddress))
-                publisher.Publish(body, properties);
+            dispatcher.Send(address, body, properties);
         }
 
         /// <summary>
@@ -91,12 +103,8 @@ namespace Medseek.Util.MicroServices
         /// </param>
         public void Send(MqAddress address, Type bodyType, object bodyValue, MessageProperties properties)
         {
-            using (var ms = new MemoryStream())
-            {
-                var contentType = properties.ContentType;
-                serializer.Serialize(contentType, bodyType, bodyValue, ms);
-                Send(address, ms.ToArray(), properties);
-            }
+            var body = serializer.Serialize(properties.ContentType, bodyType, bodyValue);
+            Send(address, body, properties);
         }
 
         /// <summary>
@@ -122,7 +130,6 @@ namespace Medseek.Util.MicroServices
             if (waitForReply)
                 throw new NotImplementedException("Support for waiting for a reply is not yet available.");
 
-            var address = channel.Plugin.ToPublisherAddress(binding.Address);
             using (var ms = new MemoryStream())
             using (messageContextAccess.Enter())
             {
@@ -138,7 +145,7 @@ namespace Medseek.Util.MicroServices
                 }
 
                 var body = ms.ToArray();
-                Send(address, body, properties);
+                Send(binding.Address, body, properties);
             }
         }
     }

@@ -23,7 +23,7 @@
         /// Initializes a new instance of the <see cref="RabbitMqChannel" 
         /// /> class.
         /// </summary>
-        public RabbitMqChannel(IConnection connection, IRabbitMqFactory factory, IRabbitMqPlugin plugin)
+        public RabbitMqChannel(IRabbitMqConnection connection, IRabbitMqFactory factory, IRabbitMqPlugin plugin)
             : base(plugin)
         {
             if (connection == null)
@@ -78,6 +78,10 @@
         /// A description of the services and messaging primitives to which the
         /// consumer binds for incoming messages.
         /// </param>
+        /// <param name="autoAckDisabled">
+        /// A value indicating whether automatic message acknowledgement is 
+        /// disabled.
+        /// </param>
         /// <param name="autoDelete">
         /// A value indicating whether closing the consumer should cause any 
         /// applicable services and messaging primitives to be removed.
@@ -85,10 +89,10 @@
         /// <returns>
         /// The message consumer component that was created.
         /// </returns>
-        protected override IMqConsumer OnCreateConsumer(MqAddress address, bool autoDelete)
+        protected override IMqConsumer OnCreateConsumer(MqAddress address, bool autoAckDisabled, bool autoDelete)
         {
             var consumerAddress = TranslateAddress(address);
-            var consumer = CreateConsumer(new[] { consumerAddress }, autoDelete);
+            var consumer = CreateConsumer(new[] { consumerAddress }, autoAckDisabled, autoDelete);
             return consumer;
         }
 
@@ -101,6 +105,10 @@
         /// which the consumer binds for incoming messages, all of which must 
         /// have the same <see cref="MqConsumerAddress.SourceKey"/>.
         /// </param>
+        /// <param name="autoAckDisabled">
+        /// A value indicating whether automatic message acknowledgement is 
+        /// disabled.
+        /// </param>
         /// <param name="autoDelete">
         /// A value indicating whether closing the consumer should cause any 
         /// applicable services and messaging primitives to be removed.
@@ -108,11 +116,11 @@
         /// <returns>
         /// The message consumer components that were created.
         /// </returns>
-        protected override IMqConsumer[] OnCreateConsumers(MqConsumerAddress[] addresses, bool autoDelete)
+        protected override IMqConsumer[] OnCreateConsumers(MqConsumerAddress[] addresses, bool autoAckDisabled, bool autoDelete)
         {
             return addresses
                 .GroupBy(x => x.SourceKey)
-                .Select(x => CreateConsumer(x.ToArray(), autoDelete))
+                .Select(x => CreateConsumer(x.ToArray(), autoAckDisabled, autoDelete))
                 .ToArray();
         }
 
@@ -143,12 +151,12 @@
             model.Dispose();
         }
 
-        private IMqConsumer CreateConsumer(IEnumerable<MqConsumerAddress> addresses, bool autoDelete)
+        private IMqConsumer CreateConsumer(IEnumerable<MqConsumerAddress> addresses, bool autoAckDisabled, bool autoDelete)
         {
             var rabbitAddresses = addresses
                 .Select(TranslateAddress)
                 .ToArray();
-            var consumer = factory.GetRabbitMqConsumer(model, rabbitAddresses, autoDelete);
+            var consumer = factory.GetRabbitMqConsumer(model, rabbitAddresses, autoAckDisabled, autoDelete);
             consumer.Disposed += (sender, e) => factory.Release(consumer);
             return consumer;
         }

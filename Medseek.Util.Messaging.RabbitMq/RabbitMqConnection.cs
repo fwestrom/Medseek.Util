@@ -11,8 +11,8 @@
     /// RabbitMQ.Client.IConnection that is obtained from the connection 
     /// factory.
     /// </summary>
-    [Register(typeof(IMqConnection), Lifestyle = Lifestyle.Transient)]
-    public class RabbitMqConnection : MqConnectionBase
+    [Register(typeof(IRabbitMqConnection), typeof(IMqConnection), Lifestyle = Lifestyle.Transient)]
+    public class RabbitMqConnection : MqConnectionBase, IRabbitMqConnection
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly IConnection connection;
@@ -35,12 +35,20 @@
         }
 
         /// <summary>
+        /// Creates a new RabbitMQ client library model object.
+        /// </summary>
+        public IModel CreateModel()
+        {
+            return connection.CreateModel();
+        }
+
+        /// <summary>
         /// Creates a new channel within the connection that can be used to 
         /// interact with the messaging system.
         /// </summary>
         protected override IMqChannel OnCreateChannel()
         {
-            var channel = factory.GetRabbitMqChannel(connection);
+            var channel = factory.GetRabbitMqChannel(this);
             channel.Disposed += (sender, e) => factory.Release(channel);
             return channel;
         }

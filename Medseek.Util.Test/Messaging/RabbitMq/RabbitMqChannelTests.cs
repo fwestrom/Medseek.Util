@@ -15,7 +15,7 @@
     [TestFixture]
     public sealed class RabbitMqChannelTests : TestFixture<RabbitMqChannel>
     {
-        private Mock<IConnection> connection;
+        private Mock<IRabbitMqConnection> connection;
         private Mock<IMqConsumer> consumer;
         private Mock<IRabbitMqFactory> factory;
         private Mock<IModel> model;
@@ -29,7 +29,7 @@
         [SetUp]
         public void Setup()
         {
-            connection = Mock<IConnection>();
+            connection = Mock<IRabbitMqConnection>();
             consumer = new Mock<IMqConsumer>();
             factory = Mock<IRabbitMqFactory>();
             model = new Mock<IModel>();
@@ -42,7 +42,7 @@
                 .Returns(model.Object);
 
             factory.Setup(x => 
-                x.GetRabbitMqConsumer(model.Object, It.IsAny<RabbitMqAddress[]>(), It.IsAny<bool>()))
+                x.GetRabbitMqConsumer(model.Object, It.IsAny<RabbitMqAddress[]>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .Returns(consumer.Object);
             factory.Setup(x =>
                 x.GetRabbitMqPublisher(model.Object, It.IsAny<MqAddress>()))
@@ -69,13 +69,13 @@
         /// Verifies that the component instance is retrieved from the factory.
         /// </summary>
         [Theory]
-        public void CreateConsumerReturnsInstanceFromFactory(bool autoDelete)
+        public void CreateConsumerReturnsInstanceFromFactory(bool autoAckDisabled, bool autoDelete)
         {
             var address = new RabbitMqAddress("topic", "exchange-name", "routing-key", "queue-name");
-            var result = Obj.CreateConsumer(address, autoDelete);
+            var result = Obj.CreateConsumer(address, autoAckDisabled, autoDelete);
 
             factory.Verify(x => 
-                x.GetRabbitMqConsumer(model.Object, It.Is<RabbitMqAddress[]>(a => a.Contains(address)), autoDelete));
+                x.GetRabbitMqConsumer(model.Object, It.Is<RabbitMqAddress[]>(a => a.Contains(address)), autoAckDisabled, autoDelete));
             Assert.That(result, Is.SameAs(consumer.Object));
         }
 
@@ -112,10 +112,10 @@
         /// Verifies that the component instance is released to the factory.
         /// </summary>
         [Theory]
-        public void DisposeConsumerReleasesInstanceToFactory(bool autoDelete)
+        public void DisposeConsumerReleasesInstanceToFactory(bool autoAckDisabled, bool autoDelete)
         {
             var address = RabbitMqAddress.Parse(string.Empty);
-            var createdConsumer = Obj.CreateConsumer(address, autoDelete);
+            var createdConsumer = Obj.CreateConsumer(address, autoAckDisabled, autoDelete);
             Assume.That(createdConsumer, Is.SameAs(consumer.Object));
 
             factory.Setup(x => 
@@ -188,7 +188,11 @@
             Obj.CreatePublisher(address);
 
             var basicReturnEventArgs = new BasicReturnEventArgs { Exchange = address.ExchangeName };
-            var returnedEventArgs = new ReturnedEventArgs(new Mock<IMessageContext>().Object, address, 0, string.Empty);
+            var messageContext = new Mock<IMessageContext>();
+            messageContext.Setup(x => 
+                x.Properties)
+                .Returns(new MessageProperties());
+            var returnedEventArgs = new ReturnedEventArgs(messageContext.Object, address, 0, string.Empty);
             plugin.Setup(x =>
                 x.ToReturnedEventArgs(address.ExchangeType, basicReturnEventArgs))
                 .Returns(returnedEventArgs);

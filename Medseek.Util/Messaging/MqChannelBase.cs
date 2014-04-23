@@ -78,6 +78,10 @@
         /// A description of the services and messaging primitives to which the
         /// consumer binds for incoming messages.
         /// </param>
+        /// <param name="autoAckDisabled">
+        /// A value indicating whether automatic message acknowledgement is 
+        /// disabled.
+        /// </param>
         /// <param name="autoDelete">
         /// A value indicating whether closing the consumer should cause any 
         /// applicable services and messaging primitives to be removed.
@@ -85,12 +89,12 @@
         /// <returns>
         /// The message consumer component that was created.
         /// </returns>
-        public IMqConsumer CreateConsumer(MqAddress address, bool autoDelete)
+        public IMqConsumer CreateConsumer(MqAddress address, bool autoAckDisabled, bool autoDelete)
         {
             using (EnterDisposeLock())
             {
                 log.DebugFormat("Creating consumer; Address = {0}, AutoDelete = {1}.", address, autoDelete);
-                var consumer = OnCreateConsumer(address, autoDelete);
+                var consumer = OnCreateConsumer(address, autoAckDisabled, autoDelete);
                 OnDisposableCreated(consumer);
                 return consumer;
             }
@@ -105,6 +109,10 @@
         /// which the consumer binds for incoming messages, all of which must 
         /// have the same <see cref="MqConsumerAddress.SourceKey"/>.
         /// </param>
+        /// <param name="autoAckDisabled">
+        /// A value indicating whether automatic message acknowledgement is 
+        /// disabled.
+        /// </param>
         /// <param name="autoDelete">
         /// A value indicating whether closing the consumer should cause any 
         /// applicable services and messaging primitives to be removed.
@@ -112,12 +120,12 @@
         /// <returns>
         /// The message consumer component that was created.
         /// </returns>
-        public IMqConsumer[] CreateConsumers(MqConsumerAddress[] addresses, bool autoDelete)
+        public IMqConsumer[] CreateConsumers(MqConsumerAddress[] addresses, bool autoAckDisabled, bool autoDelete)
         {
             using (EnterDisposeLock())
             {
                 log.DebugFormat("Creating consumer; Addresses = {0}, AutoDelete = {1}.", string.Join(", ", addresses.Select(x => x.ToString())), autoDelete);
-                var consumers = OnCreateConsumers(addresses, autoDelete);
+                var consumers = OnCreateConsumers(addresses, autoAckDisabled, autoDelete);
                 foreach (var consumer in consumers)
                     OnDisposableCreated(consumer);
                 return consumers;
@@ -175,6 +183,10 @@
         /// A description of the services and messaging primitives to which the
         /// consumer binds for incoming messages.
         /// </param>
+        /// <param name="autoAckDisabled">
+        /// A value indicating whether automatic message acknowledgement is 
+        /// disabled.
+        /// </param>
         /// <param name="autoDelete">
         /// A value indicating whether closing the consumer should cause any 
         /// applicable services and messaging primitives to be removed.
@@ -182,7 +194,7 @@
         /// <returns>
         /// The message consumer component that was created.
         /// </returns>
-        protected abstract IMqConsumer OnCreateConsumer(MqAddress address, bool autoDelete);
+        protected abstract IMqConsumer OnCreateConsumer(MqAddress address, bool autoAckDisabled, bool autoDelete);
 
         /// <summary>
         /// Creates a consumer that can be used to receive messages from the 
@@ -193,6 +205,10 @@
         /// which the consumer binds for incoming messages, all of which must 
         /// have the same <see cref="MqConsumerAddress.SourceKey"/>.
         /// </param>
+        /// <param name="autoAckDisabled">
+        /// A value indicating whether automatic message acknowledgement is 
+        /// disabled.
+        /// </param>
         /// <param name="autoDelete">
         /// A value indicating whether closing the consumer should cause any 
         /// applicable services and messaging primitives to be removed.
@@ -200,7 +216,7 @@
         /// <returns>
         /// The message consumer components that were created.
         /// </returns>
-        protected virtual IMqConsumer[] OnCreateConsumers(MqConsumerAddress[] addresses, bool autoDelete)
+        protected virtual IMqConsumer[] OnCreateConsumers(MqConsumerAddress[] addresses, bool autoAckDisabled, bool autoDelete)
         {
             throw new NotSupportedException();
         }
@@ -237,7 +253,7 @@
         /// </summary>
         protected void RaiseReturned(ReturnedEventArgs e)
         {
-            log.DebugFormat("Raising returned message notification; Address = {0}, ReplyCode = {1}, ReplyText = {2}.", e.Address, e.ReplyCode, e.ReplyText);
+            log.DebugFormat("Raising returned message notification; Address = {0}; CorrelationId = {1}, ReplyCode = {2}, ReplyText = {3}.", e.Address, e.MessageContext.Properties.CorrelationId, e.ReplyCode, e.ReplyText);
             var returned = Returned;
             if (returned != null)
                 returned(this, e);

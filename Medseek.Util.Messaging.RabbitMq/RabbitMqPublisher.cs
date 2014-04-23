@@ -40,17 +40,21 @@
         /// <summary>
         /// Publishes a message to the messaging system channel.
         /// </summary>
+        /// <param name="mandatory">
+        /// A value indicating whether published messages have the mandatory 
+        /// option set.
+        /// </param>
         /// <param name="body">
         /// An array containing the raw bytes of the message body.
         /// </param>
         /// <param name="properties">
         /// The properties associated with the message.
         /// </param>
-        protected override void OnPublish(byte[] body, MessageProperties properties)
+        protected override void OnPublish(bool mandatory, byte[] body, MessageProperties properties)
         {
             var basicProperties = helper.CreateBasicProperties(model, properties);
             var pa = helper.ToPublicationAddress(Address);
-            model.BasicPublish(pa, basicProperties, body);
+            model.BasicPublish(pa.ExchangeName, pa.RoutingKey, mandatory, false, basicProperties, body);
         }
     }
 }

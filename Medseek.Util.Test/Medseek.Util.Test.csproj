@@ -122,11 +122,13 @@
     <Compile Include="Messaging\RabbitMq\RabbitMqPluginTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqPublisherTests.cs" />
     <Compile Include="MicroServices\Lookup\MicroServiceLookupTests.cs" />
+    <Compile Include="MicroServices\MessageContextTests.cs" />
     <Compile Include="MicroServices\MessageHandlers\MessageBindingKeyTests.cs" />
     <Compile Include="MicroServices\MessageHandlers\MessageHandlerBindingProviderTests.cs" />
     <Compile Include="MicroServices\Host\ExampleMicroService.cs" />
     <Compile Include="MicroServices\Host\MicroServiceHostTests.cs" />
     <Compile Include="MicroServices\MicroServiceBindingDefaultsAttributeTests.cs" />
+    <Compile Include="MicroServices\MicroServiceDispatcherTests.cs" />
     <Compile Include="MicroServices\MicroServiceInvokerTests.cs" />
     <Compile Include="MicroServices\MicroServiceSerializerTests.cs" />
     <Compile Include="MicroServices\RemoteMicroServiceInvokerTests.cs" />

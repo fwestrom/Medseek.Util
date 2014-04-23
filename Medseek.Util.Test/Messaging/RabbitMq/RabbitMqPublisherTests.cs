@@ -40,8 +40,8 @@
         /// <summary>
         /// Verifies that the channel is invoked to publish the message.
         /// </summary>
-        [Test]
-        public void PublishInvokesModelBasicPublish()
+        [Theory]
+        public void PublishInvokesModelBasicPublish(bool mandatory)
         {
             var basicProperties = new Mock<IBasicProperties>();
             var correlationId = "CorrelationId-" + Guid.NewGuid();
@@ -62,9 +62,10 @@
 
             var body = new byte[0];
             model.Setup(x => 
-                x.BasicPublish(pa, basicProperties.Object, body))
+                x.BasicPublish(pa.ExchangeName, pa.RoutingKey, mandatory, false, basicProperties.Object, body))
                 .Verifiable();
 
+            Obj.Mandatory = mandatory;
             Obj.Publish(body, correlationId, replyTo);
 
             model.Verify();

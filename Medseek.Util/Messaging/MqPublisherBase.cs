@@ -37,6 +37,16 @@
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether published messages have the
+        /// mandatory option set.
+        /// </summary>
+        public bool Mandatory
+        {
+            get; 
+            set;
+        }
+
+        /// <summary>
         /// Publishes a message to the messaging system channel.
         /// </summary>
         /// <param name="body">
@@ -73,7 +83,7 @@
             using (EnterDisposeLock())
             {
                 log.DebugFormat("Publishing a message of {0} bytes; Address = {1}, ContentType = {2}, ReplyTo = {3}, CorrelationId = {4}.", body.Length, address, properties.ContentType, properties.ReplyTo, properties.CorrelationId);
-                OnPublish(body, properties);
+                OnPublish(Mandatory, body, properties);
             }
         }
 
@@ -94,12 +104,16 @@
         /// <summary>
         /// Publishes a message to the messaging system channel.
         /// </summary>
+        /// <param name="mandatory">
+        /// A value indicating whether published messages have the mandatory 
+        /// option set.
+        /// </param>
         /// <param name="body">
         /// An array containing the raw bytes of the message body.
         /// </param>
         /// <param name="properties">
         /// The properties associated with the message.
         /// </param>
-        protected abstract void OnPublish(byte[] body, MessageProperties properties);
+        protected abstract void OnPublish(bool mandatory, byte[] body, MessageProperties properties);
     }
 }

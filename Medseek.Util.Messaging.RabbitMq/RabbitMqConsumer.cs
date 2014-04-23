@@ -15,15 +15,16 @@
     {
         private readonly List<RabbitMqAddress> addresses = new List<RabbitMqAddress>();
         private readonly EventingBasicConsumer consumer = new EventingBasicConsumer();
-        private readonly List<string> declaredExchanges = new List<string>(); 
-        private readonly IRabbitMqPlugin plugin;
+        private readonly List<string> declaredExchanges = new List<string>();
+        private readonly bool autoAckDisabled;
         private readonly IModel model;
+        private readonly IRabbitMqPlugin plugin;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RabbitMqConsumer" 
         /// /> class.
         /// </summary>
-        public RabbitMqConsumer(RabbitMqAddress[] addresses, bool autoDelete, IModel model, IRabbitMqPlugin plugin)
+        public RabbitMqConsumer(RabbitMqAddress[] addresses, bool autoAckDisabled, bool autoDelete, IModel model, IRabbitMqPlugin plugin)
             : base(addresses.Cast<MqAddress>().ToArray())
         {
             if (addresses.Select(x => x.QueueName).Distinct().Count() > 1)
@@ -33,6 +34,7 @@
             if (plugin == null)
                 throw new ArgumentNullException("plugin");
 
+            this.autoAckDisabled = autoAckDisabled;
             this.model = model;
             this.plugin = plugin;
             consumer.Received += OnConsumerReceived;
@@ -47,7 +49,7 @@
                 model.QueueBind(queue, address.ExchangeName, address.RoutingKey);
             }
 
-            model.BasicConsume(queue, true, consumer);
+            model.BasicConsume(queue, !autoAckDisabled, consumer);
         }
 
         /// <summary>
@@ -94,6 +96,8 @@
         private void OnConsumerReceived(IBasicConsumer sender, BasicDeliverEventArgs e)
         {
             var messageContext = plugin.ToMessageContext(e);
+            if (autoAckDisabled)
+                messageContext.Acknowledged += (sender1, e1) => model.BasicAck(e.DeliveryTag, false);
             RaiseReceived(messageContext);
         }
     }

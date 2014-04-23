@@ -50,6 +50,16 @@
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether automatic message 
+        /// acknowledgement is disabled.
+        /// </summary>
+        public bool AutoAckDisabled
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets a value indicating whether [is one way].
         /// </summary>
         public bool IsOneWay
@@ -71,6 +81,7 @@
             return new T
             {
                 Address = Address,
+                AutoAckDisabled = AutoAckDisabled,
                 Method = method, 
                 Service = service,
                 IsOneWay = IsOneWay,

@@ -11,6 +11,8 @@
     using Medseek.Util.Ioc;
     using Medseek.Util.Logging;
     using Medseek.Util.Messaging;
+    using Medseek.Util.MicroServices.Lookup;
+    using Medseek.Util.Objects;
     using Medseek.Util.Threading;
 
     /// <summary>
@@ -18,21 +20,23 @@
     /// </summary>
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "MQ->MessageQueue is not hungarian notation.")]
     [Register(typeof(IMicroServiceDispatcher), Lifestyle = Lifestyle.Singleton, Start = true)]
-    public class MicroServiceDispatcher : IMicroServiceDispatcher, IStartable, IDisposable
+    public class MicroServiceDispatcher : Disposable, IMicroServiceDispatcher, IStartable
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Dictionary<IMqConsumer, List<MicroServiceBinding>> bindingMap = new Dictionary<IMqConsumer, List<MicroServiceBinding>>(); 
         private readonly List<MicroServiceBinding> bindings = new List<MicroServiceBinding>(); 
         private readonly List<IMqConsumer> consumers = new List<IMqConsumer>();
         private readonly IMqChannel channel;
+        private readonly IEnvironment environment;
+        private readonly IMicroServiceLookup lookup;
         private readonly IMessageContextAccess messageContextAccess;
         private readonly IMicroServiceLocator microServiceLocator;
         private readonly IMicroServiceSerializer microServiceSerializer;
+        private readonly IMicroServicesFactory microServicesFactory;
         private readonly IMqPlugin mqPlugin;
-        private readonly IRemoteMicroServiceInvoker remoteMicroServiceInvoker;
         private readonly IDispatchedThread thread;
+        private TimeSpan timeout = TimeSpan.FromSeconds(15);
         private long dispatcherDepth;
-        private bool disposed;
         private bool started;
         private bool threadStarted;
 
@@ -42,6 +46,7 @@
         /// </summary>
         public MicroServiceDispatcher(
             IMqConnection connection, 
+            IEnvironment environment,
             IMessageContextAccess messageContextAccess,
             IMicroServiceLocator microServiceLocator,
             IMicroServiceSerializer microServiceSerializer,
@@ -65,23 +70,97 @@
                 throw new ArgumentNullException("thread");
 
             channel = connection.CreateChannnel();
-            remoteMicroServiceInvoker = microServicesFactory.GetRemoteMicroServiceInvoker(channel);
+            lookup = microServicesFactory.GetLookup(channel);
+            this.environment = environment;
             this.messageContextAccess = messageContextAccess;
             this.microServiceLocator = microServiceLocator;
             this.microServiceSerializer = microServiceSerializer;
+            this.microServicesFactory = microServicesFactory;
             this.mqPlugin = mqPlugin;
             this.thread = thread;
             thread.Name = "MicroServices.Dispatch";
         }
 
         /// <summary>
+        /// Raised to indicate that a message was returned as undeliverable.
+        /// </summary>
+        public event EventHandler<ReturnedEventArgs> Returned;
+
+        /// <summary>
         /// Gets the remote micro-service invoker.
         /// </summary>
+        [Obsolete("Use IMicroServiceInvoker.Send instead of the methods on IRemoteMicroServiceInvoker.")]
         public IRemoteMicroServiceInvoker RemoteMicroServiceInvoker
         {
             get
             {
-                return remoteMicroServiceInvoker;
+                return microServicesFactory.GetRemoteMicroServiceInvoker(channel);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the timeout used by remote micro-service invocation 
+        /// message transmission operations.
+        /// </summary>
+        public TimeSpan Timeout
+        {
+            get
+            {
+                return timeout > TimeSpan.Zero ? timeout : TimeSpan.Zero;
+            }
+            set
+            {
+                timeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Sends a message to a remote micro-service.
+        /// </summary>
+        /// <param name="address">
+        /// The address of the micro-service to which the message should be 
+        /// sent.
+        /// </param>
+        /// <param name="body">
+        /// The message body.
+        /// </param>
+        /// <param name="properties">
+        /// The message properties.
+        /// </param>
+        /// <param name="enableLookup">
+        /// A value indicating whether micro-service lookup should be enabled 
+        /// for the send operation.
+        /// </param>
+        public void Send(MqAddress address, byte[] body, MessageProperties properties, bool enableLookup)
+        {
+            ThrowIfDisposed();
+            if (address == null)
+                throw new ArgumentNullException("address");
+            if (body == null)
+                throw new ArgumentNullException("body");
+            if (properties == null)
+                throw new ArgumentNullException("properties");
+
+            enableLookup = enableLookup && (environment.GetCommandLineArgs() ?? new string[0]).Contains("/enableMicroServiceDispatcherLookup");
+
+            var resolvedAddress = enableLookup ? lookup.Resolve(address, Timeout) : null;
+            var publishAddress = mqPlugin.ToPublisherAddress(resolvedAddress ?? address);
+            using (var publisher = channel.CreatePublisher(publishAddress))
+            {
+                if (Log.IsDebugEnabled)
+                {
+                    var sb = new StringBuilder("Publishing message; Address = " + address);
+                    if (!address.Equals(resolvedAddress))
+                        sb.AppendFormat(", Resolved = {0}", resolvedAddress != null ? (object)resolvedAddress : "(null)");
+                    if (!address.Equals(publishAddress))
+                        sb.AppendFormat(", Publish = {0}", publishAddress);
+                    Log.Debug(sb
+                        .AppendFormat(", Timeout = {0}", Timeout)
+                        .AppendFormat(", Body.Length = {0}", body.Length)
+                        .Append("."));
+                }
+
+                publisher.Publish(body, properties);
             }
         }
 
@@ -90,8 +169,7 @@
         /// </summary>
         public void Start()
         {
-            if (disposed)
-                throw new ObjectDisposedException(GetType().Name);
+            ThrowIfDisposed();
             if (started)
                 throw new InvalidOperationException();
 
@@ -103,20 +181,23 @@
                 thread.Start();
             }
 
+            channel.Returned += OnChannelReturned;
+
             microServiceLocator.Initialize();
             var consumerGroups = microServiceLocator.Bindings
                 .Do(bindings.Add)
                 .Select(binding => new { binding, address = mqPlugin.ToConsumerAddress(binding.Address) })
-                .GroupBy(x => x.address.SourceKey)
+                .GroupBy(x => string.Join("|", x.binding.AutoAckDisabled, x.address.SourceKey))
                 .ToArray();
 
             thread.Invoke(() =>
             {
                 foreach (var consumerGroup in consumerGroups)
                 {
-                    Log.InfoFormat("Starting message consumer; SourceKey = {0}, Bindings = {1}.", consumerGroup.Key, string.Join(", ", consumerGroup.Select(x => x.binding).Select(x => string.Format("(Addresses = {0}, Service = {1}, Method = {2})", x.Address, x.Service, x.Method))));
+                    var autoAckDisabled = consumerGroup.Select(x => x.binding.AutoAckDisabled).Distinct().SingleOrDefault();
+                    Log.InfoFormat("Starting message consumer; SourceKey = {0}, AutoAckDisabled = {1}, Bindings = {2}.", consumerGroup.Key, autoAckDisabled, string.Join(", ", consumerGroup.Select(x => x.binding).Select(x => string.Format("(Addresses = {0}, Service = {1}, Method = {2})", x.Address, x.Service, x.Method))));
                     var addresses = consumerGroup.Select(x => x.address).ToArray();
-                    var createdConsumers = channel.CreateConsumers(addresses, true);
+                    var createdConsumers = channel.CreateConsumers(addresses, autoAckDisabled, true);
                     foreach (var consumer in createdConsumers)
                     {
                         bindingMap[consumer] = consumerGroup.Select(x => x.binding).ToList();
@@ -132,8 +213,7 @@
         /// </summary>
         public void Stop()
         {
-            if (disposed)
-                throw new ObjectDisposedException(GetType().Name);
+            ThrowIfDisposed();
             if (!started)
                 throw new InvalidOperationException();
 
@@ -155,14 +235,18 @@
         /// <summary>
         /// Disposes the dispatcher.
         /// </summary>
-        public void Dispose()
+        protected override void OnDisposing()
         {
-            if (!disposed)
-            {
-                disposed = true;
-                thread.Dispose();
-                channel.Dispose();
-            }
+            channel.Returned -= OnChannelReturned;
+            thread.Dispose();
+            channel.Dispose();
+        }
+
+        private void OnChannelReturned(object sender, ReturnedEventArgs e)
+        {
+            var returned = Returned;
+            if (returned != null)
+                returned(this, e);
         }
 
         private void OnReceived(object sender, ReceivedEventArgs e)
@@ -180,6 +264,8 @@
                     var consumer = (IMqConsumer)sender;
                     var bindingsFromMap = bindingMap[consumer];
                     var binding = bindingsFromMap.First(x => mqPlugin.IsMatch(e.MessageContext, x.Address));
+                    if (binding.AutoAckDisabled)
+                        e.MessageContext.Ack();
 
                     using (messageContextAccess.Enter(e.MessageContext))
                     using (var instance = microServiceLocator.Get(binding))
@@ -231,8 +317,6 @@
                                 Log.Error(logBuilder, ex);
                             }
                         }
-
-                        //channel.BasicAck(e.DeliveryTag, false);
                     }
                 }
                 catch (Exception ex)

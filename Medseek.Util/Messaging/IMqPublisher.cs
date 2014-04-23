@@ -9,6 +9,16 @@ namespace Medseek.Util.Messaging
     public interface IMqPublisher : IMqDisposable
     {
         /// <summary>
+        /// Gets or sets a value indicating whether published messages have the
+        /// mandatory option set.
+        /// </summary>
+        bool Mandatory
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Publishes a message to the messaging system channel.
         /// </summary>
         /// <param name="body">

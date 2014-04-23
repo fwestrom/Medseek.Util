@@ -18,6 +18,21 @@
         private readonly ThreadLocal<Stack<IMessageContext>> contextStack = new ThreadLocal<Stack<IMessageContext>>(() => new Stack<IMessageContext>());
 
         /// <summary>
+        /// Raised to indicate that the message acknowledgement is desired.
+        /// </summary>
+        public event EventHandler Acknowledged
+        {
+            add
+            {
+                throw new NotSupportedException();
+            }
+            remove
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        /// <summary>
         /// Gets the size in bytes of the message body.
         /// </summary>
         public int BodyLength
@@ -59,6 +74,14 @@
             {
                 return GetCurrent().RoutingKey;
             }
+        }
+
+        /// <summary>
+        /// Causes the message acknowledgement to be send for the context.
+        /// </summary>
+        public void Ack()
+        {
+            GetCurrent().Ack();
         }
 
         /// <summary>

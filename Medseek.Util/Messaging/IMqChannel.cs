@@ -49,6 +49,10 @@ namespace Medseek.Util.Messaging
         /// A description of the services and messaging primitives to which the
         /// consumer binds for incoming messages.
         /// </param>
+        /// <param name="autoAckDisabled">
+        /// A value indicating whether automatic message acknowledgement is 
+        /// disabled.
+        /// </param>
         /// <param name="autoDelete">
         /// A value indicating whether closing the consumer should cause any 
         /// applicable services and messaging primitives to be removed.
@@ -56,7 +60,7 @@ namespace Medseek.Util.Messaging
         /// <returns>
         /// The message consumer component that was created.
         /// </returns>
-        IMqConsumer CreateConsumer(MqAddress address, bool autoDelete);
+        IMqConsumer CreateConsumer(MqAddress address, bool autoAckDisabled, bool autoDelete);
 
         /// <summary>
         /// Creates a set of consumers consumer that can be used to receive 
@@ -67,6 +71,10 @@ namespace Medseek.Util.Messaging
         /// which the consumer binds for incoming messages, all of which must 
         /// have the same <see cref="MqConsumerAddress.SourceKey"/>.
         /// </param>
+        /// <param name="autoAckDisabled">
+        /// A value indicating whether automatic message acknowledgement is 
+        /// disabled.
+        /// </param>
         /// <param name="autoDelete">
         /// A value indicating whether closing the consumer should cause any 
         /// applicable services and messaging primitives to be removed.
@@ -74,7 +82,7 @@ namespace Medseek.Util.Messaging
         /// <returns>
         /// The message consumer component that was created.
         /// </returns>
-        IMqConsumer[] CreateConsumers(MqConsumerAddress[] addresses, bool autoDelete);
+        IMqConsumer[] CreateConsumers(MqConsumerAddress[] addresses, bool autoAckDisabled, bool autoDelete);
 
         /// <summary>
         /// Creates a publisher that can be used to send messages over to the 

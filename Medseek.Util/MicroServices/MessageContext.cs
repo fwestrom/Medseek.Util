@@ -13,6 +13,7 @@
         private readonly byte[] body;
         private readonly MessageProperties properties;
         private readonly string routingKey;
+        private bool acknowledgedRaised;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MessageContext"/> class.
@@ -26,6 +27,11 @@
             this.properties = properties;
             this.routingKey = routingKey;
         }
+
+        /// <summary>
+        /// Raised to indicate that the message acknowledgement is desired.
+        /// </summary>
+        public event EventHandler Acknowledged;
 
         /// <summary>
         /// Gets the size in bytes of the message body.
@@ -57,6 +63,20 @@
             get
             {
                 return routingKey;
+            }
+        }
+
+        /// <summary>
+        /// Causes the message acknowledgement to be send for the context.
+        /// </summary>
+        public void Ack()
+        {
+            if (!acknowledgedRaised)
+            {
+                acknowledgedRaised = true;
+                var acknowledged = Acknowledged;
+                if (acknowledged != null)
+                    acknowledged(this, EventArgs.Empty);
             }
         }
 
