@@ -21,6 +21,7 @@
   </metadata>
   <files>
     <file src="$id$.exe.config" target="content" />
+    <file src="services.xml" target="content" />
     <file src="AssemblyInfoMicroServiceHost.cs" target="content\Properties" />
     <file src="Install.ps1" target="tools" />
   </files>

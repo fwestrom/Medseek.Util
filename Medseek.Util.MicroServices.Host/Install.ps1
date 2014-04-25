@@ -1,17 +1,34 @@
-param($installPath, $toolsPath, $package, $project)
+﻿param($installPath, $toolsPath, $package, $project)
 
 $hostConfig = $project.ProjectItems.Item("Medseek.Util.MicroServices.Host.exe.config")
+$servicesXml = $project.ProjectItems.Item("services.xml")
 
 # 'Copy To Output Directory' = 'Copy if newer'
 $copyToOutput = $hostConfig.Properties.Item("CopyToOutputDirectory")
+$copyToOutput.Value = 2
+$copyToOutput = $servicesXml.Properties.Item("CopyToOutputDirectory")
 $copyToOutput.Value = 2
 
 # 'Build Action' = 'Content'
 $buildAction = $hostConfig.Properties.Item("BuildAction")
 $buildAction.Value = 2
+$buildAction = $servicesXml.Properties.Item("BuildAction")
+$buildAction.Value = 2
 
 $project.Save();
 
+# Update services.xml
+$msbuild = [Microsoft.Build.Evaluation.ProjectCollection]::GlobalProjectCollection.LoadProject($project.FullName) | Select-Object -First 1
+$assemblyName = $msbuild.GetProperty("AssemblyName").Xml.Value
+$projectFilePath = Resolve-Path -Path $project.FullName
+$servicesXmlFilePath = [System.IO.Path]::Combine([System.IO.Path]::GetDirectoryName($projectFilePath), "services.xml")
+$servicesXmlText0 = [System.IO.File]::ReadAllText($servicesXmlFilePath)
+Write-Verbose $servicesXmlText0
+$servicesXmlText1 = $servicesXmlText0.Replace("{ASSEMBLYNAME}", $assemblyName);
+Write-Verbose $servicesXmlText1
+[System.IO.File]::WriteAllText($servicesXmlFilePath, $servicesXmlText1);
+
+# Update project startup settings
 [xml] $prjXml = Get-Content $project.FullName
 foreach($PropertyGroup in $prjXml.project.ChildNodes)
 {
@@ -36,7 +53,6 @@ $writerSettings = new-object System.Xml.XmlWriterSettings
 $writerSettings.OmitXmlDeclaration = $false
 $writerSettings.NewLineOnAttributes = $false
 $writerSettings.Indent = $true
-$projectFilePath = Resolve-Path -Path $project.FullName
 $writer = [System.Xml.XmlWriter]::Create($projectFilePath, $writerSettings)
 $prjXml.WriteTo($writer)
 $writer.Flush()
