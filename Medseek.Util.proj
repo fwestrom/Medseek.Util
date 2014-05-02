@@ -67,7 +67,7 @@
   </ItemGroup>
 
   <!-- Import External Project Files -->
-  <Import Project="$(MSBuildCommunityTasksPath)MSBuild.Community.Tasks.Targets" />
+  <Import Condition="Exists('$(MSBuildCommunityTasksPath)MSBuild.Community.Tasks.Targets')" Project="$(MSBuildCommunityTasksPath)MSBuild.Community.Tasks.Targets" />
 
   <!-- Prepare -->
   <Target Name="Prepare" DependsOnTargets="Prepare-Pack">

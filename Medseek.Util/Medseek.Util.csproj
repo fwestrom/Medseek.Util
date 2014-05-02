@@ -43,6 +43,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\Objects\Objects.cs" />
+    <Compile Include="Extensions\Strings\Strings.cs" />
     <Compile Include="IEnvironment.cs" />
     <Compile Include="Ioc\ComponentInfo.cs" />
     <Compile Include="Ioc\ComponentsInstallable.cs" />
