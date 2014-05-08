@@ -73,6 +73,9 @@
       <Link>$(AssemblyName).exe.config</Link>
       <Visible>false</Visible>
     </None>
+    <None Include="nuspec.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

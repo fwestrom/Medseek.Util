@@ -1,0 +1,19 @@
+﻿<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <copyright>$copyright$</copyright>
+    <description>$description$</description>
+    <releaseNotes/>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <tags/>
+    <dependencies/>
+  </metadata>
+  <files>
+    <file src="bin\$configuration$\**.*" target="" exclude="bin\$configuration$\**\*.log;bin\$configuration$\*.vshost.*"/>
+  </files>
+</package>
