@@ -24,5 +24,6 @@
     <file src="services.xml" target="content" />
     <file src="AssemblyInfoMicroServiceHost.cs" target="content\Properties" />
     <file src="Install.ps1" target="tools" />
+    <file src="nuspec.template" target="tools" />
   </files>
 </package>
