@@ -87,6 +87,12 @@
         public event EventHandler<ReturnedEventArgs> Returned;
 
         /// <summary>
+        /// Raised to indicate that an unhandled exception was encountered by 
+        /// the micro-service dispatcher.
+        /// </summary>
+        public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
+
+        /// <summary>
         /// Gets the remote micro-service invoker.
         /// </summary>
         [Obsolete("Use IMicroServiceInvoker.Send instead of the methods on IRemoteMicroServiceInvoker.")]
@@ -260,54 +266,71 @@
                 Log.DebugFormat("Identifying micro-service invocation details; CorrelationId = {0}.", e.MessageContext.Properties.CorrelationId);
                 if (channel.CanPause)
                     channel.IsPaused = Interlocked.Read(ref dispatcherDepth) > 10;
-                using (messageContextAccess.Enter(e.MessageContext))
+
+                var messageContextExit = messageContextAccess.Enter(e.MessageContext);
+                try
                 {
-                    try
+                    var consumer = (IMqConsumer)sender;
+                    var bindingsFromMap = bindingMap[consumer];
+                    binding = bindingsFromMap.First(x => mqPlugin.IsMatch(e.MessageContext, x.Address));
+
+                    using (var instance = microServiceLocator.Get(binding))
                     {
-                        var consumer = (IMqConsumer)sender;
-                        var bindingsFromMap = bindingMap[consumer];
-                        binding = bindingsFromMap.First(x => mqPlugin.IsMatch(e.MessageContext, x.Address));
-                        
-                        using (var instance = microServiceLocator.Get(binding))
+                        var parameterTypes = binding.Method.GetParameters().Select(x => x.ParameterType).ToArray();
+                        object[] parameterValues;
+                        using (var bodyStream = e.MessageContext.GetBodyStream())
+                            parameterValues =
+                                microServiceSerializer.Deserialize(
+                                    e.MessageContext.Properties.ContentType,
+                                    parameterTypes,
+                                    bodyStream);
+
+                        Log.DebugFormat(
+                            "Invoking micro-service; Address = {0}, IsOneWay = {1}, Method = {2}, Parameters = {3}.",
+                            binding.Address,
+                            binding.IsOneWay,
+                            binding.Method,
+                            string.Join(", ", parameterValues));
+
+                        var returnValue = instance.Invoke(parameterValues);
+                        if (e.MessageContext.Properties.ReplyTo != null && !binding.IsOneWay)
                         {
-                            var parameterTypes = binding.Method.GetParameters().Select(x => x.ParameterType).ToArray();
-                            object[] parameterValues;
-                            using (var bodyStream = e.MessageContext.GetBodyStream())
-                                parameterValues = microServiceSerializer.Deserialize(
-                                    e.MessageContext.Properties.ContentType, parameterTypes, bodyStream);
+                            var body = microServiceSerializer.Serialize(
+                                e.MessageContext.Properties.ContentType,
+                                binding.Method.ReturnType,
+                                returnValue);
+                            var replyToAddress =
+                                channel.Plugin.ToPublisherAddress(e.MessageContext.Properties.ReplyTo);
 
                             Log.DebugFormat(
-                                "Invoking micro-service; Address = {0}, IsOneWay = {1}, Method = {2}, Parameters = {3}.",
-                                binding.Address,
-                                binding.IsOneWay,
-                                binding.Method,
-                                string.Join(", ", parameterValues));
-
-                            var returnValue = instance.Invoke(parameterValues);
-                            if (e.MessageContext.Properties.ReplyTo != null && !binding.IsOneWay)
+                                "Sending reply message; ReplyTo = {0}, ContentType = {1}, CorrelationId = {2}, Body.Length = {3}, Value = {4}.",
+                                e.MessageContext.Properties.ReplyTo,
+                                e.MessageContext.Properties.ContentType,
+                                e.MessageContext.Properties.CorrelationId,
+                                body.Length,
+                                returnValue);
+                            using (messageContextAccess.Enter())
+                            using (var publisher = channel.CreatePublisher(replyToAddress))
                             {
-                                var body = microServiceSerializer.Serialize(
-                                    e.MessageContext.Properties.ContentType, binding.Method.ReturnType, returnValue);
-                                var replyToAddress = channel.Plugin.ToPublisherAddress(e.MessageContext.Properties.ReplyTo);
-
-                                Log.DebugFormat(
-                                    "Sending reply message; ReplyTo = {0}, ContentType = {1}, CorrelationId = {2}, Body.Length = {3}, Value = {4}.",
-                                    e.MessageContext.Properties.ReplyTo,
-                                    e.MessageContext.Properties.ContentType,
-                                    e.MessageContext.Properties.CorrelationId,
-                                    body.Length,
-                                    returnValue);
-                                using (messageContextAccess.Enter())
-                                using (var publisher = channel.CreatePublisher(replyToAddress))
-                                {
-                                    var properties = messageContextAccess.Current.Properties;
-                                    properties.ReplyTo = null;
-                                    publisher.Publish(body, properties);
-                                }
+                                var properties = messageContextAccess.Current.Properties;
+                                properties.ReplyTo = null;
+                                publisher.Publish(body, properties);
                             }
                         }
                     }
-                    catch (Exception ex)
+                }
+                catch (Exception ex)
+                {
+                    var isHandled = false;
+                    var unhandledException = UnhandledException;
+                    if (unhandledException != null)
+                    {
+                        var unhandledExceptionArgs = new UnhandledExceptionEventArgs(ex);
+                        unhandledException(this, unhandledExceptionArgs);
+                        isHandled = unhandledExceptionArgs.IsHandled;
+                    }
+
+                    if (!isHandled)
                     {
                         var logBuilder = new StringBuilder().AppendFormat("Unexpected failure during micro-service operation; Cause = {0}: {1}.", ex.GetType().Name, ex.Message.TrimEnd('.'));
                         if (e.MessageContext.Properties.ReplyTo != null && binding != null && !binding.IsOneWay)
@@ -325,16 +348,24 @@
                         }
                         else
                         {
-                            logBuilder.Replace("; Cause = ", string.Format("; ReplyTo = {0}, IsOneWay = {1}, Cause =", e.MessageContext.Properties.ReplyToString ?? "(null)", binding != null ? binding.IsOneWay.ToString() : "Unknown"));
+                            logBuilder.Replace(
+                                "; Cause = ",
+                                string.Format(
+                                    "; ReplyTo = {0}, IsOneWay = {1}, Cause =",
+                                    e.MessageContext.Properties.ReplyToString ?? "(null)",
+                                    binding != null ? binding.IsOneWay.ToString() : "Unknown"));
                             Log.Error(logBuilder, ex);
                         }
                     }
-                    finally
-                    {
-                        var depth = Interlocked.Decrement(ref dispatcherDepth);
-                        if (channel.CanPause)
-                            channel.IsPaused = 10 < depth;
-                    }
+                }
+                finally
+                {
+                    var depth = Interlocked.Decrement(ref dispatcherDepth);
+                    if (channel.CanPause)
+                        channel.IsPaused = 10 < depth;
+
+                    messageContextExit.Dispose();
+                    // messageContext.ExitAll();
                 }
             });
         }

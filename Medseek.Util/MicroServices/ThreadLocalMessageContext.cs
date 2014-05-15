@@ -16,6 +16,7 @@
     public class ThreadLocalMessageContext : IMessageContextAccess, IMessageContext, ICloneable
     {
         private readonly ThreadLocal<Stack<IMessageContext>> contextStack = new ThreadLocal<Stack<IMessageContext>>(() => new Stack<IMessageContext>());
+        private readonly ThreadLocal<Stack<Disposable>> disposerStack = new ThreadLocal<Stack<Disposable>>(() => new Stack<Disposable>());
 
         /// <summary>
         /// Raised to indicate that the message acknowledgement is desired.
@@ -122,6 +123,7 @@
 
             var value = messageContext ?? Clone(false);
             stack.Push(value);
+            disposerStack.Value.Push(disposable);
 
             return disposable;
         }

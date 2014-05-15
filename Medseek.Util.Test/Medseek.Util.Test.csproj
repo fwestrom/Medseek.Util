@@ -112,6 +112,7 @@
     </Compile>
     <Compile Include="Extensions\ObjectsTests.cs" />
     <Compile Include="Extensions\StringsTests.cs" />
+    <Compile Include="Extensions\TypeExtTests.cs" />
     <Compile Include="Ioc\Castle\MicroServiceProxyInterceptorTests.cs" />
     <Compile Include="Ioc\Castle\WindsorIocContainerTests.cs" />
     <Compile Include="Ioc\IocBootstrapperTests.cs" />

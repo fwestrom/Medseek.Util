@@ -14,6 +14,12 @@
         event EventHandler<ReturnedEventArgs> Returned;
 
         /// <summary>
+        /// Raised to indicate that an unhandled exception was encountered by 
+        /// the micro-service dispatcher.
+        /// </summary>
+        event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
+
+        /// <summary>
         /// Gets the remote micro-service invoker.
         /// </summary>
         /// <seealso cref="Send" />

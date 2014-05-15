@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="Extensions\Objects\Objects.cs" />
     <Compile Include="Extensions\Strings\Strings.cs" />
+    <Compile Include="Extensions\TypeExt.cs" />
     <Compile Include="IEnvironment.cs" />
     <Compile Include="Ioc\ComponentInfo.cs" />
     <Compile Include="Ioc\ComponentsInstallable.cs" />
@@ -108,6 +109,7 @@
     <Compile Include="MicroServices\ThreadLocalMessageContext.cs" />
     <Compile Include="MicroServices\MicroServiceBindingAttribute.cs" />
     <Compile Include="MicroServices\Lookup\MicroServiceLookup.cs" />
+    <Compile Include="MicroServices\UnhandledExceptionEventArgs.cs" />
     <Compile Include="Serialization\ISerializer.cs" />
     <Compile Include="Serialization\ISerializerFactory.cs" />
     <Compile Include="Serialization\SystemRuntimeSerializationDataContractSerializer.cs" />
