@@ -21,6 +21,7 @@
         private readonly List<ServiceRunner> runners = new List<ServiceRunner>();
         private readonly string broker;
         private readonly DirectoryInfo directory;
+        private readonly DispatcherTimer pollTimer;
         private readonly DispatcherTimer refreshTimer;
         private readonly Dictionary<string, string> cmdLineParams = new Dictionary<string, string>();
 
@@ -37,8 +38,9 @@
 
             broker = cmdLineParams.Get("broker");
             directory = new DirectoryInfo(cmdLineParams.Get("dir"));
+            pollTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Normal, OnPollTimerTick, dispatcher);
             refreshTimer = new DispatcherTimer(DispatcherPriority.Normal, dispatcher);
-            refreshTimer.Tick += OnTick;
+            refreshTimer.Tick += OnRefreshTimerTick;
         }
 
         /// <summary>
@@ -52,6 +54,7 @@
             Log.InfoFormat("Directory = {0}", directory);
 
             dispatcher.UnhandledException += OnDispatcherUnhandledException;
+            pollTimer.Start();
             refreshTimer.Start();
             try
             {
@@ -74,6 +77,7 @@
         /// </summary>
         protected override void OnDisposing()
         {
+            pollTimer.Stop();
             refreshTimer.Stop();
             dispatcher.InvokeShutdown();
         }
@@ -84,7 +88,13 @@
             Log.Error(message, e.Exception);
         }
 
-        private void OnTick(object sender, EventArgs e)
+        private void OnPollTimerTick(object sender, EventArgs e)
+        {
+            foreach (var runner in runners)
+                runner.Poll();
+        }
+
+        private void OnRefreshTimerTick(object sender, EventArgs e)
         {
             var sw = Stopwatch.StartNew();
             try

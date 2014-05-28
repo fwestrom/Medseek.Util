@@ -14,9 +14,11 @@
     public class ServiceRunner : Disposable
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly TimeSpan StartWaitPeriod = TimeSpan.FromSeconds(10);
         private readonly Process process = new Process();
         private readonly SynchronizationContext synchronizationContext = SynchronizationContext.Current ?? new SynchronizationContext();
         private readonly ServiceDescriptor descriptor;
+        private DateTime startTime = DateTime.MinValue;
         private string processId;
 
         /// <summary>
@@ -53,10 +55,21 @@
         }
 
         /// <summary>
+        /// Invoked by the application server periodically to allow the service
+        /// runner to perform maintenance operations.
+        /// </summary>
+        public void Poll()
+        {
+            if (processId == null && DateTime.UtcNow - startTime > StartWaitPeriod)
+                Start();
+        }
+
+        /// <summary>
         /// Starts the service instance.
         /// </summary>
         public void Start()
         {
+            startTime = DateTime.UtcNow;
             process.Start();
             processId = process.Id.ToString("D");
             Log.InfoFormat("Started service process; Service = {0}, Pid = {1}.", descriptor, processId);
@@ -97,13 +110,14 @@
             else
                 Log.Warn(message);
 
-            processId = null;
             synchronizationContext.Post(ignored =>
             {
-                process.EnableRaisingEvents = false;
-                process.Refresh();
                 if (!IsDisposed)
-                    Start();
+                {
+                    process.EnableRaisingEvents = false;
+                    process.Refresh();
+                }
+                processId = null;
             }, null);
         }
     }
