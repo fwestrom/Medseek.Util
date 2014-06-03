@@ -34,9 +34,6 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NLog">
-      <HintPath>..\packages\NLog.2.1.0\lib\net45\NLog.dll</HintPath>
-    </Reference>
     <Reference Include="NLog.Interface">
       <HintPath>..\packages\NLog.Interface.1.1.0\lib\net40\NLog.Interface.dll</HintPath>
     </Reference>
