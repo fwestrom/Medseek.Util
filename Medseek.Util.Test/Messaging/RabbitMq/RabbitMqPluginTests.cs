@@ -20,6 +20,7 @@
         private static readonly Random Rand = new Random();
         private Mock<IMessageContext> messageContext;
         private MessageProperties messageContextProperties;
+        private const string TenantIdKey = "TenantId";
 
         /// <summary>
         /// Sets up before each test is executed.
@@ -256,6 +257,46 @@
         }
 
         /// <summary>
+        /// Verifies that the tenantId is set correctly.
+        /// </summary>
+        [Test]
+        public void ToPropertiesSetsTenantId()
+        {
+            var tenantId = "tenantId-" + Guid.NewGuid();
+            var basicProperties = new Mock<IBasicProperties>();
+            var headers = new Dictionary<string, object> { { TenantIdKey, tenantId }, { "Key1", "Value1" } };
+            basicProperties.Setup(x =>
+                x.Headers)
+                .Returns(headers);
+
+            MessageProperties result = null;
+            TestDelegate action = () => result = Obj.ToProperties(basicProperties.Object);
+
+            Assert.That(action, Throws.Nothing);
+            Assert.That(result.TenantId, Is.EquivalentTo(tenantId));
+        }
+
+        /// <summary>
+        /// Verifies that the tenantId is not added to AdditionalProperties.
+        /// </summary>
+        [Test]
+        public void ToPropertiesTenantIdNotAddedToAdditionalProperties()
+        {
+            var tenantId = "tenantId-" + Guid.NewGuid();
+            var basicProperties = new Mock<IBasicProperties>();
+            var headers = new Dictionary<string, object> { { TenantIdKey, tenantId }, { "Key1", "Value1" } };
+            basicProperties.Setup(x =>
+                x.Headers)
+                .Returns(headers);
+
+            MessageProperties result = null;
+            TestDelegate action = () => result = Obj.ToProperties(basicProperties.Object);
+
+            Assert.That(action, Throws.Nothing);
+            Assert.That(!result.AdditionalProperties.ContainsKey(TenantIdKey));
+        }
+
+        /// <summary>
         /// Verifies that null is returned for any non-provided property.
         /// </summary>
         [Test]
@@ -296,6 +337,7 @@
             var correlationId = "correlationId-" + Guid.NewGuid();
             var basicProperties = new Mock<IBasicProperties>();
             basicProperties.SetupProperty(x => x.CorrelationId);
+            basicProperties.SetupProperty(x => x.Headers);
             var model = new Mock<IModel>();
             model.Setup(x =>
                 x.CreateBasicProperties())
@@ -320,6 +362,7 @@
             var replyTo = new MqAddress(string.Format("{0}://{1}/{2}/{3}", exchangeType, exchangeName, routingKey, queueName));
             var basicProperties = new Mock<IBasicProperties>();
             basicProperties.SetupProperty(x => x.ReplyTo);
+            basicProperties.SetupProperty(x => x.Headers);
             var model = new Mock<IModel>();
             model.Setup(x =>
                 x.CreateBasicProperties())
@@ -340,6 +383,7 @@
             var contentType = "type-" + Guid.NewGuid().ToString("n");
             var basicProperties = new Mock<IBasicProperties>();
             basicProperties.SetupProperty(x => x.ContentType);
+            basicProperties.SetupProperty(x => x.Headers);
             var model = new Mock<IModel>();
             model.Setup(x =>
                 x.CreateBasicProperties())
@@ -371,6 +415,26 @@
             
             Assert.That(result.Headers["host"], Is.EqualTo(host));
             Assert.That(result.Headers["cookie"], Is.EqualTo(cookie));
+        }
+
+        /// <summary>
+        /// Verifies that the TenantId header is set correctly when provided.
+        /// </summary>
+        [Test]
+        public void CreateBasicPropertiesSetsTenantIdInHeader()
+        {
+            var tenantId = "tenantId-" + Guid.NewGuid();
+            var basicProperties = new Mock<IBasicProperties>();
+            basicProperties.SetupProperty(x => x.Headers);
+            var model = new Mock<IModel>();
+            model.Setup(x =>
+                x.CreateBasicProperties())
+                .Returns(basicProperties.Object);
+            var messageProperties = new MessageProperties { TenantId = tenantId };
+
+            var result = Obj.CreateBasicProperties(model.Object, messageProperties);
+
+            Assert.That(result.Headers[TenantIdKey], Is.EqualTo(tenantId));
         }
 
         /// <summary>
@@ -453,7 +517,7 @@
             Assert.That(result.ReplyCode, Is.EqualTo(replyCode));
             Assert.That(result.ReplyText, Is.EqualTo(replyText));
         }
-
+        
         private static MessageProperties NewMessageProperties(Mock<IBasicProperties> bp = null)
         {
             var result = new MessageProperties
