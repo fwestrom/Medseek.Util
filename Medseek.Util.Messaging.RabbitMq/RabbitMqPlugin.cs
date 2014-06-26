@@ -22,6 +22,8 @@
         /// </summary>
         public const string DefaultConnection = "Medseek.Util.Messaging.RabbitMq.RabbitMqConnection.Default";
 
+        private const string TenantIdKey = "TenantId";
+
         /// <summary>
         /// The name of a default RabbitMQ connection factory component.
         /// </summary>
@@ -41,11 +43,12 @@
                 basicProperties.CorrelationId = properties.CorrelationId;
             if (properties.ReplyTo != null)
                 basicProperties.ReplyTo = ToPublicationAddress(properties.ReplyTo).ToString();
+            if (basicProperties.Headers == null)
+                basicProperties.Headers = new Dictionary<string, object>();
+            basicProperties.Headers[TenantIdKey] = properties.TenantId;
 
             if (properties.AdditionalProperties != null)
             {
-                if (basicProperties.Headers == null)
-                    basicProperties.Headers = new Dictionary<string, object>();
                 properties.AdditionalProperties
                     .ForEach(p => basicProperties.Headers[p.Key] = p.Value);
             }
@@ -137,6 +140,12 @@
                 // Add Headers to the MessageProperties dictionary.
                 basicProperties.Headers
                     .ForEach(h => properties[h.Key] = h.Value);
+
+                if (basicProperties.Headers.ContainsKey(TenantIdKey))
+                {
+                    properties.AdditionalProperties.Remove(TenantIdKey);
+                    properties.TenantId = basicProperties.Headers[TenantIdKey].ToString();
+                }
             }
 
             return properties;
