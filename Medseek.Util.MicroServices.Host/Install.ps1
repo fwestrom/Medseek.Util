@@ -36,7 +36,6 @@ if (!(Test-Path -Path $destinationPath))
 $project.Save();
 
 # Update services.xml
-$msbuild = [Microsoft.Build.Evaluation.ProjectCollection]::GlobalProjectCollection.LoadProject($project.FullName) | Select-Object -First 1
 $servicesXmlFilePath = $servicesXml.Properties.Item("FullPath").Value
 
 $servicesXmlText0 = [System.IO.File]::ReadAllText($servicesXmlFilePath)
@@ -46,14 +45,33 @@ Write-Verbose $servicesXmlText1
 [System.IO.File]::WriteAllText($servicesXmlFilePath, $servicesXmlText1);
 
 # Update project startup settings
-$startAction = $msbuild.GetProperty("StartAction")
+	
+[xml] $prjXml = Get-Content $project.FullName
+$xmlNs = $prjXml.Project.GetAttribute("xmlns");
 
+[System.Xml.XmlNamespaceManager] $nsmgr = $prjXml.NameTable
+$nsmgr.AddNamespace('projNs',$xmlNs);
+
+$startAction = $prjXml.SelectSingleNode("//projNs:PropertyGroup/projNs:StartAction", $nsmgr);
 if($startAction -ne $null)
 {
 	return
 }
-	
-$msbuild.SetProperty("StartAction" , "Program")
-$msbuild.SetProperty("StartProgram" , "`$(MSBuildProjectDirectory)\`$(OutputPath)Medseek.Util.MicroServices.Host.exe")
-$msbuild.SetProperty("StartArguments" , "`$(AssemblyName).dll")
-$msbuild.Save()
+
+$propertyGroupElement = $prjXml.CreateElement("PropertyGroup", $xmlNs);
+
+$startActionElement = $prjXml.CreateElement("StartAction", $xmlNs);
+$startActionElement.InnerText = "Program";
+$propertyGroupElement.AppendChild($startActionElement) | Out-Null
+
+$startProgramElement = $prjXml.CreateElement("StartProgram", $xmlNs);
+$startProgramElement.InnerText = "`$(MSBuildProjectDirectory)\`$(OutputPath)Medseek.Util.MicroServices.Host.exe";
+$propertyGroupElement.AppendChild($startProgramElement) | Out-Null
+
+$startArgumentsElement = $prjXml.CreateElement("StartArguments", $xmlNs);
+$startArgumentsElement.InnerText = "`$(AssemblyName).dll";
+$propertyGroupElement.AppendChild($startArgumentsElement) | Out-Null
+
+$prjXml.project.AppendChild($propertyGroupElement) | Out-Null
+
+$prjXml.Save($project.FullName);
