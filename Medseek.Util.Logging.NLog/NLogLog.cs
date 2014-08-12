@@ -57,7 +57,7 @@
         public override void Debug(object message, Exception ex = null)
         {
             if (ex == null)
-                log.Debug(message.ToString());
+                log.Log(typeof(LogBase), new LogEventInfo(LogLevel.Debug, log.Name, message.ToString()));
             else
                 log.DebugException(message.ToString(), ex);
         }
@@ -65,7 +65,7 @@
         public override void Error(object message, Exception ex = null)
         {
             if (ex == null)
-                log.Error(message.ToString());
+                log.Log(typeof(LogBase), new LogEventInfo(LogLevel.Error, log.Name, message.ToString()));
             else
                 log.ErrorException(message.ToString(), ex);
         }
@@ -73,7 +73,7 @@
         public override void Fatal(object message, Exception ex = null)
         {
             if (ex == null)
-                log.Fatal(message.ToString());
+                log.Log(typeof(LogBase), new LogEventInfo(LogLevel.Fatal, log.Name, message.ToString()));
             else
                 log.FatalException(message.ToString(), ex);
         }
@@ -81,7 +81,7 @@
         public override void Info(object message, Exception ex = null)
         {
             if (ex == null)
-                log.Info(message.ToString());
+                log.Log(typeof(LogBase), new LogEventInfo(LogLevel.Info, log.Name, message.ToString()));
             else
                 log.InfoException(message.ToString(), ex);
         }
@@ -89,7 +89,7 @@
         public override void Warn(object message, Exception ex = null)
         {
             if (ex == null)
-                log.Warn(message.ToString());
+                log.Log(typeof(LogBase), new LogEventInfo(LogLevel.Warn, log.Name, message.ToString()));
             else
                 log.WarnException(message.ToString(), ex);
         }
