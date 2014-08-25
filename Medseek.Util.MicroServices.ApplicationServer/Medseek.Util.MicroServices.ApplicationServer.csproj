@@ -57,6 +57,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Medseek.Util.MicroServices.ApplicationServer.nuspec">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Medseek.Util.Ioc.Castle\Medseek.Util.Ioc.Castle.csproj">

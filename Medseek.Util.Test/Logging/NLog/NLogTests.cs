@@ -5,6 +5,7 @@
     using Moq;
     using NUnit.Framework;
     using ILogger = global::NLog.Interface.ILogger;
+    using NLog = global::NLog;
     
     /// <summary>
     /// Test fixture for the <see cref="NLogLog"/> class.
@@ -39,7 +40,7 @@
             var args = new object[] { 0, 1, 2 };
             var message = string.Format(format, args);
             log.Setup(x =>
-                x.Debug(It.Is<string>(s => s == message)))
+                x.Log(It.Is<Type>(t => true), It.Is<NLog.LogEventInfo>(y => y.Level == NLog.LogLevel.Debug && y.Message == message)))
                 .Verifiable();
 
             obj.DebugFormat(format, args);
@@ -94,7 +95,7 @@
             var args = new object[] { 0, 1, 2 };
             var message = string.Format(format, args);
             log.Setup(x =>
-                x.Fatal(It.Is<string>(s => s == message)))
+                x.Log(It.Is<Type>(t => true), It.Is<NLog.LogEventInfo>(y => y.Level == NLog.LogLevel.Fatal && y.Message == message)))
                 .Verifiable();
 
             obj.FatalFormat(format, args);
@@ -132,7 +133,7 @@
             var args = new object[] { 0, 1, 2 };
             var message = string.Format(format, args);
             log.Setup(x =>
-                x.Info(It.Is<string>(s => s == message)))
+                x.Log(It.Is<Type>(t => true), It.Is<NLog.LogEventInfo>(y => y.Level == NLog.LogLevel.Info && y.Message == message)))
                 .Verifiable();
 
             obj.InfoFormat(format, args);
@@ -169,7 +170,7 @@
             var args = new object[] { 0, 1, 2 };
             var message = string.Format(format, args);
             log.Setup(x =>
-                x.Warn(It.Is<string>(s => s == message)))
+                x.Log(It.Is<Type>(t => true), It.Is<NLog.LogEventInfo>(y => y.Level == NLog.LogLevel.Warn && y.Message == message)))
                 .Verifiable();
 
             obj.WarnFormat(format, args);

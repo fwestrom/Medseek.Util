@@ -78,6 +78,9 @@
     <CreateProperty Value="False">
       <Output PropertyName="Do%(Skip.Identity)" TaskParameter="Value" />
     </CreateProperty>
+    <CreateProperty Value="True">
+      <Output PropertyName="Skip%(Skip.Identity)" TaskParameter="Value" />
+    </CreateProperty>
 
     <ItemGroup>
       <PrepareDir Include="$(BuildDir)" />

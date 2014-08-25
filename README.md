@@ -1,6 +1,6 @@
 #Medseek.Util
 
-Medseek Utility library for .NET projects.
+Medseek Utility library for .NET projects and Micro-Services SDK.
 
 ## Vision
 
