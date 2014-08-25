@@ -60,6 +60,7 @@
         /// paused.
         /// </summary>
         [Test]
+        [Ignore("Flow control seems to be broken is some versions of RabbitMQ.")]
         public void CanPauseReturnsTrue()
         {
             Assert.That(Obj.CanPause, Is.True);
