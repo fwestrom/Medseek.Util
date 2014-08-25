@@ -120,8 +120,16 @@
         {
             if (type != typeof(void))
             {
-                var serializer = GetSerializer(contentType, type, ref serializerState);
-                serializer.Serialize(type, value, destination);
+                if (type == typeof(Stream))
+                {
+                    var stream = (Stream)value;
+                    stream.CopyTo(destination);
+                }
+                else
+                {
+                    var serializer = GetSerializer(contentType, type, ref serializerState);
+                    serializer.Serialize(type, value, destination);
+                }
             }
         }
     }

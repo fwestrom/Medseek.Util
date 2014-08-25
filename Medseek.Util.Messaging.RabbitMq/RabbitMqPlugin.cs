@@ -45,7 +45,11 @@
                 basicProperties.ReplyTo = ToPublicationAddress(properties.ReplyTo).ToString();
             if (basicProperties.Headers == null)
                 basicProperties.Headers = new Dictionary<string, object>();
-            basicProperties.Headers[TenantIdKey] = properties.TenantId;
+            if (properties.UserId != null)
+                basicProperties.UserId = properties.UserId;
+
+            if (properties.TenantId != null)
+                basicProperties.Headers[TenantIdKey] = properties.TenantId;
 
             if (properties.AdditionalProperties != null)
             {
@@ -133,6 +137,7 @@
                 CorrelationId = basicProperties.CorrelationId,
                 ReplyTo = basicProperties.ReplyTo != null ? new MqAddress(basicProperties.ReplyTo) : null,
                 ContentType = basicProperties.ContentType,
+                UserId = basicProperties.UserId,
             };
 
             if (basicProperties.Headers != null)
@@ -143,8 +148,11 @@
 
                 if (basicProperties.Headers.ContainsKey(TenantIdKey))
                 {
-                    properties.AdditionalProperties.Remove(TenantIdKey);
-                    properties.TenantId = basicProperties.Headers[TenantIdKey].ToString();
+                    if (properties.AdditionalProperties != null)
+                        properties.AdditionalProperties.Remove(TenantIdKey);
+                    var tenantId = basicProperties.Headers[TenantIdKey];
+                    if (tenantId != null)
+                        properties.TenantId = tenantId.ToString();
                 }
             }
 

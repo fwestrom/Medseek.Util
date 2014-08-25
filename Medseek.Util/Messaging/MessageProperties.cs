@@ -44,6 +44,16 @@ namespace Medseek.Util.Messaging
         }
 
         /// <summary>
+        /// Gets or sets the tenant identifier associated with the message.
+        /// </summary>
+        [DataMember(Name = "user-id", Order = 1, IsRequired = false, EmitDefaultValue = false)]
+        public string UserId
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets the location to which reply messages should be
         /// published.
         /// </summary>
@@ -138,6 +148,8 @@ namespace Medseek.Util.Messaging
                 ContentType = ContentType,
                 CorrelationId = CorrelationId,
                 ReplyTo = ReplyTo,
+                UserId = UserId,
+                TenantId = TenantId,
             };
 
             result.additionalProperties = additionalProperties != null
