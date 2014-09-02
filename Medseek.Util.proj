@@ -64,6 +64,7 @@
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Plugin.WebApi.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Serialization.Newtonsoft.Json.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Testing.csproj" />
+    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.MicroServices.ApplicationServer.csproj" />
   </ItemGroup>
 
   <!-- Import External Project Files -->
