@@ -2,9 +2,9 @@
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("Medseek.Util.MicroServices.ApplicationServer")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Medseek Microservices Application Server")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Medseek")]
 [assembly: AssemblyProduct("Medseek.Util.MicroServices.ApplicationServer")]
 [assembly: AssemblyCopyright("Copyright ©  2014")]
 [assembly: AssemblyTrademark("")]
