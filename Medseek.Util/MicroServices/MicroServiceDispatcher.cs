@@ -239,6 +239,25 @@
         }
 
         /// <summary>
+        /// Sets up a micro-service operation for handling reply messages.
+        /// </summary>
+        public IDisposable SetupReply<T>(Action<T> onReceived)
+        {
+            var messageContext = messageContextAccess.Current;
+            var correlationId = messageContext.Properties.CorrelationId;
+            var originalCorrelationId = correlationId;
+            if (!string.IsNullOrEmpty(correlationId))
+                correlationId += ".";
+            correlationId += Guid.NewGuid().ToString("n");
+            messageContext.Properties.CorrelationId = correlationId;
+
+            var disposable = new Disposable();
+            disposable.Disposing += (sender, e) => 
+                messageContext.Properties.CorrelationId = originalCorrelationId;
+            return disposable;
+        }
+
+        /// <summary>
         /// Disposes the dispatcher.
         /// </summary>
         protected override void OnDisposing()
