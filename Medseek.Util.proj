@@ -16,6 +16,7 @@
   <PropertyGroup Label="Other Properties">
     <BuildBinDir>$(BuildDir)bin\</BuildBinDir>
     <BuildObjDir>$(BuildDir)obj\</BuildObjDir>
+    <BuildNuspecsDir>$(BuildDir)nuspec\</BuildNuspecsDir>
     <BuildPackagesDir>$(BuildDir)packages\</BuildPackagesDir>
     <DoClean Condition="'$(DoClean)' == ''">True</DoClean>
     <DoBuild Condition="'$(DoBuild)' == ''">True</DoBuild>
@@ -52,10 +53,15 @@
     <ExcludeProjectReferences Include="$(SourceDir)Medseek.Util*\*.HelloWorld.csproj" />
     <ExcludeProjectReferences Include="$(SourceDir)Medseek.Util*\*.ProjectTemplate.csproj" />
     <ExcludeProjectReferences Include="$(SourceDir)Medseek.Util*\*.Extension.csproj" />
-    <ProjectReference Include="$(SourceDir)Medseek.Util*\*.csproj" Exclude="@(ExcludeProjectReferences)" />
+    <ProjectReference Include="$(SourceDir)Medseek.Util*\*.csproj" Exclude="@(ExcludeProjectReferences)">
+      <ProjectDir>%(RootDir)%(Directory)</ProjectDir>
+      <nuspecFileName>%(ProjectDir)%(FileName).nuspec</nuspecFileName>
+      <ProjAssemblyPath>$(BuildBinDir)%(FileName).$ext$</ProjAssemblyPath>
+      <UseNuspec Condition="'%(FileName)'=='Medseek.Util.MicroServices.ApplicationServer'">true</UseNuspec>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.csproj" />
+    <!--<NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Ioc.Castle.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Logging.Log4Net.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Logging.NLog.csproj" />
@@ -64,7 +70,8 @@
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Plugin.WebApi.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Serialization.Newtonsoft.Json.csproj" />
     <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.Testing.csproj" />
-    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.MicroServices.ApplicationServer.csproj" />
+    <NuSpec Include="$(SourceDir)Medseek.*\Medseek.Util.MicroServices.ApplicationServer.nuspec" />-->
+    <NuSpec Include="@(ProjectReference)" />
   </ItemGroup>
 
   <!-- Import External Project Files -->
@@ -87,6 +94,7 @@
       <PrepareDir Include="$(BuildDir)" />
       <PrepareDir Include="$(BuildBinDir)" />
       <PrepareDir Include="$(BuildObjDir)" />
+      <PrepareDir Include="$(BuildNuspecsDir)" />
       <PrepareDir Include="$(BuildPackagesDir)" />
     </ItemGroup>
     <MakeDir Directories="@(PrepareDir)" />
@@ -170,14 +178,40 @@
       <PreReleaseTag Condition="'$(GitBranch)' != 'develop'">$(GitBranch)</PreReleaseTag>
     </PropertyGroup>
     -->
+
     <PropertyGroup>
-      <PackCommand>$(NuGetExePath) pack "%(NuSpec.Identity)"</PackCommand>
+      <UseNuspec>false</UseNuspec>
+      <UseNuspec Condition="'%(NuSpec.UseNuspec)'=='true'">true</UseNuspec>
+    </PropertyGroup>
+    
+    <GetMetadataInfo Condition="$(UseNuspec)" AssemblyPath="%(NuSpec.ProjAssemblyPath)">
+      <Output TaskParameter="MetadataInfo" ItemName="MetadataInfo"/>
+    </GetMetadataInfo>
+
+    <Copy Condition="$(UseNuspec)" SourceFiles="%(NuSpec.nuspecFileName)" DestinationFiles="$(BuildNuspecsDir)%(NuSpec.Filename).nuspec">
+      <Output TaskParameter="CopiedFiles" ItemName="CopiedNuspec" />
+    </Copy>
+    
+    <!--Add Configuration to the metadata-->
+    <ItemGroup>
+      <MetadataInfo>
+        <Configuration>$(Configuration)</Configuration>
+      </MetadataInfo>
+    </ItemGroup>
+
+    <ReplaceTokens Condition="$(UseNuspec)" NuspecPath="%(CopiedNuspec.Identity)" MetadataInfo="@(MetadataInfo)" />
+
+    <PropertyGroup>
+      <PackCommand>$(NuGetExePath) pack</PackCommand>
+      <PackCommand Condition="'$(UseNuspec)'=='true'">$(PackCommand) "%(CopiedNuspec.Identity)"</PackCommand>
+      <PackCommand Condition="'$(UseNuspec)'!='true'">$(PackCommand) "%(NuSpec.Identity)"</PackCommand>
       <PackCommand>$(PackCommand) -BasePath $(BuildBinDir)</PackCommand>
       <PackCommand>$(PackCommand) -OutputDirectory $(BuildPackagesDir)</PackCommand>
       <PackCommand>$(PackCommand) -Symbols</PackCommand>
       <PackCommand>$(PackCommand) -Prop Configuration=$(Configuration)</PackCommand>
       <PackCommand>$(PackCommand) -Prop OutputPath=$(BuildBinDir)</PackCommand>
       <PackCommand>$(PackCommand) -Verbosity detailed</PackCommand>
+      <PackCommand>$(PackCommand) -NoPackageAnalysis</PackCommand>
     </PropertyGroup>
     <Exec Command="$(PackCommand)" WorkingDirectory="$(BuildDir)" />
     <ItemGroup>
@@ -185,4 +219,64 @@
     </ItemGroup>
     <Copy SourceFiles="@(ToCopy)" DestinationFolder="$(BuildPackagesDir)" />
   </Target>
+
+  <!-- Custom tasks -->
+  <UsingTask TaskName="GetMetadataInfo" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll" >
+    <ParameterGroup>
+      <AssemblyPath ParameterType="System.String" Required="true"/>
+      <MetadataInfo ParameterType="Microsoft.Build.Framework.ITaskItem" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.Reflection" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+          if (System.IO.File.Exists(this.AssemblyPath.Replace("$ext$", "dll")))
+            this.AssemblyPath = this.AssemblyPath.Replace("$ext$", "dll");
+          else if (System.IO.File.Exists(this.AssemblyPath.Replace("$ext$", "exe")))
+            this.AssemblyPath = this.AssemblyPath.Replace("$ext$", "exe");
+        
+          Assembly assembly = System.Reflection.Assembly.LoadFrom(this.AssemblyPath);
+          MetadataInfo = new TaskItem(assembly.GetName().Name);
+
+          MetadataInfo.SetMetadata("Version", assembly.GetName().Version.ToString());
+
+          var attributes = assembly.GetCustomAttributes(typeof (AssemblyTitleAttribute), false);
+          MetadataInfo.SetMetadata("Title", ((AssemblyTitleAttribute)attributes[0]).Title);
+
+          attributes = assembly.GetCustomAttributes(typeof (AssemblyCompanyAttribute), false);
+          MetadataInfo.SetMetadata("Company", ((AssemblyCompanyAttribute)attributes[0]).Company);
+
+          attributes = assembly.GetCustomAttributes(typeof (AssemblyDescriptionAttribute), false);
+          MetadataInfo.SetMetadata("Description", ((AssemblyDescriptionAttribute)attributes[0]).Description);
+
+          attributes = assembly.GetCustomAttributes(typeof (AssemblyCopyrightAttribute), false);
+          MetadataInfo.SetMetadata("Copyright", ((AssemblyCopyrightAttribute)attributes[0]).Copyright);
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <UsingTask TaskName="ReplaceTokens" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll" >
+    <ParameterGroup>
+      <NuspecPath ParameterType="System.String" Required="true" />
+      <MetadataInfo ParameterType="Microsoft.Build.Framework.ITaskItem" Required="true"/>
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+          string content = File.ReadAllText(NuspecPath);          
+          
+          content = content.Replace("$id$", MetadataInfo.ItemSpec);
+          content = content.Replace("$version$", MetadataInfo.GetMetadata("Version"));
+          content = content.Replace("$title$", MetadataInfo.GetMetadata("Title"));
+          content = content.Replace("$author$", MetadataInfo.GetMetadata("Company"));
+          content = content.Replace("$copyright$", MetadataInfo.GetMetadata("Copyright"));
+          content = content.Replace("$description$", MetadataInfo.GetMetadata("Description"));
+          content = content.Replace("$configuration$", MetadataInfo.GetMetadata("Configuration"));
+          File.WriteAllText(NuspecPath, content);
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+  
 </Project>
