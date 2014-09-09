@@ -11,13 +11,15 @@
     <releaseNotes/>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <tags/>
-    <dependencies>
-      <dependency id="Medseek.Util" version="1.2" />
-      <dependency id="Medseek.Util.Ioc.Castle" version="1.2" />
-      <dependency id="Medseek.Util.Logging.Log4Net" version="1.2" />
-    </dependencies>
+    <dependencies/>
   </metadata>
   <files>
-    <file src="$id$.exe.config" target="content" />
+    <file src="Medseek.Util.dll;Medseek.Util.pdb" target=""/>
+    <file src="Medseek.Util.Ioc.Castle.dll;Medseek.Util.Ioc.Castle.pdb" target=""/>
+    <file src="Medseek.Util.Logging.Log4Net.dll;Medseek.Util.Logging.Log4Net.pdb" target=""/>
+    <file src="log4net.dll;log4net.config" target=""/>
+    <file src="Castle.Core.dll" target=""/>
+    <file src="Castle.Windsor.dll" target=""/>
+    <file src="Medseek.Util.MicroServices.ApplicationServer.*" target="" exclude="*.log;*.vshost.*"/>
   </files>
 </package>
