@@ -86,6 +86,7 @@
         {
             var message = string.Format("Unhandled exception from Dispatcher; Handled = {0}.", e.Handled);
             Log.Error(message, e.Exception);
+            e.Handled = true;
         }
 
         private void OnPollTimerTick(object sender, EventArgs e)

@@ -1,10 +1,13 @@
 ﻿namespace Medseek.Util.MicroServices.ApplicationServer
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Linq;
     using System.Reflection;
     using System.Threading;
+    using Medseek.Util.Interactive;
     using Medseek.Util.Logging;
     using Medseek.Util.Objects;
 
@@ -15,10 +18,10 @@
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly TimeSpan StartWaitPeriod = TimeSpan.FromSeconds(10);
-        private readonly Process process = new Process();
         private readonly SynchronizationContext synchronizationContext = SynchronizationContext.Current ?? new SynchronizationContext();
         private readonly ServiceDescriptor descriptor;
         private DateTime startTime = DateTime.MinValue;
+        private Process process;
         private string processId;
 
         /// <summary>
@@ -31,16 +34,6 @@
                 throw new ArgumentNullException("descriptor");
 
             this.descriptor = descriptor;
-            process.Exited += OnProcessExited;
-            process.ErrorDataReceived += OnProcessErrorDataReceived;
-            process.OutputDataReceived += OnProcessOutputDataReceived;
-            process.StartInfo = new ProcessStartInfo
-            {
-                Arguments = descriptor.Args,
-                FileName = Path.Combine(Path.GetDirectoryName(descriptor.ManifestPath), descriptor.Run),
-                WorkingDirectory = Path.GetDirectoryName(descriptor.ManifestPath),
-                UseShellExecute = false,
-            };
         }
 
         /// <summary>
@@ -70,10 +63,48 @@
         public void Start()
         {
             startTime = DateTime.UtcNow;
-            process.Start();
-            processId = process.Id.ToString("D");
-            Log.InfoFormat("Started service process; Service = {0}, Pid = {1}.", descriptor, processId);
-            process.EnableRaisingEvents = true;
+            try
+            {
+                if (process == null)
+                {
+                    process = new Process();
+                    process.Exited += OnProcessExited;
+                    process.ErrorDataReceived += OnProcessErrorDataReceived;
+                    process.OutputDataReceived += OnProcessOutputDataReceived;
+                    process.StartInfo = new ProcessStartInfo
+                    {
+                        Arguments = descriptor.Args,
+                        WorkingDirectory = Path.GetDirectoryName(descriptor.ManifestPath),
+                        UseShellExecute = false,
+                    };
+                    
+                    var exts = new List<string> { string.Empty };
+                    exts.AddRange((Environment.GetEnvironmentVariable("PATHEXT") ?? ".exe")
+                        .Split(Path.PathSeparator)
+                        .Distinct());
+
+                    var paths = new List<string> { process.StartInfo.WorkingDirectory };
+                    paths.AddRange((Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
+                        .Split(Path.PathSeparator)
+                        .Select(x => Path.Combine(x, descriptor.Run))
+                        .Distinct());
+
+                    process.StartInfo.FileName = paths
+                        .SelectMany(x => exts.Select(ext => Path.ChangeExtension(x, ext)))
+                        .FirstOrDefault(File.Exists)
+                        ?? descriptor.Run;
+                }
+
+                process.Start();
+                processId = process.Id.ToString("D");
+                Log.InfoFormat("Started service process; Service = {0}, Pid = {1}.", descriptor, processId);
+                process.EnableRaisingEvents = true;
+            }
+            catch (Exception ex)
+            {
+                var message = string.Format("Failed to start service process; Service = {0}, Cause = {1}: {2}.", descriptor, ex.GetType().Name, ex.Message.TrimEnd('.'));
+                Log.WarnFormat(message, ex);
+            }
         }
 
         /// <summary>

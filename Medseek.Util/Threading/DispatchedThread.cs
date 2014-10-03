@@ -1,10 +1,18 @@
-﻿namespace Medseek.Util.Threading
+﻿//#define USE_DISPATCHER
+namespace Medseek.Util.Threading
 {
     using System;
+#if !USE_DISPATCHER
+    using System.Collections.Generic;
+#endif
+#if USE_DISPATCHER
     using System.Diagnostics;
+#endif
     using System.Reflection;
     using System.Threading;
+#if USE_DISPATCHER
     using System.Windows.Threading;
+#endif
     using Medseek.Util.Ioc;
     using Medseek.Util.Logging;
 
@@ -16,10 +24,18 @@
     public class DispatchedThread : IDispatchedThread
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+#if !USE_DISPATCHER
+        private readonly Queue<Op> queue = new Queue<Op>();
+#endif
         private readonly object sync = new object();
         private readonly IThread thread;
+#if USE_DISPATCHER
         private Dispatcher dispatcher;
+#endif
         private bool disposed;
+#if !USE_DISPATCHER
+        private bool started;
+#endif
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DispatchedThread" /> 
@@ -158,7 +174,10 @@
                 Log.DebugFormat("{0}", MethodBase.GetCurrentMethod().Name);
                 thread.Start();
                 Monitor.Wait(sync);
+#if USE_DISPATCHER
                 Debug.Assert(dispatcher != null, "The dispatcher must be set by the thread.");
+#endif
+                started = true;
             }
         }
 
@@ -180,8 +199,12 @@
                 if (!disposed)
                 {
                     disposed = true;
+#if USE_DISPATCHER
                     if (dispatcher != null)
                         dispatcher.InvokeShutdown();
+#else
+                    Monitor.Pulse(sync);
+#endif
                 }
             }
         }
@@ -194,10 +217,22 @@
         /// </param>
         public void Invoke(Action action)
         {
-            if (dispatcher == null)
+            if (!started)
                 throw new InvalidOperationException("The thread must be started before operations can be dispatched.");
             
+#if USE_DISPATCHER
+            Debug.Assert(dispatcher != null, "CurrentDispatcher should never be null.");
             dispatcher.Invoke(action);
+#else
+            using (var done = new ManualResetEventSlim())
+            {
+                Exception exception = null;
+                InvokeInternal(action, ex => exception = ex, done.Set);
+                done.Wait();
+                if (exception != null)
+                    throw new TargetInvocationException(exception);
+            }
+#endif
         }
 
         /// <summary>
@@ -208,26 +243,56 @@
         /// </param>
         public void InvokeAsync(Action action)
         {
-            if (dispatcher == null)
+            if (!started)
                 throw new InvalidOperationException("The thread must be started before operations can be dispatched.");
 
+#if USE_DISPATCHER
+            Debug.Assert(dispatcher != null, "CurrentDispatcher should never be null.");
             dispatcher.InvokeAsync(action);
+#else
+            InvokeInternal(action, OnDispatcherUnhandledException);
+#endif
         }
 
+#if !USE_DISPATCHER
+        private void InvokeInternal(Action action, Action<Exception> onException, Action onCompleted = null)
+        {
+            var op = new Op(action, onException, onCompleted);
+            lock (sync)
+            {
+                queue.Enqueue(op);
+                if (queue.Count == 1)
+                    Monitor.Pulse(sync);
+            }
+        }
+#endif
+
+        // ReSharper disable UnusedParameter.Local
         private void OnDispatcherShutdownFinished(object sender, EventArgs e)
         {
+            // ReSharper restore UnusedParameter.Local
             Log.DebugFormat("Dispatcher shutdown finished; Thread = {0}:{1}.", thread.Id, thread.Name);
         }
 
+        // ReSharper disable UnusedParameter.Local
         private void OnDispatcherShutdownStarted(object sender, EventArgs e)
         {
+            // ReSharper restore UnusedParameter.Local
             Log.DebugFormat("Dispatcher shutdown started; Thread = {0}:{1}.", thread.Id, thread.Name);
         }
 
+#if USE_DISPATCHER
         private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
-            var message = string.Format("Unhandled exception from dispatcher; Thread = {0}:{1}, Handled = {2}, Cause = {3}: {4}.", thread.Id, thread.Name, e.Handled, e.Exception.GetType().Name, e.Exception.Message.TrimEnd('.'));
-            Log.Warn(message, e.Exception);
+            if (!e.Handled)
+                OnDispatcherUnhandledException(e.Exception);
+        }
+#endif
+
+        private void OnDispatcherUnhandledException(Exception ex)
+        {
+            var message = string.Format("Unhandled exception from dispatcher; Thread = {0}:{1}, Cause = {2}: {3}.", thread.Id, thread.Name, ex.GetType().Name, ex.Message.TrimEnd('.'));
+            Log.Warn(message, ex);
         }
 
         private void RunDispatchThread()
@@ -235,15 +300,72 @@
             Log.DebugFormat("Started dispatcher thread; Thread = {0}:{1}.", thread.Id, thread.Name);
             lock (sync)
             {
+                Monitor.Pulse(sync);
+#if USE_DISPATCHER
                 dispatcher = Dispatcher.CurrentDispatcher;
                 dispatcher.UnhandledException += OnDispatcherUnhandledException;
                 dispatcher.ShutdownFinished += OnDispatcherShutdownFinished;
                 dispatcher.ShutdownStarted += OnDispatcherShutdownStarted;
-                Monitor.Pulse(sync);
                 Debug.Assert(dispatcher != null, "CurrentDispatcher should never be null.");
+#endif
             }
 
+#if USE_DISPATCHER
             Dispatcher.Run();
+#else
+            while (!disposed)
+            {
+                Op op;
+                lock (sync)
+                {
+                    if (queue.Count == 0)
+                    {
+                        Monitor.Wait(sync);
+                        continue;
+                    }
+
+                    op = queue.Dequeue();
+                }
+                
+                op.Invoke();
+            }
+
+            OnDispatcherShutdownStarted(this, EventArgs.Empty);
+            OnDispatcherShutdownFinished(this, EventArgs.Empty);
+#endif
         }
+
+#if !USE_DISPATCHER
+        private class Op
+        {
+            private readonly Action action;
+            private readonly Action onCompleted;
+            private readonly Action<Exception> onException;
+
+            internal Op(Action action, Action<Exception> onException, Action onCompleted)
+            {
+                this.action = action;
+                this.onCompleted = onCompleted;
+                this.onException = onException;
+            }
+
+            internal void Invoke()
+            {
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    onException(ex);
+                }
+                finally
+                {
+                    if (onCompleted != null)
+                        onCompleted();
+                }
+            }
+        }
+#endif
     }
 }
