@@ -7,7 +7,6 @@
     using System.Linq;
     using System.Reflection;
     using System.Threading;
-    using Medseek.Util.Interactive;
     using Medseek.Util.Logging;
     using Medseek.Util.Objects;
 
@@ -63,47 +62,56 @@
         public void Start()
         {
             startTime = DateTime.UtcNow;
+            if (process != null)
+                process.Dispose();
+
+            process = new Process();
+            process.Exited += OnProcessExited;
+            process.StartInfo = new ProcessStartInfo
+            {
+                Arguments = descriptor.Args,
+                WorkingDirectory = Path.GetDirectoryName(descriptor.ManifestPath),
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true
+            };
+
+            var exts = new List<string> { string.Empty };
+            exts.AddRange((Environment.GetEnvironmentVariable("PATHEXT") ?? ".exe")
+                .Split(Path.PathSeparator)
+                .Distinct());
+
+            var paths = new List<string> { process.StartInfo.WorkingDirectory };
+            paths.AddRange((Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
+                .Split(Path.PathSeparator)
+                .Select(x => Path.Combine(x, descriptor.Run))
+                .Distinct());
+
+            process.StartInfo.FileName = paths
+                .SelectMany(x => exts.Select(ext => Path.ChangeExtension(x, ext)))
+                .FirstOrDefault(File.Exists)
+                ?? descriptor.Run;
+
             try
             {
-                if (process == null)
-                {
-                    process = new Process();
-                    process.Exited += OnProcessExited;
-                    process.ErrorDataReceived += OnProcessErrorDataReceived;
-                    process.OutputDataReceived += OnProcessOutputDataReceived;
-                    process.StartInfo = new ProcessStartInfo
-                    {
-                        Arguments = descriptor.Args,
-                        WorkingDirectory = Path.GetDirectoryName(descriptor.ManifestPath),
-                        UseShellExecute = false,
-                    };
-                    
-                    var exts = new List<string> { string.Empty };
-                    exts.AddRange((Environment.GetEnvironmentVariable("PATHEXT") ?? ".exe")
-                        .Split(Path.PathSeparator)
-                        .Distinct());
-
-                    var paths = new List<string> { process.StartInfo.WorkingDirectory };
-                    paths.AddRange((Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
-                        .Split(Path.PathSeparator)
-                        .Select(x => Path.Combine(x, descriptor.Run))
-                        .Distinct());
-
-                    process.StartInfo.FileName = paths
-                        .SelectMany(x => exts.Select(ext => Path.ChangeExtension(x, ext)))
-                        .FirstOrDefault(File.Exists)
-                        ?? descriptor.Run;
-                }
-
                 process.Start();
                 processId = process.Id.ToString("D");
-                Log.InfoFormat("Started service process; Service = {0}, Pid = {1}.", descriptor, processId);
+                Log.InfoFormat("Started service process; Service = {0}, Pid = {1}, Exe = {2}, Args = {3}.", descriptor, processId, process.StartInfo.FileName, process.StartInfo.Arguments);
+
+                var logger = string.Format("Service.{0}.id-{1}.pid-{2}", Path.GetFileName(Path.GetDirectoryName(descriptor.ManifestPath)), descriptor.Id ?? "none", processId);
+                var log = LogManager.GetLogger(logger);
+                process.ErrorDataReceived += (sender, e) => log.Warn(e.Data);
+                process.OutputDataReceived += (sender, e) => log.Info(e.Data);
+                process.BeginErrorReadLine();
+                process.BeginOutputReadLine();
                 process.EnableRaisingEvents = true;
             }
             catch (Exception ex)
             {
-                var message = string.Format("Failed to start service process; Service = {0}, Cause = {1}: {2}.", descriptor, ex.GetType().Name, ex.Message.TrimEnd('.'));
+                var message = string.Format("Failed to start service process; Service = {0}, Exe = {1}, Args = {2}, Cause = {3}: {4}.", descriptor, process.StartInfo.FileName, process.StartInfo.Arguments, ex.GetType().Name, ex.Message.TrimEnd('.'));
                 Log.WarnFormat(message, ex);
+                process = null;
             }
         }
 
@@ -120,17 +128,6 @@
             }
 
             process.Dispose();
-        }
-
-        private static void OnProcessErrorDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            Console.Error.WriteLine(e.Data);
-        }
-
-        private void OnProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            Log.DebugFormat("Read STDOUT from process; Pid = {0}.", processId);
-            Console.Out.WriteLine(e.Data);
         }
 
         private void OnProcessExited(object sender, EventArgs e)
