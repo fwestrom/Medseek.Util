@@ -104,7 +104,7 @@
                 processId = process.Id.ToString("D");
                 Log.InfoFormat("Started service process; Service = {0}, Pid = {1}, Exe = {2}, Args = {3}.", descriptor, processId, process.StartInfo.FileName, process.StartInfo.Arguments);
 
-                var logger = string.Format("Service.{0}.id-{1}.pid-{2}", Path.GetFileName(Path.GetDirectoryName(descriptor.ManifestPath)), descriptor.Id ?? "none", processId);
+                var logger = string.Format("{0}.id-{1}.pid-{2}", Path.GetFileName(Path.GetDirectoryName(descriptor.ManifestPath)), descriptor.Id ?? "none", processId);
                 var log = LogManager.GetLogger(logger);
                 process.ErrorDataReceived += (sender, e) => log.Warn(e.Data);
                 process.OutputDataReceived += (sender, e) => log.Info(e.Data);
