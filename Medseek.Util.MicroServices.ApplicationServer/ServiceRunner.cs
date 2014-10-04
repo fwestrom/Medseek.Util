@@ -73,6 +73,7 @@
             {
                 Arguments = descriptor.Args,
                 WorkingDirectory = Path.GetFullPath(Path.GetDirectoryName(descriptor.ManifestPath)),
+                CreateNoWindow = true,
                 RedirectStandardError = true,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
@@ -110,6 +111,7 @@
                 process.OutputDataReceived += (sender, e) => log.Info(e.Data);
                 process.BeginErrorReadLine();
                 process.BeginOutputReadLine();
+                process.CancelErrorRead();
                 process.EnableRaisingEvents = true;
             }
             catch (Exception ex)

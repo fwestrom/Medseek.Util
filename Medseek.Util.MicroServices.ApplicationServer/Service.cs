@@ -107,7 +107,15 @@
             using (var applicationServer = new MicroServiceApplicationServer(args))
             {
                 disposables.Add(applicationServer);
-                applicationServer.Run();
+                try
+                {
+                    applicationServer.Run();
+                }
+                catch (Exception ex)
+                {
+                    var message = string.Format("Unexpected failure, exiting; Cause = {0}: {1}.", ex.GetType().Name, ex.Message.TrimEnd('.'));
+                    Log.Warn(message, ex);
+                }
             }
         }
     }

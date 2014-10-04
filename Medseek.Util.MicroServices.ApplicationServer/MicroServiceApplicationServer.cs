@@ -6,6 +6,7 @@
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
     using System.Windows.Threading;
     using System.Xml.Linq;
     using Medseek.Util.Logging;
@@ -17,13 +18,13 @@
     public class MicroServiceApplicationServer : Disposable
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
+        private readonly Dictionary<string, string> cmdLineParams = new Dictionary<string, string>();
         private readonly List<ServiceRunner> runners = new List<ServiceRunner>();
         private readonly string broker;
         private readonly DirectoryInfo directory;
-        private readonly DispatcherTimer pollTimer;
-        private readonly DispatcherTimer refreshTimer;
-        private readonly Dictionary<string, string> cmdLineParams = new Dictionary<string, string>();
+        private Dispatcher dispatcher;
+        private DispatcherTimer pollTimer;
+        private DispatcherTimer refreshTimer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MicroServiceApplicationServer" /> 
@@ -38,9 +39,6 @@
 
             broker = cmdLineParams.Get("broker");
             directory = new DirectoryInfo(cmdLineParams.Get("dir"));
-            pollTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Normal, OnPollTimerTick, dispatcher);
-            refreshTimer = new DispatcherTimer(DispatcherPriority.Normal, dispatcher);
-            refreshTimer.Tick += OnRefreshTimerTick;
         }
 
         /// <summary>
@@ -48,28 +46,40 @@
         /// </summary>
         public void Run()
         {
-            dispatcher.VerifyAccess();
-
             Log.InfoFormat("Broker = {0}", broker);
             Log.InfoFormat("Directory = {0}", directory);
 
+            dispatcher = Dispatcher.FromThread(Thread.CurrentThread) ?? Dispatcher.CurrentDispatcher;
             dispatcher.UnhandledException += OnDispatcherUnhandledException;
+            dispatcher.ShutdownStarted += OnDispatcherShutdownStarted;
+
+            pollTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Normal, OnPollTimerTick, dispatcher);
+            refreshTimer = new DispatcherTimer(DispatcherPriority.Normal, dispatcher);
+            refreshTimer.Tick += OnRefreshTimerTick;
             pollTimer.Start();
             refreshTimer.Start();
             try
             {
                 Dispatcher.Run();
+                Log.Info("Dispatcher exited.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Unexpected failure from Dispatcher.", ex);
             }
             finally
             {
-                Log.Info("Dispatcher exited.");
-                refreshTimer.Stop();
-                dispatcher.UnhandledException -= OnDispatcherUnhandledException;
-
                 foreach (var runner in runners)
                     runner.Dispose();
                 runners.Clear();
             }
+        }
+
+        private void OnDispatcherShutdownStarted(object sender, EventArgs e)
+        {
+            Log.Info("Dispatcher is shutting down.");
+            pollTimer.Stop();
+            refreshTimer.Stop();
         }
 
         /// <summary>
@@ -77,9 +87,11 @@
         /// </summary>
         protected override void OnDisposing()
         {
-            pollTimer.Stop();
-            refreshTimer.Stop();
-            dispatcher.InvokeShutdown();
+            if (dispatcher != null)
+            {
+                Log.Info("Disposing.");
+                dispatcher.InvokeShutdown();
+            }
         }
 
         private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
