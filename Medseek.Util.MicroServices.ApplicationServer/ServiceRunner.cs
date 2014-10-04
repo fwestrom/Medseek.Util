@@ -2,11 +2,13 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Specialized;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
+    using Medseek.Util.Interactive;
     using Medseek.Util.Logging;
     using Medseek.Util.Objects;
 
@@ -70,12 +72,15 @@
             process.StartInfo = new ProcessStartInfo
             {
                 Arguments = descriptor.Args,
-                WorkingDirectory = Path.GetDirectoryName(descriptor.ManifestPath),
-                UseShellExecute = false,
+                WorkingDirectory = Path.GetFullPath(Path.GetDirectoryName(descriptor.ManifestPath)),
                 RedirectStandardError = true,
                 RedirectStandardInput = true,
-                RedirectStandardOutput = true
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
             };
+
+            Environment.GetEnvironmentVariables().Keys.Cast<string>()
+                .ForEach(x => process.StartInfo.EnvironmentVariables[x] = Environment.GetEnvironmentVariable(x));
 
             var exts = new List<string> { string.Empty };
             exts.AddRange((Environment.GetEnvironmentVariable("PATHEXT") ?? ".exe")
