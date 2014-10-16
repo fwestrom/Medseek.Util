@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Collections.Specialized;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
@@ -24,6 +23,7 @@
         private DateTime startTime = DateTime.MinValue;
         private Process process;
         private string processId;
+        private bool started;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceRunner"/> class.
@@ -54,8 +54,11 @@
         /// </summary>
         public void Poll()
         {
-            if (processId == null && DateTime.UtcNow - startTime > StartWaitPeriod)
-                Start();
+            if (started && !IsDisposed)
+            {
+                if (processId == null && DateTime.UtcNow - startTime > StartWaitPeriod)
+                    Start();
+            }
         }
 
         /// <summary>
@@ -63,6 +66,7 @@
         /// </summary>
         public void Start()
         {
+            started = true;
             startTime = DateTime.UtcNow;
             if (process != null)
                 process.Dispose();
@@ -111,7 +115,6 @@
                 process.OutputDataReceived += (sender, e) => log.Info(e.Data);
                 process.BeginErrorReadLine();
                 process.BeginOutputReadLine();
-                process.CancelErrorRead();
                 process.EnableRaisingEvents = true;
             }
             catch (Exception ex)
@@ -123,24 +126,50 @@
         }
 
         /// <summary>
+        /// Stops the service runner.
+        /// </summary>
+        public void Stop()
+        {
+            if (started)
+            {
+                started = false;
+                if (process != null)
+                {
+                    process.Refresh();
+                    if (!process.HasExited)
+                    {
+                        Log.InfoFormat("Stopping service process; Service = {0}, Pid = {1}.", descriptor, processId);
+                        process.CloseMainWindow();
+                        process.StandardInput.WriteLine("\x3");
+                        process.StandardInput.Close();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Disposes the service runner.
         /// </summary>
         protected override void OnDisposing()
         {
-            if (!process.HasExited)
+            if (process != null)
             {
-                Log.WarnFormat("Killing service process; Service = {0}, Pid = {1}.", descriptor, processId);
-                process.Kill();
-                process.WaitForExit();
-            }
+                process.Refresh();
+                if (!process.HasExited)
+                {
+                    Log.WarnFormat("Killing service process; Service = {0}, Pid = {1}.", descriptor, processId);
+                    process.Kill();
+                }
 
-            process.Dispose();
+                process.Dispose();
+                process = null;
+            }
         }
 
         private void OnProcessExited(object sender, EventArgs e)
         {
             var message = string.Format("Service process exited; Service = {0}, Pid = {1}.", descriptor, processId);
-            if (IsDisposed)
+            if (!started || IsDisposed)
                 Log.Info(message);
             else
                 Log.Warn(message);

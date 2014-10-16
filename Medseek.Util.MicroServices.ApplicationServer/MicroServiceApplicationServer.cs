@@ -62,6 +62,8 @@
             {
                 Dispatcher.Run();
                 Log.Info("Dispatcher exited.");
+                if (runners.Count > 0)
+                    Thread.Sleep(TimeSpan.FromSeconds(3));
             }
             catch (Exception ex)
             {
@@ -80,6 +82,8 @@
             Log.Info("Dispatcher is shutting down.");
             pollTimer.Stop();
             refreshTimer.Stop();
+            foreach (var runner in runners)
+                runner.Stop();
         }
 
         /// <summary>
