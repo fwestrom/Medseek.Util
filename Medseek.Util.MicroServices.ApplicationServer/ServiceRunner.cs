@@ -92,7 +92,7 @@
                 .Split(Path.PathSeparator)
                 .Distinct());
 
-            var paths = new List<string> { process.StartInfo.WorkingDirectory };
+            var paths = new List<string> { Path.Combine(process.StartInfo.WorkingDirectory, descriptor.Run) };
             paths.AddRange((Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
                 .Split(Path.PathSeparator)
                 .Select(x => Path.Combine(x, descriptor.Run))
