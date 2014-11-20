@@ -79,8 +79,8 @@
                 AddFacility<StartableFacility>(x => x.DeferredStart());
             if (plugin.AddTypedFactoryFacility && !facilities.Any(f => f is TypedFactoryFacility))
                 AddFacility<TypedFactoryFacility>();
-            if (plugin.AddWcfFacility && !facilities.Any(f => f is WcfFacility))
-                AddFacility<WcfFacility>();
+            if (plugin.AddWcfFacility)
+                AddWcfFacility();
             if (plugin.RegisterIWindsorContainer 
                 && !Kernel.HasComponent(typeof(IIocContainer))
                 && !Kernel.HasComponent(typeof(IWindsorContainer)))
@@ -129,6 +129,13 @@
         public new IEnumerable<object> ResolveAll(Type service)
         {
             return base.ResolveAll(service).Cast<object>();
+        }
+
+        private void AddWcfFacility()
+        {
+            var facilities = Kernel.GetFacilities();
+            if (plugin.AddWcfFacility && !facilities.Any(f => f is WcfFacility))
+                AddFacility<WcfFacility>();
         }
 
         private void OnKernelComponentRegistered(string key, IHandler handler)
