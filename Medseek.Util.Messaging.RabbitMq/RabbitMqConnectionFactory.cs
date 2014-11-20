@@ -63,7 +63,11 @@
                 if (brokerArgument != null)
                 {
                     var brokerSettings = brokerArgument.Split('=');
-                    if (brokerSettings[1].Contains('/'))
+                    if (brokerSettings[1].StartsWith("amqp://"))
+                    {
+                        factory.Uri = brokerSettings[1];
+                    }
+                    else if (brokerSettings[1].Contains('/'))
                     {
                         var brokerSpec = brokerSettings[1].Split('/');
                         factory.HostName = brokerSpec[0];
