@@ -38,7 +38,7 @@
             AppDomain.CurrentDomain.DomainUnload += (sender, e) => Log.InfoFormat("Unloading AppDomain.");
             AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
             {
-                var message = string.Format("Unhandled exception from AppDomain; IsTerminating = {0}.", e.IsTerminating);
+                var message = string.Format("Unhandled exception from AppDomain; Type = {0}, IsTerminating = {1}.", e.ExceptionObject.GetType().FullName, e.IsTerminating);
                 if (e.IsTerminating)
                     Log.Fatal(message, e.ExceptionObject as Exception);
                 else
@@ -47,7 +47,7 @@
 
             Dispatcher.CurrentDispatcher.UnhandledException += (sender, e) =>
             {
-                var message = string.Format("Unhandled exception from Dispatcher; Handled = {0}.", e.Handled);
+                var message = string.Format("Unhandled exception from Dispatcher; Type = {0}, Handled = {1}.", e.Exception.GetType().FullName, e.Handled);
                 Log.Error(message, e.Exception);
             };
 
