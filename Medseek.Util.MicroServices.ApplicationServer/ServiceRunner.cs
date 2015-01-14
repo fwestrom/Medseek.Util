@@ -71,12 +71,16 @@
             if (process != null)
                 process.Dispose();
 
+            var workingDir = descriptor.Dir;
+            if (workingDir != null && !Path.IsPathRooted(workingDir))
+                workingDir = Path.Combine(Path.GetDirectoryName(descriptor.ManifestPath), workingDir);
+
             process = new Process();
             process.Exited += OnProcessExited;
             process.StartInfo = new ProcessStartInfo
             {
                 Arguments = descriptor.Args,
-                WorkingDirectory = Path.GetFullPath(Path.GetDirectoryName(descriptor.ManifestPath)),
+                WorkingDirectory = Path.GetFullPath(workingDir ?? Path.GetDirectoryName(descriptor.ManifestPath)),
                 CreateNoWindow = true,
                 RedirectStandardError = true,
                 RedirectStandardInput = true,

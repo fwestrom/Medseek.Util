@@ -12,11 +12,12 @@
         private readonly string run;
         private readonly string args;
         private readonly string manifestPath;
+        private readonly string dir;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceDescriptor"/> class.
         /// </summary>
-        public ServiceDescriptor(string id, string run, string args, string manifestPath)
+        public ServiceDescriptor(string id, string run, string args, string manifestPath, string dir)
         {
             if (run == null)
                 throw new ArgumentNullException("run");
@@ -29,6 +30,7 @@
             this.run = run;
             this.args = args;
             this.manifestPath = manifestPath;
+            this.dir = dir;
         }
 
         /// <summary>
@@ -39,6 +41,14 @@
             get
             {
                 return id;
+            }
+        }
+
+        public string Dir
+        {
+            get
+            {
+                return dir;
             }
         }
 

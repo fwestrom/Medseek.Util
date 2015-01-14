@@ -119,10 +119,11 @@
                 directory.Refresh();
                 if (directory.Exists)
                 {
-                    var descriptors = directory.GetFiles("services.xml", SearchOption.AllDirectories)
+                    var startFile = cmdLineParams.Get("start-file") ?? "services.xml";
+                    var descriptors = directory.GetFiles(startFile, SearchOption.AllDirectories)
                         .SelectMany(file => XDocument.Load(file.FullName)
                             .Descendants(XName.Get("service", string.Empty))
-                            .Select(xe => new ServiceDescriptor(xe.Attrib("id"), xe.Attrib("run"), MapArgumentTokens(xe.Attrib("args")), file.FullName)))
+                            .Select(xe => new ServiceDescriptor(xe.Attrib("id"), xe.Attrib("run"), MapArgumentTokens(xe.Attrib("args")), file.FullName, xe.Attrib("dir"))))
                         .ToArray();
 
                     var removed = runners.Where(r => !descriptors.Contains(r.Descriptor)).ToArray();
