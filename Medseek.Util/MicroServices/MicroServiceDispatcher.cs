@@ -201,9 +201,10 @@
                 foreach (var consumerGroup in consumerGroups)
                 {
                     var autoAckDisabled = consumerGroup.Select(x => x.binding.AutoAckDisabled).Distinct().SingleOrDefault();
+                    var autoDelete = consumerGroup.Select(x => x.binding.AutoDelete).Distinct().SingleOrDefault();
                     Log.InfoFormat("Starting message consumer; SourceKey = {0}, AutoAckDisabled = {1}, Bindings = {2}.", consumerGroup.Key, autoAckDisabled, string.Join(", ", consumerGroup.Select(x => x.binding).Select(x => string.Format("(Addresses = {0}, Service = {1}, Method = {2})", x.Address, x.Service, x.Method))));
                     var addresses = consumerGroup.Select(x => x.address).ToArray();
-                    var createdConsumers = channel.CreateConsumers(addresses, autoAckDisabled, true);
+                    var createdConsumers = channel.CreateConsumers(addresses, autoAckDisabled, autoDelete);
                     foreach (var consumer in createdConsumers)
                     {
                         bindingMap[consumer] = consumerGroup.Select(x => x.binding).ToList();

@@ -10,6 +10,12 @@
     /// </summary>
     public class MicroServiceBinding
     {
+        // for backwards compatibility, we need to default AutoDelete to true
+        public MicroServiceBinding()
+        {
+            AutoDelete = true;
+        }
+
         /// <summary>
         /// Gets or sets the messaging system address associated with the 
         /// binding.
@@ -57,5 +63,15 @@
             get;
             set;
         }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the queue specified in this binding should be set to auto-delete
+        /// </summary>
+        public bool AutoDelete
+        {
+            get; 
+            set;
+        }
+
     }
 }

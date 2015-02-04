@@ -38,6 +38,7 @@
         public MicroServiceBindingAttribute(string addressValue)
         {
             Address = new MqAddress(addressValue);
+            AutoDelete = true;
         }
 
         /// <summary>
@@ -69,6 +70,15 @@
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether [to auto delete]
+        /// </summary>
+        public bool AutoDelete
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Returns a micro-service binding description for the specified 
         /// method marked by the attribute.
         /// </summary>
@@ -85,6 +95,7 @@
                 Method = method, 
                 Service = service,
                 IsOneWay = IsOneWay,
+                AutoDelete = AutoDelete
             };
         }
     }
