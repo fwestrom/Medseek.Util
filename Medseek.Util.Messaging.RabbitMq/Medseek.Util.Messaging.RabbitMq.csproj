@@ -46,6 +46,7 @@
       <Link>Properties\AssemblyInfoShared.cs</Link>
     </Compile>
     <Compile Include="IRabbitMqConnection.cs" />
+    <Compile Include="QueuePropertiesMismatchException.cs" />
     <Compile Include="RabbitMqConnectionFactory.cs" />
     <Compile Include="IRabbitMqConnectionFactory.cs" />
     <Compile Include="IRabbitMqFactory.cs" />
