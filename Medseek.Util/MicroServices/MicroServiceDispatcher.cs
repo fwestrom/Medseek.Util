@@ -193,7 +193,7 @@
             var consumerGroups = microServiceLocator.Bindings
                 .Do(bindings.Add)
                 .Select(binding => new { binding, address = mqPlugin.ToConsumerAddress(binding.Address) })
-                .GroupBy(x => string.Join("|", x.binding.AutoAckDisabled, x.address.SourceKey))
+                .GroupBy(x => string.Join("|", x.binding.AutoAckDisabled, x.binding.AutoDelete, x.address.SourceKey))
                 .ToArray();
 
             thread.Invoke(() =>
@@ -202,7 +202,7 @@
                 {
                     var autoAckDisabled = consumerGroup.Select(x => x.binding.AutoAckDisabled).Distinct().SingleOrDefault();
                     var autoDelete = consumerGroup.Select(x => x.binding.AutoDelete).Distinct().SingleOrDefault();
-                    Log.InfoFormat("Starting message consumer; SourceKey = {0}, AutoAckDisabled = {1}, Bindings = {2}.", consumerGroup.Key, autoAckDisabled, string.Join(", ", consumerGroup.Select(x => x.binding).Select(x => string.Format("(Addresses = {0}, Service = {1}, Method = {2})", x.Address, x.Service, x.Method))));
+                    Log.InfoFormat("Starting message consumer; SourceKey = {0}, AutoAckDisabled = {1}, AutoDelete = {2}, Bindings = {3}.", consumerGroup.Key, autoAckDisabled, autoDelete, string.Join(", ", consumerGroup.Select(x => x.binding).Select(x => string.Format("(Addresses = {0}, Service = {1}, Method = {2})", x.Address, x.Service, x.Method))));
                     var addresses = consumerGroup.Select(x => x.address).ToArray();
                     var createdConsumers = channel.CreateConsumers(addresses, autoAckDisabled, autoDelete);
                     foreach (var consumer in createdConsumers)
