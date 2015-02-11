@@ -126,6 +126,8 @@
     <Compile Include="Messaging\RabbitMq\RabbitMqConsumerTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqPluginTests.cs" />
     <Compile Include="Messaging\RabbitMq\RabbitMqPublisherTests.cs" />
+    <Compile Include="MicroServices\MicroServiceBindingAttributeTests.cs" />
+    <Compile Include="MicroServices\MicroServiceDispatcherStartTests.cs" />
     <Compile Include="MicroServices\Lookup\MicroServiceLookupTests.cs" />
     <Compile Include="MicroServices\MessageContextTests.cs" />
     <Compile Include="MicroServices\MessageHandlers\MessageBindingKeyTests.cs" />
@@ -138,6 +140,7 @@
     <Compile Include="MicroServices\MicroServiceSerializerTests.cs" />
     <Compile Include="MicroServices\RemoteMicroServiceInvokerTests.cs" />
     <Compile Include="Plugin\WebApi\IocDependencyResolverTests.cs" />
+    <Compile Include="RabbitMq\RabbitMqConsumerTests.cs" />
     <Compile Include="Serialization\NewtonsoftJsonSerializerTests.cs" />
     <Compile Include="UtilComponentsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

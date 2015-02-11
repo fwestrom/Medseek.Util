@@ -6,6 +6,7 @@
     using Medseek.Util.Ioc;
     using RabbitMQ.Client;
     using RabbitMQ.Client.Events;
+    using RabbitMQ.Client.Exceptions;
 
     /// <summary>
     /// A message consumer for interacting with RabbitMQ.
@@ -40,8 +41,21 @@
             consumer.Received += OnConsumerReceived;
 
             var queue = addresses.Select(x => x.QueueName).Distinct().Single();
-            model.QueueDeclare(queue, false, false, autoDelete, null);
 
+            try
+            {
+                model.QueueDeclare(queue, false, false, autoDelete, null);
+            }
+            catch (OperationInterruptedException e)
+            {
+                if (e.Message.Contains("code=406, text=\"PRECONDITION_FAILED"))
+                {
+                    throw new QueuePropertiesMismatchException(e);
+                }
+
+                throw;
+            }
+            
             foreach (var address in addresses.Where(DoBindQueue))
             {
                 if (!declaredExchanges.Contains(address.ExchangeName))
