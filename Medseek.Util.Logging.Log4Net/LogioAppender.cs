@@ -1,10 +1,10 @@
-﻿namespace Medseek.Util.Logging.Log4Net
+﻿using System.Text.RegularExpressions;
+using Medseek.Util.MicroServices.MessageHandlers;
+
+namespace Medseek.Util.Logging.Log4Net
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Text;
-    using System.Threading.Tasks;
     using log4net.Appender;
     using System.IO;
     using System.Net.Sockets;
@@ -12,8 +12,6 @@
 
     public class LogioAppender : AppenderSkeleton
     {
-        private readonly Dictionary<string, string> registeredStreams = new Dictionary<string, string>();
-        
         private TcpClient tcpClient;
         
         /// <summary>
@@ -38,19 +36,23 @@
         protected override void Append(log4net.Core.LoggingEvent loggingEvent)
         {
             var message = string.Format("+log|{0}|{1}|{2}|{3}\r\n", loggingEvent.LoggerName, this.ThisHost, loggingEvent.Level.Name.ToLowerInvariant(),loggingEvent.RenderedMessage.Replace(Environment.NewLine, "/"));
-            SendTheMessageToRemoteHost(message, loggingEvent.LoggerName);
+            SendTheMessageToRemoteHost(formatMessage(message) );
         }
-        private void SendTheMessageToRemoteHost(string message, string stream)
+
+        private string formatMessage(string message)
         {
-            if (!registeredStreams.ContainsKey(stream))
-                RegisterStreamAndHost(stream, this.ThisHost);
+            var messageParts = message.Split('|');
+
+            messageParts[1] = Regex.Split(messageParts[1], ".pid-")[0];
+
+            return String.Join("|", messageParts);
+        }
+
+        private void SendTheMessageToRemoteHost(string message  )
+        {
             SendMessageToRemoteHost(message);
         }
-        private void RegisterStreamAndHost(string stream, string host)
-        {
-            SendMessageToRemoteHost("+stream|" + stream + "|" + host + "\r\n");
-            registeredStreams[stream] = DateTime.Now.ToShortDateString();
-        }
+      
         private void SendMessageToRemoteHost(string message)
         {
             try
@@ -58,13 +60,11 @@
                 if (tcpClient == null)
                     tcpClient = new TcpClient(Host, Port);
 
-                if (tcpClient != null)
-                {
-                    var data = Encoding.ASCII.GetBytes(message);
+                if (tcpClient == null) return;
+                var data = Encoding.ASCII.GetBytes(message);
 
-                    var stream = tcpClient.GetStream();
-                    stream.Write(data, 0, data.Length);
-                }
+                var stream = tcpClient.GetStream();
+                stream.Write(data, 0, data.Length);
             }
             catch (SocketException)
             {
