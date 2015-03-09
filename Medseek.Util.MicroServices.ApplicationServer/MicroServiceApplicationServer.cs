@@ -1,4 +1,6 @@
-﻿namespace Medseek.Util.MicroServices.ApplicationServer
+﻿using System.Runtime.InteropServices;
+
+namespace Medseek.Util.MicroServices.ApplicationServer
 {
     using System;
     using System.Collections.Generic;
@@ -41,11 +43,46 @@
             directory = new DirectoryInfo(cmdLineParams.Get("dir"));
         }
 
+
+        /// <summary>
+        /// This function sets the handler for kill events.
+        /// </summary>
+        /// <param name="Handler"></param>
+        /// <param name="Add"></param>
+        /// <returns></returns>
+        [DllImport("Kernel32")]
+        public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
+
+        //delegate type to be used of the handler routine
+        public delegate bool HandlerRoutine(CtrlTypes CtrlType);
+
+        // control messages
+        public enum CtrlTypes
+        {
+            CTRL_C_EVENT = 0,
+            CTRL_BREAK_EVENT = 1,
+            CTRL_CLOSE_EVENT = 2,
+            CTRL_LOGOFF_EVENT = 5,
+            CTRL_SHUTDOWN_EVENT = 6
+        }
+
+        private bool ConsoleCtrlCheck(CtrlTypes ctrlType)
+        {
+            while (!dispatcher.HasShutdownFinished)
+            {
+                dispatcher.InvokeShutdown();
+            }
+
+            return true;
+        }
+       
         /// <summary>
         /// Invoked to enter the main application loop.
         /// </summary>
         public void Run()
         {
+            handleConsoleWindow();
+
             Log.InfoFormat("Broker = {0}", broker);
             Log.InfoFormat("Directory = {0}", directory);
 
@@ -64,6 +101,7 @@
                 Log.Info("Dispatcher exited.");
                 if (runners.Count > 0)
                     Thread.Sleep(TimeSpan.FromSeconds(3));
+
             }
             catch (Exception ex)
             {
@@ -75,6 +113,16 @@
                     runner.Dispose();
                 runners.Clear();
             }
+        }
+
+        private void handleConsoleWindow()
+        {
+            var hr = new HandlerRoutine(ConsoleCtrlCheck);
+            SetConsoleCtrlHandler(hr, true);
+            GC.KeepAlive(hr);
+
+            IntPtr handle = Process.GetCurrentProcess().MainWindowHandle;
+            ConsoleAPI.EnableCloseButton(handle, false);
         }
 
         private void OnDispatcherShutdownStarted(object sender, EventArgs e)
@@ -140,6 +188,7 @@
                         Log.InfoFormat("Added service {0}.", descriptor);
                         var runner = new ServiceRunner(descriptor);
                         runners.Add(runner);
+                       
                         runner.Start();
                     }
                 }
