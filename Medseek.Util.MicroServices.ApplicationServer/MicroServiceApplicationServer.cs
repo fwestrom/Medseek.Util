@@ -124,7 +124,6 @@ namespace Medseek.Util.MicroServices.ApplicationServer
 
         void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            Console.WriteLine("HERE IN EXCePTION");
             while (!dispatcher.HasShutdownFinished)
             {
                 dispatcher.InvokeShutdown();
