@@ -66,6 +66,13 @@
                     if (brokerSettings[1].StartsWith("amqp://"))
                     {
                         factory.Uri = brokerSettings[1];
+                        var parsedUri = new Uri(brokerSettings[1]);
+                        if (!string.IsNullOrEmpty(parsedUri.UserInfo))
+                        {
+                            var userInfo = parsedUri.UserInfo.Split(':');
+                            factory.UserName = userInfo[0];
+                            factory.Password = userInfo[1];
+                        }
                     }
                     else if (brokerSettings[1].Contains('/'))
                     {

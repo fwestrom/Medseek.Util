@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Medseek.Util.MicroServices.MessageHandlers;
 
 namespace Medseek.Util.Logging.Log4Net
@@ -28,7 +29,7 @@ namespace Medseek.Util.Logging.Log4Net
         /// Gets or sets this host name.
         /// </summary>
         public string ThisHost { get; set; }
-        
+
         /// <summary>
         /// Writes to the logIo tool.
         /// </summary>
@@ -48,7 +49,7 @@ namespace Medseek.Util.Logging.Log4Net
             return String.Join("|", messageParts);
         }
 
-        private void SendTheMessageToRemoteHost(string message  )
+        private void SendTheMessageToRemoteHost(string message)
         {
             SendMessageToRemoteHost(message);
         }
