@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Security.Permissions;
 
 namespace Medseek.Util.MicroServices.ApplicationServer
 {
@@ -81,7 +82,13 @@ namespace Medseek.Util.MicroServices.ApplicationServer
         /// </summary>
         public void Run()
         {
-            handleConsoleWindow();
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            var hr = new HandlerRoutine(ConsoleCtrlCheck);
+            SetConsoleCtrlHandler(hr, true);
+            GC.KeepAlive(hr);
+
+            var handle = Process.GetCurrentProcess().MainWindowHandle;
+            ConsoleAPI.EnableCloseButton(handle, false);
 
             Log.InfoFormat("Broker = {0}", broker);
             Log.InfoFormat("Directory = {0}", directory);
@@ -115,14 +122,13 @@ namespace Medseek.Util.MicroServices.ApplicationServer
             }
         }
 
-        private void handleConsoleWindow()
+        void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            var hr = new HandlerRoutine(ConsoleCtrlCheck);
-            SetConsoleCtrlHandler(hr, true);
-            GC.KeepAlive(hr);
+            while (!dispatcher.HasShutdownFinished)
+            {
+                dispatcher.InvokeShutdown();
+            }
 
-            IntPtr handle = Process.GetCurrentProcess().MainWindowHandle;
-            ConsoleAPI.EnableCloseButton(handle, false);
         }
 
         private void OnDispatcherShutdownStarted(object sender, EventArgs e)
@@ -172,7 +178,7 @@ namespace Medseek.Util.MicroServices.ApplicationServer
                         .SelectMany(file => XDocument.Load(file.FullName)
                             .Descendants(XName.Get("service", string.Empty))
                             .Select(xe => new ServiceDescriptor(xe.Attrib("id"), xe.Attrib("run"), MapArgumentTokens(xe.Attrib("args")), file.FullName, xe.Attrib("dir"))))
-                        .ToArray();
+                        .OrderBy(m=>m.ManifestPath).ToArray();
 
                     var removed = runners.Where(r => !descriptors.Contains(r.Descriptor)).ToArray();
                     foreach (var runner in removed)
