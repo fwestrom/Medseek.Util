@@ -50,6 +50,7 @@
     <Compile Include="..\Medseek.Util\Properties\AssemblyInfoShared.cs">
       <Link>Properties\AssemblyInfoShared.cs</Link>
     </Compile>
+    <Compile Include="LogioTarget.cs" />
     <Compile Include="NLogComponents.cs" />
     <Compile Include="NLogCoreLogger.cs" />
     <Compile Include="NLogLog.cs" />
