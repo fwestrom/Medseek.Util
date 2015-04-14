@@ -22,7 +22,7 @@ namespace Medseek.Util.MicroServices.ApplicationServer
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Dictionary<string, string> cmdLineParams = new Dictionary<string, string>();
-        private readonly Dictionary<DirectoryInfo, List<ServiceRunner>> runnersMap = new Dictionary<DirectoryInfo, List<ServiceRunner>>();
+        private readonly List<ServiceRunner> runners = new List<ServiceRunner>();
         private readonly string broker;
         private readonly List<DirectoryInfo> directories;
         private Dispatcher dispatcher;
@@ -111,7 +111,7 @@ namespace Medseek.Util.MicroServices.ApplicationServer
             {
                 Dispatcher.Run();
                 Log.Info("Dispatcher exited.");
-                if (runnersMap.SelectMany(m => m.Value).Count() > 0)
+                if (runners.Count > 0)
                     Thread.Sleep(TimeSpan.FromSeconds(3));
 
             }
@@ -121,9 +121,9 @@ namespace Medseek.Util.MicroServices.ApplicationServer
             }
             finally
             {
-                foreach (var runner in runnersMap.SelectMany(m => m.Value))
+                foreach (var runner in runners)
                     runner.Dispose();
-                runnersMap.Clear();
+                runners.Clear();
             }
         }
 
@@ -141,7 +141,7 @@ namespace Medseek.Util.MicroServices.ApplicationServer
             Log.Info("Dispatcher is shutting down.");
             pollTimer.Stop();
             refreshTimer.Stop();
-            foreach (var runner in runnersMap.SelectMany(m => m.Value))
+            foreach (var runner in runners)
                 runner.Stop();
         }
 
@@ -166,7 +166,7 @@ namespace Medseek.Util.MicroServices.ApplicationServer
 
         private void OnPollTimerTick(object sender, EventArgs e)
         {
-            foreach (var runner in runnersMap.SelectMany(m => m.Value))
+            foreach (var runner in runners)
                 runner.Poll();
         }
 
@@ -175,43 +175,56 @@ namespace Medseek.Util.MicroServices.ApplicationServer
             var sw = Stopwatch.StartNew();
             try
             {
-                foreach (var directory in directories)
-                {
-                    directory.Refresh();
-
-                    if (directory.Exists)
-                    {
-                        var startFile = cmdLineParams.Get("start-file") ?? "services.xml";
-                        var descriptors = directory.GetFiles(startFile, SearchOption.AllDirectories)
-                            .SelectMany(file => XDocument.Load(file.FullName)
-                                .Descendants(XName.Get("service", string.Empty))
-                                .Select(xe => new ServiceDescriptor(xe.Attrib("id"), xe.Attrib("run"), MapArgumentTokens(xe.Attrib("args")), file.FullName, xe.Attrib("dir"))))
-                            .OrderBy(m => m.ManifestPath).ToArray();
-
-                        var runners = MapServiceRunners(directory);
-                        var removed = runners.Where(r => !descriptors.Contains(r.Descriptor)).ToArray();
-                        foreach (var runner in removed)
-                        {
-                            Log.InfoFormat("Removed service {0}.", runner);
-                            runners.Remove(runner);
-                            runner.Dispose();
-                        }
-
-                        var added = descriptors.Except(runners.Select(x => x.Descriptor)).ToArray();
-                        foreach (var descriptor in added)
-                        {
-                            Log.InfoFormat("Added service {0}.", descriptor);
-                            var runner = new ServiceRunner(descriptor);
-                            runners.Add(runner);
-                            runner.Start();
-                        }
-                    }
-                }
+                var descriptors = FindServiceDescriptors();
+                StopRemovedServices(descriptors);
+                StartAddedServices(descriptors);
             }
             finally
             {
                 Log.DebugFormat("{0}: Refresh completed; Elapsed = {1}.", MethodBase.GetCurrentMethod().Name, sw.Elapsed);
                 refreshTimer.Interval = TimeSpan.FromSeconds(10);
+            }
+        }
+
+        private List<ServiceDescriptor> FindServiceDescriptors()
+        {
+            List<ServiceDescriptor> descriptors = new List<ServiceDescriptor>();
+            foreach (var directory in directories)
+            {
+                directory.Refresh();
+                if (directory.Exists)
+                {
+                    var startFile = cmdLineParams.Get("start-file") ?? "services.xml";
+                    descriptors.AddRange(directory.GetFiles(startFile, SearchOption.AllDirectories)
+                        .SelectMany(file => XDocument.Load(file.FullName)
+                            .Descendants(XName.Get("service", string.Empty))
+                            .Select(xe => new ServiceDescriptor(xe.Attrib("id"), xe.Attrib("run"), MapArgumentTokens(xe.Attrib("args")), file.FullName, xe.Attrib("dir"))))
+                        .OrderBy(m => m.ManifestPath));
+                }
+            }
+            return descriptors;
+        }
+
+        private void StopRemovedServices(List<ServiceDescriptor> descriptors)
+        {
+            var removed = runners.Where(r => !descriptors.Contains(r.Descriptor)).ToArray();
+            foreach (var runner in removed)
+            {
+                Log.InfoFormat("Removed service {0}.", runner);
+                runners.Remove(runner);
+                runner.Dispose();
+            }
+        }
+
+        private void StartAddedServices(List<ServiceDescriptor> descriptors)
+        {
+            var added = descriptors.Except(runners.Select(x => x.Descriptor)).ToArray();
+            foreach (var descriptor in added)
+            {
+                Log.InfoFormat("Added service {0}.", descriptor);
+                var runner = new ServiceRunner(descriptor);
+                runners.Add(runner);
+                runner.Start();
             }
         }
 
@@ -224,20 +237,6 @@ namespace Medseek.Util.MicroServices.ApplicationServer
             }
 
             return args;
-        }
-
-        private List<ServiceRunner> MapServiceRunners(DirectoryInfo directory)
-        {
-            if (runnersMap.ContainsKey(directory))
-            {
-                return runnersMap[directory];
-            }
-            else
-            {
-                var runners = new List<ServiceRunner>();
-                runnersMap.Add(directory, runners);
-                return runners;
-            }
         }
     }
 }
