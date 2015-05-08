@@ -14,7 +14,8 @@ namespace Medseek.Util.Logging.Log4Net
     public class LogioAppender : AppenderSkeleton
     {
         private TcpClient tcpClient;
-        
+        private DateTime LastFailure = DateTime.Now.AddMinutes(-1);
+
         /// <summary>
         /// Gets or sets the Log io Port.
         /// </summary>
@@ -28,7 +29,15 @@ namespace Medseek.Util.Logging.Log4Net
         /// <summary>
         /// Gets or sets this host name.
         /// </summary>
-        public string ThisHost { get; set; }
+        public string ThisHost 
+        { 
+            get 
+            {
+                return Environment.MachineName;
+            } 
+        }
+
+        public string ShouldLog { get; set; }
 
         /// <summary>
         /// Writes to the logIo tool.
@@ -36,11 +45,14 @@ namespace Medseek.Util.Logging.Log4Net
         /// <param name="loggingEvent">The logging event.</param>
         protected override void Append(log4net.Core.LoggingEvent loggingEvent)
         {
+            if (string.IsNullOrEmpty(ShouldLog) && ShouldLog != "True")
+                return;
+
             var message = string.Format("+log|{0}|{1}|{2}|{3}\r\n", loggingEvent.LoggerName, this.ThisHost, loggingEvent.Level.Name.ToLowerInvariant(),loggingEvent.RenderedMessage.Replace(Environment.NewLine, "/"));
-            SendTheMessageToRemoteHost(formatMessage(message) );
+            SendTheMessageToRemoteHost(FormatMessage(message));
         }
 
-        private string formatMessage(string message)
+        private string FormatMessage(string message)
         {
             var messageParts = message.Split('|');
 
@@ -58,7 +70,7 @@ namespace Medseek.Util.Logging.Log4Net
         {
             try
             {
-                if (tcpClient == null)
+                if (tcpClient == null && HaveNotTriedInAMinute())
                     tcpClient = new TcpClient(Host, Port);
 
                 if (tcpClient == null) return;
@@ -69,10 +81,16 @@ namespace Medseek.Util.Logging.Log4Net
             }
             catch (SocketException)
             {
+                LastFailure = DateTime.Now;
             }
             catch (IOException)
             {
             }
+        }
+
+        private bool HaveNotTriedInAMinute()
+        {
+            return DateTime.Now.AddMinutes(-1) > LastFailure;
         }
     }
 }
