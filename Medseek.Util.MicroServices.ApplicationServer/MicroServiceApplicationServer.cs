@@ -24,7 +24,7 @@ namespace Medseek.Util.MicroServices.ApplicationServer
         private readonly Dictionary<string, string> cmdLineParams = new Dictionary<string, string>();
         private readonly List<ServiceRunner> runners = new List<ServiceRunner>();
         private readonly string broker;
-        private readonly DirectoryInfo directory;
+        private readonly List<DirectoryInfo> directories;
         private Dispatcher dispatcher;
         private DispatcherTimer pollTimer;
         private DispatcherTimer refreshTimer;
@@ -41,7 +41,9 @@ namespace Medseek.Util.MicroServices.ApplicationServer
             cmdLineParams = args.ToArgDictionary();
 
             broker = cmdLineParams.Get("broker");
-            directory = new DirectoryInfo(cmdLineParams.Get("dir"));
+
+            directories = new List<DirectoryInfo>();
+            cmdLineParams.Get("dir").Split(',').ToList().ForEach(path => directories.Add(new DirectoryInfo(path)));
         }
 
 
@@ -76,7 +78,7 @@ namespace Medseek.Util.MicroServices.ApplicationServer
 
             return true;
         }
-       
+
         /// <summary>
         /// Invoked to enter the main application loop.
         /// </summary>
@@ -91,7 +93,10 @@ namespace Medseek.Util.MicroServices.ApplicationServer
             ConsoleAPI.EnableCloseButton(handle, false);
 
             Log.InfoFormat("Broker = {0}", broker);
-            Log.InfoFormat("Directory = {0}", directory);
+            foreach (var directory in directories)
+            {
+                Log.InfoFormat("Directory = {0}", directory);
+            }
 
             dispatcher = Dispatcher.FromThread(Thread.CurrentThread) ?? Dispatcher.CurrentDispatcher;
             dispatcher.UnhandledException += OnDispatcherUnhandledException;
@@ -170,39 +175,56 @@ namespace Medseek.Util.MicroServices.ApplicationServer
             var sw = Stopwatch.StartNew();
             try
             {
-                directory.Refresh();
-                if (directory.Exists)
-                {
-                    var startFile = cmdLineParams.Get("start-file") ?? "services.xml";
-                    var descriptors = directory.GetFiles(startFile, SearchOption.AllDirectories)
-                        .SelectMany(file => XDocument.Load(file.FullName)
-                            .Descendants(XName.Get("service", string.Empty))
-                            .Select(xe => new ServiceDescriptor(xe.Attrib("id"), xe.Attrib("run"), MapArgumentTokens(xe.Attrib("args")), file.FullName, xe.Attrib("dir"))))
-                        .OrderBy(m=>m.ManifestPath).ToArray();
-
-                    var removed = runners.Where(r => !descriptors.Contains(r.Descriptor)).ToArray();
-                    foreach (var runner in removed)
-                    {
-                        Log.InfoFormat("Removed service {0}.", runner);
-                        runners.Remove(runner);
-                        runner.Dispose();
-                    }
-
-                    var added = descriptors.Except(runners.Select(x => x.Descriptor)).ToArray();
-                    foreach (var descriptor in added)
-                    {
-                        Log.InfoFormat("Added service {0}.", descriptor);
-                        var runner = new ServiceRunner(descriptor);
-                        runners.Add(runner);
-                       
-                        runner.Start();
-                    }
-                }
+                var descriptors = FindServiceDescriptors();
+                StopRemovedServices(descriptors);
+                StartAddedServices(descriptors);
             }
             finally
             {
                 Log.DebugFormat("{0}: Refresh completed; Elapsed = {1}.", MethodBase.GetCurrentMethod().Name, sw.Elapsed);
                 refreshTimer.Interval = TimeSpan.FromSeconds(10);
+            }
+        }
+
+        private List<ServiceDescriptor> FindServiceDescriptors()
+        {
+            List<ServiceDescriptor> descriptors = new List<ServiceDescriptor>();
+            foreach (var directory in directories)
+            {
+                directory.Refresh();
+                if (directory.Exists)
+                {
+                    var startFile = cmdLineParams.Get("start-file") ?? "services.xml";
+                    descriptors.AddRange(directory.GetFiles(startFile, SearchOption.AllDirectories)
+                        .SelectMany(file => XDocument.Load(file.FullName)
+                            .Descendants(XName.Get("service", string.Empty))
+                            .Select(xe => new ServiceDescriptor(xe.Attrib("id"), xe.Attrib("run"), MapArgumentTokens(xe.Attrib("args")), file.FullName, xe.Attrib("dir"))))
+                        .OrderBy(m => m.ManifestPath));
+                }
+            }
+            return descriptors;
+        }
+
+        private void StopRemovedServices(List<ServiceDescriptor> descriptors)
+        {
+            var removed = runners.Where(r => !descriptors.Contains(r.Descriptor)).ToArray();
+            foreach (var runner in removed)
+            {
+                Log.InfoFormat("Removed service {0}.", runner);
+                runners.Remove(runner);
+                runner.Dispose();
+            }
+        }
+
+        private void StartAddedServices(List<ServiceDescriptor> descriptors)
+        {
+            var added = descriptors.Except(runners.Select(x => x.Descriptor)).ToArray();
+            foreach (var descriptor in added)
+            {
+                Log.InfoFormat("Added service {0}.", descriptor);
+                var runner = new ServiceRunner(descriptor);
+                runners.Add(runner);
+                runner.Start();
             }
         }
 
