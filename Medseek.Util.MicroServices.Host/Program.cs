@@ -41,9 +41,14 @@
             {
                 var message = string.Format("Unhandled exception from AppDomain; Type = {0}, IsTerminating = {1}.", e.ExceptionObject.GetType().FullName, e.IsTerminating);
                 if (e.IsTerminating)
+                {
                     Log.Fatal(message, e.ExceptionObject as Exception);
+                    Environment.Exit(1);
+                }
                 else
+                {
                     Log.Error(message, e.ExceptionObject as Exception);
+                }
             };
 
             AppDomain.CurrentDomain.FirstChanceException += (sender, e) =>
