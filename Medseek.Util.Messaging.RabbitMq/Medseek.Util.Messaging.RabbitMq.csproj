@@ -45,6 +45,7 @@
     <Compile Include="..\Medseek.Util\Properties\AssemblyInfoShared.cs">
       <Link>Properties\AssemblyInfoShared.cs</Link>
     </Compile>
+    <Compile Include="ConnectionForcedClosedException.cs" />
     <Compile Include="IRabbitMqConnection.cs" />
     <Compile Include="QueuePropertiesMismatchException.cs" />
     <Compile Include="RabbitMqConnectionFactory.cs" />

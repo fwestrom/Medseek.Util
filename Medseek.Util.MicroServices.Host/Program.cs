@@ -36,6 +36,7 @@
         public static void Main(string[] args)
         {
             AppDomain.CurrentDomain.DomainUnload += (sender, e) => Log.InfoFormat("Unloading AppDomain.");
+
             AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
             {
                 var message = string.Format("Unhandled exception from AppDomain; Type = {0}, IsTerminating = {1}.", e.ExceptionObject.GetType().FullName, e.IsTerminating);
@@ -43,6 +44,15 @@
                     Log.Fatal(message, e.ExceptionObject as Exception);
                 else
                     Log.Error(message, e.ExceptionObject as Exception);
+            };
+
+            AppDomain.CurrentDomain.FirstChanceException += (sender, e) =>
+            {
+                if (e.Exception.GetType() == typeof(ConnectionForcedClosedException))
+                {
+                    Log.Fatal("Connection to MQ closed.", e.Exception);
+                    Environment.Exit(1);
+                }
             };
 
             Dispatcher.CurrentDispatcher.UnhandledException += (sender, e) =>

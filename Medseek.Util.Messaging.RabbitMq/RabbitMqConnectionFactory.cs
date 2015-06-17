@@ -90,6 +90,14 @@
             }
 
             var connection = factory.CreateConnection();
+            connection.ConnectionShutdown += (conn, reason) =>
+            {
+                Log.InfoFormat("Connection Shutdown, Reason={0}", reason);
+                if ((int)reason.ReplyCode == RabbitMQ.Client.Framing.v0_9_1.Constants.ConnectionForced)
+                {
+                    throw new ConnectionForcedClosedException(reason);
+                }
+            };
             return connection;
         }
 
