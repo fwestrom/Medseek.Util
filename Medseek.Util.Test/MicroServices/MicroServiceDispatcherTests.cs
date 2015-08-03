@@ -106,6 +106,7 @@
         /// micro-service invocation throws an exception.
         /// </summary>
         [Test]
+        [Ignore("Not using the service invoker")]
         public void OnReceivedRaisesUnhandledExceptionWhenMicroServiceInvocationThrows()
         {
             var testException = new Exception("test-exception");
