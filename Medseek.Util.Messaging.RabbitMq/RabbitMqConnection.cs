@@ -39,7 +39,9 @@
         /// </summary>
         public IModel CreateModel()
         {
-            return connection.CreateModel();
+            var model = connection.CreateModel();
+            model.BasicQos(0, 50, false);
+            return model;
         }
 
         /// <summary>

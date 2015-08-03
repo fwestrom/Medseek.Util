@@ -125,5 +125,22 @@
 
             connection.Verify();
         }
+
+        /// <summary>
+        /// Verifies that creating a model sets the default consumer prefetch count
+        /// </summary>
+        [Test]
+        public void CreateModelSetsBasicQos()
+        {
+            var model = new Mock<IModel>();
+            model.Setup(m => m.BasicQos(0, 50, false)).Verifiable();
+            connection.Setup(x =>
+                x.CreateModel())
+                .Returns(model.Object);
+
+            var result = Obj.CreateModel();
+            model.Verify();
+        }
+
     }
 }
