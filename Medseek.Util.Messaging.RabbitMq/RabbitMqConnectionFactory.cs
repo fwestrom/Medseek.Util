@@ -74,6 +74,20 @@
                             factory.Password = userInfo[1];
                         }
                     }
+                    else if (brokerSettings[1].StartsWith("amqps://"))
+                    {
+                        factory.Uri = brokerSettings[1];
+                        factory.Ssl.Enabled = true;
+                        factory.Ssl.Version = System.Security.Authentication.SslProtocols.Tls12;
+
+                        var parsedUri = new Uri(brokerSettings[1]);
+                        if (!string.IsNullOrEmpty(parsedUri.UserInfo))
+                        {
+                            var userInfo = parsedUri.UserInfo.Split(':');
+                            factory.UserName = userInfo[0];
+                            factory.Password = userInfo[1];
+                        }
+                    }
                     else if (brokerSettings[1].Contains('/'))
                     {
                         var brokerSpec = brokerSettings[1].Split('/');
