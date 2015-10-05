@@ -6,6 +6,7 @@
     using System.Text;
     using Medseek.Util.Logging;
     using RabbitMQ.Client;
+    using System.Net.Security;
 
     /// <summary>
     /// Provides instances of components that correspond to connections using 
@@ -66,6 +67,21 @@
                     if (brokerSettings[1].StartsWith("amqp://"))
                     {
                         factory.Uri = brokerSettings[1];
+                        var parsedUri = new Uri(brokerSettings[1]);
+                        if (!string.IsNullOrEmpty(parsedUri.UserInfo))
+                        {
+                            var userInfo = parsedUri.UserInfo.Split(':');
+                            factory.UserName = userInfo[0];
+                            factory.Password = userInfo[1];
+                        }
+                    }
+                    else if (brokerSettings[1].StartsWith("amqps://"))
+                    {
+                        factory.Uri = brokerSettings[1];
+                        factory.Ssl.Enabled = true;
+                        factory.Ssl.Version = System.Security.Authentication.SslProtocols.Tls12;
+                        factory.Ssl.AcceptablePolicyErrors = SslPolicyErrors.RemoteCertificateNameMismatch | SslPolicyErrors.RemoteCertificateChainErrors;
+
                         var parsedUri = new Uri(brokerSettings[1]);
                         if (!string.IsNullOrEmpty(parsedUri.UserInfo))
                         {
